@@ -1,0 +1,111 @@
+/**
+ * \file surface.hpp
+ */
+
+#ifndef SURFACE_HPP_
+#define SURFACE_HPP_
+
+#include <memory>
+#include <map>
+
+#include "common.hpp"
+
+class Surface
+{
+public:
+	Surface(unsigned int id, const float *x_vert, const float *y_vert,
+			const float *z_vert, int n_vert);
+	Surface(unsigned int id, const double *x_vert, const double *y_vert,
+			const double *z_vert, int n_vert);
+	virtual ~Surface();
+
+	unsigned int get_id() const;
+	float get_area() const;
+	bool is_point_inside(avrs::point3d_t point);
+	float get_dist_origin() const;
+	avrs::point3d_t &get_normal();
+	arma::frowvec4 &get_plane_coeff();
+//	point3d_t &get_vertex(unsigned int index);
+	void set_b_filter_coeff(std::vector<double> &b_coeff);
+	std::vector<double> &get_b_filter_coeff();
+	void set_a_filter_coeff(std::vector<double> &a_coeff);
+	std::vector<double> &get_a_filter_coeff();
+
+private:
+	bool _init();
+
+	unsigned int _id;
+	arma::fmat _vert;  // 4x3 matrix (four xyz points for now)
+	avrs::point3d_t _center;  ///< Geometric center of the plane
+	avrs::point3d_t _normal;  // normal to plane
+	float _dist_origin;  // distance to origin
+	float _area;
+
+	arma::frowvec4 _plane_coeff;  // (a, b, c, d) coefficients of plane equation [ax + by + cz + d = 0]
+
+	// absorption coefficients in Sabines (freq, value)
+	//std::map<int,float> _abs_coeff;
+	//std::vector<int> _freq_abs_coeff;  // in Hz
+	// material filter coefficients
+	std::vector<double> _b_filter_coeff;
+	std::vector<double> _a_filter_coeff;
+
+	void _calc_center();
+	void _calc_plane_coeff();
+	void _calc_normal();
+	void _calc_dist_origin();
+	void _calc_area();
+};
+
+inline unsigned int Surface::get_id() const
+{
+	return _id;
+}
+
+inline float Surface::get_area() const
+{
+	return _area;
+}
+
+inline float Surface::get_dist_origin() const
+{
+	return _dist_origin;
+}
+
+inline avrs::point3d_t &Surface::get_normal()
+{
+	return _normal;
+}
+
+inline arma::frowvec4 &Surface::get_plane_coeff()
+{
+	return _plane_coeff;
+}
+
+//inline point3d_t Surface::get_vertex(unsigned int index)
+//{
+//	assert(index <= 4);
+//	return _vert.row(index);
+//}
+
+inline void Surface::set_b_filter_coeff(std::vector<double> &b_coeff)
+{
+	_b_filter_coeff = b_coeff;
+}
+
+inline std::vector<double> &Surface::get_b_filter_coeff()
+{
+	return _b_filter_coeff;
+}
+
+inline void Surface::set_a_filter_coeff(std::vector<double> &a_coeff)
+{
+	_a_filter_coeff = a_coeff;
+}
+
+inline std::vector<double> &Surface::get_a_filter_coeff()
+{
+	return _a_filter_coeff;
+}
+
+#endif  // SURFACE_HPP_

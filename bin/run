@@ -1,0 +1,35 @@
+#!/bin/bash
+
+WM_ADDRESS=00:24:F3:2D:C0:BB
+OBJECT_FILENAME=Object4
+PREFIX=`rtai-config --prefix`
+#INSMOD=/sbin/insmod
+
+if [ "$PREFIX" == "" ]; then 
+	echo "ERROR: please set your PATH variable to <rtai-install>/bin"
+	exit
+fi
+
+if test \! "x`type -t sudo`" = x; then
+	SUDO=sudo
+fi
+
+# load RTAI kernel modules
+#if [ "`lsmod | grep rtai`" == "" ]; then
+#	$SUDO $INSMOD $PREFIX/modules/rtai_hal.ko
+
+#	for MODULE in rtai_lxrt rtai_fifos; do
+#		$SUDO $INSMOD $PREFIX/modules/$MODULE.ko
+#	done
+#fi
+
+$SUDO echo "Press buttons 1 and 2 on the Wiimote to connect... "
+read -p "(then press Enter to continue)"
+echo "Connecting..."
+#$SUDO /usr/bin/hcitool cc $WM_ADDRESS
+echo "rv:" $?
+#read -p "Waiting... (press Enter)"
+echo "and Launching AVRS..."
+./avrs $1
+
+exit 0
