@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2012 Fabián C. Tommasini
+ * Copyright (C) 2009-2013 Fabián C. Tommasini <fabian@tommasini.com.ar>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
