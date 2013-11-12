@@ -1,7 +1,8 @@
 RTAI Installation Guide
 =======================
 
-(adapted by Fabián C. Tommasini)
+
+by **Fabián C. Tommasini** (adapted from [Monteiro][1] and [Ari][2]).
 
 
 Software
