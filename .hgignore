@@ -7,3 +7,5 @@ bin/*
 aula_conf/*
 avrs
 aula.conf
+.project
+.cproject
