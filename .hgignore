@@ -4,3 +4,6 @@ data/*
 conf.tar.gz
 data.tar.gz
 bin/*
+aula_conf/*
+avrs
+aula.conf

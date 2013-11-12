@@ -224,10 +224,10 @@ It’s time to ﬁnally test the installation. For this, do the following:
 Step 7: Post-installation
 -------------------------
 
-Add the `/usr/realtime` directory to the system path:
+Add the `/usr/realtime/bin` directory to the system path:
 Edit the `~/.bashrc` file and add the following line to the end.
 
-	export PATH=${PATH}:/usr/realtime
+	export PATH=${PATH}:/usr/realtime/bin
 
 Then reload the configuration:
 

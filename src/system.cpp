@@ -55,7 +55,7 @@ bool System::_init()
 //	_tracker = TrackerWiimote::create("Object4", "00:24:F3:2D:C0:BB", read_interval_ms);
 
 	_tracker = TrackerSimulation::create(TrackerSimulation::from_file,
-			read_interval_ms, "../data/movdb/der_izq.movdb");
+			read_interval_ms, "data/movdb/der_izq.movdb");
 
 //	_tracker = TrackerSimulation::create(TrackerSimulation::calculation,
 //			read_interval_ms, "");
