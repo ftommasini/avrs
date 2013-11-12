@@ -3,3 +3,4 @@ conf/*
 data/*
 conf.tar.gz
 data.tar.gz
+bin/*

@@ -27,7 +27,7 @@ OUT_OBJF = $(addprefix $(OBJ_DIR)/,$(OBJF))
         
 LIBS = -lfftw3f -lc -lm -lstk -lasound -lpthread -ldxflib -larmadillo -lbluetooth -lcwiid -lncurses
 
-INCLUDES = -I/usr/include/stk \
+INCLUDES = -I/usr/local/include/stk \
            -I/usr/local/include/dxflib \
            -I/usr/realtime/include \
            -I/usr/src/linux/include
