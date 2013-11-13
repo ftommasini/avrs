@@ -68,11 +68,11 @@ bool System::_init()
 
 //	_tracker = TrackerWiimote::create("Object4", "00:24:F3:2D:C0:BB", read_interval_ms);
 
-	_tracker = TrackerSimulation::create(TrackerSimulation::from_file,
-			read_interval_ms, "data/movdb/der_izq.movdb");
+//	_tracker = TrackerSimulation::create(TrackerSimulation::from_file,
+//			read_interval_ms, "data/movdb/der_izq.movdb");
 
-//	_tracker = TrackerSimulation::create(TrackerSimulation::calculation,
-//			read_interval_ms, "");
+	_tracker = TrackerSimulation::create(TrackerSimulation::calculation,
+			read_interval_ms, "");
 
 //	avrs::position_t pos;
 //	avrs::orientation_angles_t ori;
@@ -83,6 +83,7 @@ bool System::_init()
 	assert(_tracker.get() != NULL);
 
 	_ve = VirtualEnvironment::create(_config_sim, _tracker);
+	assert(_ve.get() != NULL);
 
 	return true;
 }

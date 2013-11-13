@@ -105,9 +105,10 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	print_about(); // TODO if quiet option is activated, not shown
+	//print_about(); // TODO if quiet option is activated, not shown
 
 	//avrs::show_sim_config(config_sim);
+
 
 	// create auto_ptr pointer to the system
 	sys = System::create(&config_sim);

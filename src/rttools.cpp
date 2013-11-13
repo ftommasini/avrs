@@ -25,13 +25,13 @@
 MBX *rttools::get_mbx(std::string name, int size)
 {
 	unsigned long mbx_id = nam2num(name.c_str());
+	DPRINT("%lu", mbx_id);
 	MBX *mbx = (MBX *) rt_get_adr(mbx_id);
 
 	if (!mbx)  // if doesn't exist, create a new mailbox
 	{
 		mbx = rt_mbx_init(mbx_id, size);
 	}
-
 	return mbx;
 }
 

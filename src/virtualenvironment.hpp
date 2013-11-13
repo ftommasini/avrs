@@ -29,11 +29,13 @@
 
 #include <rtai_mbx.h>
 
+
 #include <Iir.h>
 #include <Delay.h>
 
 #include "tree.hpp"
 
+#include "rttools.hpp"
 #include "mathtools.hpp"
 #include "tracker.hpp"
 #include "trackerwiimote.hpp"
@@ -241,6 +243,7 @@ private:
 
 inline void VirtualEnvironment::start_simulation()
 {
+
 	if (_tracker.get() != NULL) {
 		_tracker->start();
 

@@ -19,8 +19,6 @@
 #include "virtualenvironment.hpp"
 
 #include "dxflib/dl_dxf.h"
-
-#include "rttools.hpp"
 #include "dxfreader.hpp"
 
 VirtualEnvironment::VirtualEnvironment(avrs::config_sim_t *cs, TrackerBase::ptr_t tracker)
@@ -140,7 +138,6 @@ bool VirtualEnvironment::_init()
 
 	// updates and calculations
 	update_surfaces_data();
-
 	calc_ISM();  // calculate VSs by ISM
 
 	_update_vis();
@@ -161,10 +158,10 @@ void VirtualEnvironment::add_surface(Surface *s)
 
 void VirtualEnvironment::calc_ISM()
 {
-	RTIME startt, endt;
-	float elapsedt;
+//	RTIME startt, endt;
+//	float elapsedt;
 
-	startt = rt_get_time_ns();
+	//startt = rt_get_time_ns();
 
 	_max_dist = _config_sim->max_distance;
 	_max_order = _config_sim->max_order;
@@ -191,10 +188,11 @@ void VirtualEnvironment::calc_ISM()
 	// propagate first order... and then run recursively
 	_propagate_ISM(vs, _root_it, 1);
 
-	endt = rt_get_time_ns();
-	elapsedt = (float) (endt - startt) / 1E6; // in ms
-	DPRINT("ISM calculation time: %2.4f ms", elapsedt);
-	DPRINT("Max distance: %3.2f - Max order: %d", _max_dist, _max_order);
+	//endt = rt_get_time_ns();
+
+	//elapsedt = (float) (endt - startt) / 1E6; // in ms
+	//DPRINT("ISM calculation time: %2.4f ms", elapsedt);
+	//DPRINT("Max distance: %3.2f - Max order: %d", _max_dist, _max_order);
 }
 
 // recursive function
@@ -202,6 +200,8 @@ void VirtualEnvironment::_propagate_ISM(virtualsource_t *vs, tree_it_t node, con
 {
 	if (order > _max_order)  // break condition for recursive function (for safety)
 		return;
+
+
 
 	// for each surface
 	for (unsigned int i = 0; i < _surfaces.size(); i++)
