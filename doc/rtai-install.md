@@ -29,10 +29,6 @@ Go to home directory:
 
 	$ cd ~
 
-Download Linux kernel 3.4.58 from [kernel.org](http://www.kernel.org):
-
-	$ wget https://www.kernel.org/pub/linux/kernel/v3.x/linux-3.4.58.tar.xz
-
 Download RTAI 3.9 from [Git repository](https://github.com/ShabbyX/RTAI):
 
 	$ git clone https://github.com/ShabbyX/RTAI.git
@@ -44,6 +40,10 @@ Check out specific changeset (this is not absolutely necesary):
 > *Note*: For quite awhile, all the commands are run as root until you reach near the bottom so feel free to just run:
 
 > `$ sudo -s`
+
+Download Linux kernel 3.4.58 from [kernel.org](http://www.kernel.org):
+
+	$ wget https://www.kernel.org/pub/linux/kernel/v3.x/linux-3.4.58.tar.xz
 
 Put this file into `/usr/src/`:
 
