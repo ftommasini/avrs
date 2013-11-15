@@ -25,7 +25,7 @@ OBJF =	surface.o \
 
 OUT_OBJF = $(addprefix $(OBJ_DIR)/,$(OBJF))        
         
-LIBS = -lfftw3f -lc -lm -lstk -lasound -lpthread -ldxflib -larmadillo -lbluetooth -lcwiid -lncurses
+LIBS = -lfftw3f -lc -lm -lstk -lasound -lpthread -ldxflib -larmadillo -lbluetooth -lcwiid -lncurses 
 
 INCLUDES = -I/usr/local/include/stk \
            -I/usr/local/include/dxflib \
@@ -35,7 +35,7 @@ INCLUDES = -I/usr/local/include/stk \
 CXXFLAGS = -O2 -Wall -pipe
 CFLAGS = -O2 -Wall -pipe
 
-LDFLAGS = -L/usr/realtime/lib #-L../lib -ldxflib
+LDFLAGS = -L/usr/realtime/lib #-L../lib
 
 MACROS = -D__LINUX_ALSA__ -D__LITTLE_ENDIAN__ -D_REENTRANT #-DHRTF_IIR
 

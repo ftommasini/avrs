@@ -514,7 +514,6 @@ void VirtualEnvironment::print_vis()
 
 void VirtualEnvironment::renderize()
 {
-	RTIME start, end;
 	float elapsed;
 
 	// check if the listener is moved
@@ -530,12 +529,10 @@ void VirtualEnvironment::renderize()
 	memcpy(&_render_buffer.left[0], &_zeros[0], _config_sim->bir_length_samples * sizeof(sample_t));
 	memcpy(&_render_buffer.right[0], &_zeros[0], _config_sim->bir_length_samples * sizeof(sample_t));
 
-	// TODO PARALELIZE!!!
 	// TODO SE PODRÍA MEJORAR SI SE GUARDAR EL ITERATOR EN CADA VS, ASI SE RECORRE SOLAMENTE LAS VISIBLES
 
 	// only for visible VSs
 	for (tree_it_t it = _tree.begin(); it != _tree.end(); it++)
-	//for (vis_it_t it = _vis.begin(); it != _vis.end(); it++)
 	{
 		virtualsource_t *vs = *it;
 
@@ -563,8 +560,6 @@ void VirtualEnvironment::renderize()
 		output = _hrtf_iir_filter(input, vs->ref_listener_orientation);
 #endif
 
-		start = rt_get_time_ns();
-
 		// calculate the sample from reflectogram where starts this reflection
 		// TODO delay menor a una muestra
 		unsigned long sample = (unsigned long) round((vs->time_rel_ms * SAMPLE_RATE) / 1000.0f);
@@ -577,17 +572,10 @@ void VirtualEnvironment::renderize()
 			_render_buffer.right[i] += output.right[j];
 		}
 
-		end = rt_get_time_ns();
-
 		_new_bir = true;
 
 		// TODO NORMALIZE!!!
-
-		elapsed = (float) (end - start) / 1E3; // in us
-
 	}
-
-	//DPRINT("Time: %6.3f us",  elapsed);
 }
 
 #else
@@ -737,19 +725,25 @@ binauraldata_t VirtualEnvironment::_hrtf_iir_filter(data_t &input, const orienta
 		out_r[i] = _filter_r.tick(input[i]);
 	}
 
-	_delay.clear();
+//	for (uint i = 0; i < input.size(); i++)
+//	{
+//		out_l[i] = input[i];
+//		out_r[i] = input[i];
+//	}
 
-	// ITD
-	if (_hc.itd > 0)  // left is delayed
-	{
-		_delay.setDelay(_hc.itd);
-		out_l = _delay.tick(out_l);
-	}
-	else if (_hc.itd < 0)  // right is delayed
-	{
-		_delay.setDelay((-1) * _hc.itd);  // change the sign
-		out_r = _delay.tick(out_r);
-	}
+//	_delay.clear();
+//
+//	// ITD
+//	if (_hc.itd > 0)  // left is delayed
+//	{
+//		_delay.setDelay(_hc.itd);
+//		out_l = _delay.tick(out_l);
+//	}
+//	else if (_hc.itd < 0)  // right is delayed
+//	{
+//		_delay.setDelay((-1) * _hc.itd);  // change the sign
+//		out_r = _delay.tick(out_r);
+//	}
 
 	for (uint i = 0; i < out_l.size(); i++)
 	{

@@ -68,11 +68,11 @@ bool System::_init()
 
 //	_tracker = TrackerWiimote::create("Object4", "00:24:F3:2D:C0:BB", read_interval_ms);
 
-//	_tracker = TrackerSimulation::create(TrackerSimulation::from_file,
-//			read_interval_ms, "data/movdb/der_izq.movdb");
+	_tracker = TrackerSimulation::create(TrackerSimulation::from_file,
+			read_interval_ms, "data/movdb/der_izq.movdb");
 
-	_tracker = TrackerSimulation::create(TrackerSimulation::calculation,
-			read_interval_ms, "");
+//	_tracker = TrackerSimulation::create(TrackerSimulation::calculation,
+//			read_interval_ms, "");
 
 //	avrs::position_t pos;
 //	avrs::orientation_angles_t ori;
@@ -153,7 +153,7 @@ bool System::run()
 
 	// Why error? (segmentation fault)
 	//stop_rt_timer();
-	//rt_task_delete(wait_task);
+	rt_task_delete(wait_task);
 
 	printf("Quit\n");
 
@@ -288,7 +288,8 @@ void *System::_rt_thread(void *arg)
 		elapsed_loop = (float) (end_loop - start_loop) / 1E6; // in ms
 		elapsed_render = (float) (end_render - start_render) / 1E6; // in ms
 		elapsed_conv = (float) (end_conv - start_conv) / 1E6; // in ms
-		//DPRINT("Render: %6.3f - RT Convolution: %6.3f - Loop: %6.3f ms", elapsed_render, elapsed_conv, elapsed_loop);
+		DPRINT("Render: %6.3f - RT Convolution: %6.3f - Loop: %6.3f - Tick: %6.3f ms",
+				elapsed_render, elapsed_conv, elapsed_loop, TICK_TIME / 1.0e+6f);
 
 		rt_task_wait_period();
 	}
