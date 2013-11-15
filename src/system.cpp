@@ -288,8 +288,8 @@ void *System::_rt_thread(void *arg)
 		elapsed_loop = (float) (end_loop - start_loop) / 1E6; // in ms
 		elapsed_render = (float) (end_render - start_render) / 1E6; // in ms
 		elapsed_conv = (float) (end_conv - start_conv) / 1E6; // in ms
-		DPRINT("Render: %6.3f - RT Convolution: %6.3f - Loop: %6.3f - Tick: %6.3f ms",
-				elapsed_render, elapsed_conv, elapsed_loop, TICK_TIME / 1.0e+6f);
+//		DPRINT("Render: %6.3f - RT Convolution: %6.3f - Loop: %6.3f - Tick: %6.3f ms",
+//				elapsed_render, elapsed_conv, elapsed_loop, TICK_TIME / 1.0e+6f);
 
 		rt_task_wait_period();
 	}

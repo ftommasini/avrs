@@ -77,7 +77,7 @@ inline void Listener::rotate(const avrs::orientation_angles_t &o)
 
 	// Euler angles ZXZ (in degrees)
 	int sign1 = (_Rc(0,1) >= 0 ? 1 : -1);
-	_ori.az =  sign1 * (acos(_Rc(0,0)) * 180.0) / M_PI;
+	_ori.az = sign1 * (acos(_Rc(0,0)) * 180.0) / M_PI;
 	int sign2 = (_Rc(1,2) >= 0 ? 1 : -1);
 	_ori.el = sign2 * (acos(_Rc(2,2)) * 180.0) / M_PI;
 	_ori.ro = 0;  // always zero

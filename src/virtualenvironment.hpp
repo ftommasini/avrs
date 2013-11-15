@@ -243,12 +243,8 @@ private:
 
 inline void VirtualEnvironment::start_simulation()
 {
-
-	if (_tracker.get() != NULL) {
+	if (_tracker.get() != NULL)
 		_tracker->start();
-
-		//_tracker->calibrate();
-	}
 }
 
 inline void VirtualEnvironment::calibrate_tracker()

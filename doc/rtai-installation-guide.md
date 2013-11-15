@@ -2,24 +2,43 @@ RTAI Installation Guide
 =======================
 
 
-by **Fabián C. Tommasini** (adapted from [Monteiro][1] and [Ari][2]).
+by **Fabián C. Tommasini** (adapted from [Monteiro][1], [Ari][2] and [Sousa][6]).
+
+*Last update: Nov 15, 2013*
 
 
 Software
 --------
 
 - GNU/Linux distro: Ubuntu Server 12.04 LTS (64 bits)
-- C Compiler: GCC 4.6.3
 - Linux kernel 3.4.67
-- RTAI 3.9 from Git repository @ GitHub.com (dev branch)
+- RTAI 3.9 from Git repository @ GitHub.com (magma branch)
+- C Compiler: GCC 4.8.1
 
 
 Step 0: Pre-requisites
 ----------------------
 
-It is necessary to have installed all the packages associated with kernel compilation and Git CVS:
+It is necessary to have installed all the packages associated with kernel compilation and Git distributed version control system:
 
-	$ sudo aptitude install build-essential kernel-package ncurses-dev git-core
+	$ sudo apt-get install build-essential kernel-package ncurses-dev python-software-properties git-core
+
+Update the GCC toolchain to version 4.8.1 (adapted from [here][5]):
+
+	$ sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+	$ sudo apt-get update
+	$ sudo apt-get install gcc-4.8 g++-4.8
+
+Installing the v4.8 compilers does not remove the previous v4.6 compiler. We need to let `update-alternatives` know we have two C/C++ compilers, create a record for each one, and then configure which one we want to use. This is done with the following:
+
+	$ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.6 60 --slave /usr/bin/g++ g++ /usr/bin/g++-4.6 
+	$ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 40 --slave /usr/bin/g++ g++ /usr/bin/g++-4.8 
+	$ sudo update-alternatives --config gcc
+
+Then select GCC v4.8.
+Calling the C compiler with `--version` confirms the right version is correctly installed:
+
+	$ gcc --version
 
 
 Step 1: Preparation
@@ -33,19 +52,23 @@ Download RTAI 3.9 from [Git repository](https://github.com/ShabbyX/RTAI):
 
 	$ git clone https://github.com/ShabbyX/RTAI.git
 	$ cd RTAI
-	$ git checkout dev
+
+Switch to magma branch:
+
+	$ git checkout magma
 
 Download Linux kernel 3.4.67 from [kernel.org](http://www.kernel.org):
 
 	$ wget https://www.kernel.org/pub/linux/kernel/v3.x/linux-3.4.67.tar.xz
 
-> *Note*: For quite awhile, all the commands are run as root until you reach near the bottom so feel free to just run:
-
-> `$ sudo -s`
 
 Put this file into `/usr/src/`:
 
-	# cp linux-3.4.67.tar.xz /usr/src/
+	$ sudo cp linux-3.4.67.tar.xz /usr/src/
+
+> *Note*: For quite awhile, all the commands are run as root until you reach near the bottom so feel free to just run:
+
+> `$ sudo -s`
 
 Unpack the file:
 
@@ -58,21 +81,21 @@ Delete the tarballs:
 
 Rename linux source directory to a more descriptive name (optional):
 
-	# mv linux-3.4.67 linux-3.4.67-rtai
+	# mv linux-3.4.67 linux-3.4.67-rtai-3.9
 
 Create symbolic links to the new folder:
 
-	# ln -snf linux-3.4.67-rtai linux
+	# ln -snf linux-3.4.67-rtai-3.9 linux
 
 
-Step 3: Kernel Patching and Configuration
------------------------------------------
+Step 3: Patching and Configuring Kernel
+---------------------------------------
 
 Patch the kernel source with the correspondent RTAI patch:
 
 	# cd /usr/src/linux
 	# make mrproper
-	# patch -p1 < ~/RTAI/base/arch/x86/patches/hal-linux-3.4.67-x86-1.patch
+	# patch -p1 < /home/<your user>/RTAI/base/arch/x86/patches/hal-linux-3.4.67-x86-1.patch
 
 > *Note*: x86_64 and i386 have been merged into x86 arch (that happened around 2.6.24 iirc kernel version). Use x86 if you want 32- or 64-bit kernels.
 
@@ -86,12 +109,9 @@ Now is time to configure the new kernel:
 
 	# make menuconfig
 
-### Kernel configuration
+> *Tip:* To determining your basic hardware, open up a new tab in the terminal or a new terminal window and run the following command as root:
 
-To determining your basic hardware, open up a new tab in the terminal or a new
-terminal window and run the following command as root:
-
-	# lspci -k | grep "driver in use"
+> `# lspci -k | grep "driver in use"`
 
 In the configuration menu you should do:
 
@@ -129,10 +149,6 @@ If you know your machine processor type you can choose the right one:
 
 - Processor type and features > Processor family = (choose yours)
 
-It is possible use multiple cores on multicore machines:
-
-- Processor type and features > Multi core scheduling = no/yes
-
 After all changes exit and say **YES** to save the configuration.
 
 > *Note*: More options can be reading in [Monteiro][1] and [Ari][2].
@@ -146,9 +162,9 @@ Compiling and installing the kernel:
 
 	# make -j$(cat /proc/cpuinfo | grep processor | wc -l)
 	# make modules_install
-	# cp -prvL arch/x86/boot/bzImage /boot/vmlinuz-3.4.67-rtai
-	# cp -prvL System.map /boot/System.map-3.4.67-rtai
-	# cp -prvL .config /boot/config-3.4.67-rtai
+	# cp -prvL arch/x86/boot/bzImage /boot/vmlinuz-3.4.67-rtai-3.9
+	# cp -prvL System.map /boot/System.map-3.4.67-rtai-3.9
+	# cp -prvL .config /boot/config-3.4.67-rtai-3.9
 
 Update your boot loader:
 
@@ -162,10 +178,10 @@ To manually set a specific kernel to boot, you must edit the `/etc/default/grub`
 
 	# nano /etc/default/grub
 
-The line to edit is the `GRUB_DEFAULT=0`.<br />
+The line to edit is the `GRUB_DEFAULT=0`.
 Change this line to (for more details you can see [Ubuntu Community Documentation][3]):
 
-	GRUB_DEFAULT="Previous Linux versions>Ubuntu, with Linux 3.4.67-rtai"
+	GRUB_DEFAULT="Previous Linux versions>Ubuntu, with Linux 3.4.67-rtai-3.9"
 
 Then save the file and update the GRUB 2 configuration file using the following command:
 
@@ -184,8 +200,7 @@ Now, enter to the RTAI folder:
 
 Now lets conﬁgure the RTAI:
 
-	$ ./autogen.sh
-	$ make menuconfig
+	$ sudo make
 
 The following options should be veriﬁed in the ncurses menu that will show up:
 
@@ -194,17 +209,9 @@ The following options should be veriﬁed in the ncurses menu that will show up:
 - Machine (x86_64) > Number of CPUs (SMP-only) = (number of CPUs/cores)
 
 All set, now just exit and reply **YES** to save the conﬁguration.
-Compile RTAI:
-
-	$ make
-
-Now, install RTAI:
+After that, RTAI starts to compiling. At the end, install RTAI:
 
 	$ sudo make install
-
-or (as root):
-
-	# make install
 
 Now reboot your computer and boot our new kernel with RTAI installed.
 
@@ -212,9 +219,14 @@ Now reboot your computer and boot our new kernel with RTAI installed.
 Step 6: Testing RTAI
 --------------------
 
-It’s time to ﬁnally test the installation. For this, do the following:
+It’s time to ﬁnally test the installation. For this, do the following (kernel space test):
 
 	$ cd /usr/realtime/testsuite/kern/latency
+	$ sudo ./run
+
+Run test for user space too:
+
+	$ cd /usr/realtime/testsuite/user/latency
 	$ sudo ./run
 
 
@@ -230,16 +242,25 @@ Then reload the configuration:
 
 	$ . ~/.bashrc
 
+To define LD_LIBRARY_PATH for all applications, instead of using the environment variable LD_LIBRARY_PATH, you can create a file called `rtai.conf` in the subdirectory `/etc/ld.so.conf.d` containing just the line `/usr/realtime/lib`:
+	
+	$ sudo echo /usr/realtime/lib > /etc/ld.so.conf.d/rtai.conf
+
+Then run the `ldconfig` command (this assumes that the file `/etc/ld.so.conf` contains the line `include /etc/ld.so.conf.d/*.conf`):
+
+	$ sudo ldconfig
+
 
 Appendix: Uninstalling Patched Kernel
 -------------------------------------
 
 (Extracted from [Ubuntu Forums][4])
 
-	# rm /boot/vmlinuz-3.4.67-rtai
-	# rm /boot/System.map-3.4.67-rtai
-	# rm /boot/config-3.4.67-rtai
-	# rm -r /lib/modules/3.4.67-rtai/
+	# rm -r /usr/src/linux-3.4.67-rtai-3.9
+	# rm /boot/vmlinuz-3.4.67-rtai-3.9
+	# rm /boot/System.map-3.4.67-rtai-3.9
+	# rm /boot/config-3.4.67-rtai-3.9
+	# rm -r /lib/modules/3.4.67-rtai-3.9/
 	# update-grub
 
 
@@ -250,3 +271,7 @@ Appendix: Uninstalling Patched Kernel
 [3]: https://help.ubuntu.com/community/Grub2/Submenus	"Ubuntu Community Documentation. Grub2/Submenus."
 
 [4]: http://ubuntuforums.org/showthread.php?t=1278547	"Ubuntu Forums. Uninstall custom kernel."
+
+[5]: http://charette.no-ip.com:81/programming/2011-12-24_GCCv47/	"Programming Comments"
+
+[6]: http://www2.isr.uc.pt/~rui/str/howto_install_rtai.html	"Cristóvão Sousa. HOWTO install RTAI - openSuse way."

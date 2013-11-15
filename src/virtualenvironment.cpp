@@ -432,7 +432,10 @@ bool VirtualEnvironment::update_listener_orientation()
 	// check for new data
 	if (_tracker_data.timestamp != tmp_data.timestamp)
 	{
-		if (tmp_data.timestamp != 0) {
+		if (tmp_data.timestamp != 0)
+		{
+			//DPRINT("az %f, el %f", _tracker_data.ori.az, _tracker_data.ori.el);
+
 			_tracker_data = tmp_data;  // save the current tracker data
 			_listener->rotate(tmp_data.ori);  // update listener orientation
 			//_listener->move(tmp_data.pos.to_point3d());  // update listener position
@@ -712,24 +715,28 @@ binauraldata_t VirtualEnvironment::_hrtf_iir_filter(data_t &input, const orienta
 	stk::StkFrames out_l(input.size(), 1);  // one channel
 	stk::StkFrames out_r(input.size(), 1);  // one channel
 
+	//DPRINT("Az: %f, El: %f", ori.az, ori.el);
+
 	_hcdb->get_HRTF_coeff(&_hc, ori.az, ori.el);  // get the best-fit HRTF for both ears
 
 	// TODO PARALELIZE!!
 	_filter_l.setCoefficients(_hc.b_left, _hc.a_left, true);
 	_filter_r.setCoefficients(_hc.b_right, _hc.a_right, true);
 
-	// HRTF filtering
 	for (uint i = 0; i < input.size(); i++)
 	{
-		out_l[i] = _filter_l.tick(input[i]);
-		out_r[i] = _filter_r.tick(input[i]);
+		out_l[i] = input[i];
+		out_r[i] = input[i];
 	}
 
+	// HRTF filtering
 //	for (uint i = 0; i < input.size(); i++)
 //	{
-//		out_l[i] = input[i];
-//		out_r[i] = input[i];
+//		out_l[i] = _filter_l.tick(input[i]);
+//		out_r[i] = _filter_r.tick(input[i]);
 //	}
+
+	//DPRINT("delay %d", _hc.itd);
 
 //	_delay.clear();
 //
