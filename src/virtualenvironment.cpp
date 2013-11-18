@@ -21,7 +21,7 @@
 #include "dxflib/dl_dxf.h"
 #include "dxfreader.hpp"
 
-VirtualEnvironment::VirtualEnvironment(avrs::config_sim_t *cs, TrackerBase::ptr_t tracker)
+VirtualEnvironment::VirtualEnvironment(configuration_t *cs, TrackerBase::ptr_t tracker)
 {
 	assert(cs != NULL);
 
@@ -97,7 +97,7 @@ VirtualEnvironment::~VirtualEnvironment()
 	}
 }
 
-VirtualEnvironment::ptr_t VirtualEnvironment::create(avrs::config_sim_t *cs, TrackerBase::ptr_t tracker)
+VirtualEnvironment::ptr_t VirtualEnvironment::create(configuration_t *cs, TrackerBase::ptr_t tracker)
 {
 	ptr_t p_tmp(new VirtualEnvironment(cs, tracker));
 

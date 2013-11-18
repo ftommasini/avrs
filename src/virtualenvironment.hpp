@@ -87,7 +87,7 @@ public:
 
 	virtual ~VirtualEnvironment();
 	/// Static factory function for VirtualEnvironment objects
-	static ptr_t create(avrs::config_sim_t *cs, TrackerBase::ptr_t tracker);
+	static ptr_t create(configuration_t *cs, TrackerBase::ptr_t tracker);
 
 	// Room methods
 
@@ -134,11 +134,11 @@ public:
 	bool new_BIR() const;
 
 private:
-	VirtualEnvironment(avrs::config_sim_t *cs, TrackerBase::ptr_t tracker);
+	VirtualEnvironment(configuration_t *cs, TrackerBase::ptr_t tracker);
 
 	bool _init();
 
-	config_sim_t *_config_sim;
+	configuration_t *_config_sim;
 //	config_t *_config;
 
 	data_t _input_buffer;

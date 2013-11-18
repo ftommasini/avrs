@@ -1,6 +1,23 @@
+/*
+ * Copyright (C) 2011-2013 Fabián C. Tommasini <fabian@tommasini.com.ar>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see http://www.gnu.org/licenses/.
+ *
+ */
+
 /**
- * \file configuration.hpp
- * \brief
+ * @file configuration.hpp
  */
 
 #ifndef CONFIGURATION_HPP_
@@ -11,58 +28,56 @@
 #include "soundsource.hpp"
 #include "listener.hpp"
 
-using namespace std;
-
 namespace avrs
 {
-
-//typedef struct
-//{
-//    std::string exec_name;                ///< name of executable (without path)
-//    std::string name;                     ///< name of system
-//} config_sys_t;
 
 // Simulation config
 typedef struct
 {
+	// General
+	std::string name;
+	float temperature;
+	float speed_of_sound;
+	float angle_threshold;
+	float bir_length_sec; ///< binaural impulse response (BIR) length in seconds
+	unsigned long bir_length_samples;
+
 	// Room
-	string dxf_file;
+	std::string dxf_file;
 	float volume;
 	unsigned int n_surfaces;
-	string filter_surf_file;
+	std::string filter_surf_file;
+
+	// ISM parameters
 	float max_distance;
 	unsigned int max_order;
+
 	std::vector< std::vector<double> > b_coeff;
 	std::vector< std::vector<double> > a_coeff;
 
 	// Sound Source
-	string ir_file;
-	string directivity_file;
+	std::string ir_file;
+	std::string directivity_file;
 	SoundSource::ptr_t sound_source;
 
 	// Listener
-	string hrtf_file;
-	string hrtf_filter_file;
+	std::string hrtf_file;
+	std::string hrtf_filter_file;
 	Listener::ptr_t listener;
 
 	// Output
 	float master_gain_db; ///< correction factor in dB
 
 	// Input
-	string anechoic_file;
+	std::string anechoic_file;
 
-	// General
-	float temperature;
-	float speed_of_sound;
-	float angle_threshold;
-	float bir_length_sec; ///< binaural impulse response (BIR) length in seconds
-	unsigned long bir_length_samples;
-} config_sim_t;
 
-bool load_sim_file(const string filename, config_sim_t &c);
-void show_sim_config(const config_sim_t &conf);
-bool load_surface_filters(string filename, config_sim_t &c);
+} configuration_t;
+
+void load_config_file(const std::string filename, avrs::configuration_t &c);
+void show_config(const avrs::configuration_t &conf);
+bool load_surface_filters(std::string filename, avrs::configuration_t &c);
 
 } // namespace
 
-#endif  // CONFIGURATION_H_
+#endif  // CONFIGURATION_HPP_

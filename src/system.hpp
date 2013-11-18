@@ -50,7 +50,7 @@ public:
 
 	virtual ~System();
 	/// Static factory function for System objects
-	static ptr_t create(avrs::config_sim_t *config_sim);
+	static ptr_t create(configuration_t *config_sim);
 
 	/**
 	 * Run the system. Sets up RT process and runs through loop
@@ -59,7 +59,7 @@ public:
 	bool run();
 
 private:
-	System(avrs::config_sim_t *config_sim);  ///< Private constructor
+	System(configuration_t *config_sim);  ///< Private constructor
 	System(const System &); ///< Prevent copy-construction
 	System &operator=(const System &);  ///< Prevent assignment
 
@@ -72,8 +72,7 @@ private:
 	// one for now, maybe more in the future
 	VirtualEnvironment::ptr_t _ve;
 
-//	avrs::config_t *_config;
-	avrs::config_sim_t *_config_sim;
+	configuration_t *_config_sim;
 	InputWaveLoop::ptr_t _in;
 	Player::ptr_t _out;
 

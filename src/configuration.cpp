@@ -1,9 +1,28 @@
+/*
+ * Copyright (C) 2011-2013 Fabián C. Tommasini <fabian@tommasini.com.ar>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see http://www.gnu.org/licenses/.
+ *
+ */
+
 /**
  * \file configuration.cpp
- * \brief
  */
 
 #include <cstdio>
+#include <boost/format.hpp>
+#include <boost/filesystem.hpp>
 
 #include "configuration.hpp"
 #include "configfilereader.hpp"
@@ -11,42 +30,71 @@
 #include "tokenizer.hpp"
 #include "mathtools.hpp"
 
-bool avrs::load_sim_file(const string filename, config_sim_t &c)
+void avrs::load_config_file(const string filename, avrs::configuration_t &c)
 {
-	// todo check for errors!
+	using namespace boost::filesystem;
 
-	ConfigFileReader cfr(filename);
+	path p_conf(filename);
+	ConfigFileReader cfr(p_conf.string());
 	int coord;
 	string delimiter = ","; // delimiter for coordinates
 	string tmp;
 	string b_title;
 	string a_title;
 	stringstream id;
-	bool ok;
 
 	// Room
-	cfr.readInto(c.dxf_file, "ROOM_DXF_FILE");
-	cfr.readInto(c.volume, "ROOM_VOLUME");
-	ok = cfr.readInto(c.n_surfaces, "ROOM_N_SURFACES");
+	if (!cfr.readInto(tmp, "ROOM_DXF_FILE"))
+		throw "Error in configuration file: ROOM_DXF_FILE is missing";
 
-	if (!ok)
-		c.n_surfaces = 0;
+	path p_dxf(tmp);
+	path p_dxf_full = p_conf.parent_path() / p_dxf;
+	c.dxf_file = p_dxf_full.string();
 
-	cfr.readInto(c.filter_surf_file, "ROOM_FILTER_SURFACES_FILE");
-	ok = load_surface_filters(c.filter_surf_file, c);
+	if (!cfr.readInto(c.volume, "ROOM_VOLUME"))
+		throw "Error in configuration file: ROOM_VOLUME is missing";
 
-	if (!ok)
-		ERROR("surface filters");
+	if (!cfr.readInto(c.n_surfaces, "ROOM_N_SURFACES"))
+		throw "Error in configuration file: ROOM_N_SURFACES is missing";
 
-	cfr.readInto(c.max_distance, "ISM_MAX_DISTANCE");
-	cfr.readInto(c.max_order, "ISM_MAX_ORDER");
+	if (!cfr.readInto(tmp, "ROOM_FILTER_SURFACES_FILE"))
+		throw "Error in configuration file: ROOM_FILTER_SURFACES_FILE is missing";
+
+	path p_surf(tmp);
+	path p_surf_full = p_conf.parent_path() / p_surf;
+	c.filter_surf_file = p_surf_full.string();
+
+	if (!load_surface_filters(c.filter_surf_file, c))
+		throw "Error loading surface filters";
+
+	// ISM parameters
+	if (!cfr.readInto(c.max_distance, "ISM_MAX_DISTANCE"))
+		throw "Error in configuration file: ISM_MAX_DISTANCE is missing";
+
+	if (!cfr.readInto(c.max_order, "ISM_MAX_ORDER"))
+		throw "Error in configuration file: ISM_MAX_ORDER is missing";
 
 	// Sound Source
-	cfr.readInto(c.ir_file, "SOUND_SOURCE_IR_FILE");
-	cfr.readInto(c.directivity_file, "SOUND_SOURCE_DIRECTIVITY_FILE");
+	if (!cfr.readInto(tmp, "SOUND_SOURCE_IR_FILE"))
+		throw "Error in configuration file: SOUND_SOURCE_IR_FILE is missing";
+
+	path p_ir(tmp);
+	path p_ir_full = p_conf.parent_path() / p_ir;
+	c.ir_file = p_ir_full.string();
+
+	if (!cfr.readInto(tmp, "SOUND_SOURCE_DIRECTIVITY_FILE"))
+		throw "Error in configuration file: SOUND_SOURCE_DIRECTIVITY_FILE is missing";
+
+	path p_dir(tmp);
+	path p_dir_full = p_conf.parent_path() / p_dir;
+	c.directivity_file = p_dir_full.string();
+
 	c.sound_source = SoundSource::create(c.ir_file);
 	assert(c.sound_source.get() != NULL);
-	cfr.readInto(tmp, "SOUND_SOURCE_POSITION");
+
+	if (!cfr.readInto(tmp, "SOUND_SOURCE_POSITION"))
+		throw "Error in configuration file: SOUND_SOURCE_POSITION is missing";
+
 	Tokenizer t1(tmp, delimiter);
 	coord = 0;
 
@@ -61,7 +109,10 @@ bool avrs::load_sim_file(const string filename, config_sim_t &c)
 	// Listener
 	c.listener = Listener::create();
 	assert(c.listener.get() != NULL);
-	cfr.readInto(tmp, "LISTENER_POSITION");
+
+	if (!cfr.readInto(tmp, "LISTENER_POSITION"))
+		throw "Error in configuration file: LISTENER_POSITION is missing";
+
 	point3d_t pos;
 	Tokenizer t2(tmp, delimiter);
 	coord = 0;
@@ -73,7 +124,10 @@ bool avrs::load_sim_file(const string filename, config_sim_t &c)
 	}
 
 	c.listener->set_position_reference(pos);
-	cfr.readInto(tmp, "LISTENER_ORIENTATION");
+
+	if (!cfr.readInto(tmp, "LISTENER_ORIENTATION"))
+		throw "Error in configuration file: LISTENER_ORIENTATION is missing";
+
 	orientation_angles_t ori;
 	Tokenizer t3(tmp, delimiter);
 	t3.next_token();
@@ -81,12 +135,6 @@ bool avrs::load_sim_file(const string filename, config_sim_t &c)
 	t3.next_token();
 	ori.el = (float) atof(t3.get_token().c_str());
 	//c.listener->set_orientation_reference(ori);
-
-//	ori.az = -185;
-//	ori.el = -5;
-//	pos.at(0) = 5;
-//	pos.at(1) = 42;
-//	pos.at(2) = 35;
 
 	// azimuth (-180, +180]
 	if (ori.az > 180)
@@ -102,26 +150,44 @@ bool avrs::load_sim_file(const string filename, config_sim_t &c)
 
 	c.listener->set_initial_point_of_view(ori, pos);
 
-	cfr.readInto(c.hrtf_file, "LISTENER_HRTF_FILE");
-	cfr.readInto(c.hrtf_filter_file, "LISTENER_FILTER_HRTF_FILE");
+	if (!cfr.readInto(c.hrtf_file, "LISTENER_HRTF_FILE"))
+		throw "Error in configuration file: LISTENER_HRTF_FILE is missing";
+
+	if (!cfr.readInto(tmp, "LISTENER_FILTER_HRTF_FILE"))  // IIR filters coefficients
+		throw "Error in configuration file: LISTENER_FILTER_HRTF_FILE is missing";
+
+	path p_hrtf(tmp);
+	path p_hrtf_full = p_conf.parent_path() / p_hrtf;
+	c.hrtf_filter_file = p_hrtf_full.string();
 
 	// Input
-	cfr.readInto(c.anechoic_file, "ANECHOIC_FILE");
+	if (!cfr.readInto(tmp, "ANECHOIC_FILE"))
+		throw "Error in configuration file: ANECHOIC_FILE is missing";
+
+	path p_a(tmp);
+	path p_a_full = p_conf.parent_path() / p_a;
+	c.anechoic_file = p_a_full.string();
 
 	// Output
-	cfr.readInto(c.master_gain_db, "MASTER_GAIN_DB");
+	if (!cfr.readInto(c.master_gain_db, "MASTER_GAIN_DB"))
+		throw "Error in configuration file: MASTER_GAIN_DB is missing";
 
 	// General
-	cfr.readInto(c.temperature, "TEMPERATURE");
-	c.speed_of_sound = mathtools::speed_of_sound(c.temperature);
-	cfr.readInto(c.angle_threshold, "ANGLE_THRESHOLD");
-	cfr.readInto(c.bir_length_sec, "BIR_LENGTH");
-	c.bir_length_samples = (unsigned long) (c.bir_length_sec * SAMPLE_RATE);
+	if (!cfr.readInto(c.temperature, "TEMPERATURE"))
+		throw "Error in configuration file: TEMPERATURE is missing";
 
-	return true;
+	c.speed_of_sound = mathtools::speed_of_sound(c.temperature);
+
+	if (!cfr.readInto(c.angle_threshold, "ANGLE_THRESHOLD"))
+		throw "Error in configuration file: ANGLE_THRESHOLD is missing";
+
+	if (!cfr.readInto(c.bir_length_sec, "BIR_LENGTH"))
+		throw "Error in configuration file: BIR_LENGTH is missing";
+
+	c.bir_length_samples = (unsigned long) (c.bir_length_sec * SAMPLE_RATE);
 }
 
-void avrs::show_sim_config(const config_sim_t &c)
+void avrs::show_config(const avrs::configuration_t &c)
 {
 	printf("AVRS simulation configuration\n");
 	printf("-----------------------------\n");
@@ -181,7 +247,7 @@ void avrs::show_sim_config(const config_sim_t &c)
 	printf("BIR_LENGTH = %.2f\n", c.bir_length_sec);
 }
 
-bool avrs::load_surface_filters(string filename, config_sim_t &c)
+bool avrs::load_surface_filters(string filename, avrs::configuration_t &c)
 {
 	FILE *p_file;
 	size_t n;
@@ -233,3 +299,4 @@ error: // read error management
 	fclose(p_file);
 	return false;
 }
+

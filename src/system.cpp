@@ -29,7 +29,7 @@
 #include "mathtools.hpp"
 #include "system.hpp"
 
-System::System(avrs::config_sim_t *config_sim)
+System::System(configuration_t *config_sim)
 	: _config_sim(config_sim)
 {
 	;  // nothing to do
@@ -41,7 +41,7 @@ System::~System()
 }
 
 // Singleton (static ptr_t)
-System::ptr_t System::create(avrs::config_sim_t *config_sim)
+System::ptr_t System::create(configuration_t *config_sim)
 {
 	static ptr_t p_tmp(new System(config_sim));
 	static bool is_init = false;

@@ -9,3 +9,4 @@ avrs
 aula.conf
 .project
 .cproject
+.nfs*

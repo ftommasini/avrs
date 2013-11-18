@@ -19,7 +19,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>  // gettimeofday
-// AVRS headers
+#include <exception>
+
 #include "common.hpp"
 #include "system.hpp"
 #include "configuration.hpp"
@@ -85,40 +86,39 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	// TODO parse arguments
+	//print_about(); // TODO if quiet option is activated, not shown
 
-	avrs::config_sim_t config_sim;
-	System::ptr_t sys;
-	string end_message;
-	string config_filename;
-	struct timeval start;
-	struct timeval end;
-	float elapsed_sec;
-	bool ok;
+	configuration_t config;
 
-	config_filename = argv[1];
-	ok = avrs::load_sim_file(config_filename, config_sim);
-
-	if (!ok)
+	try
 	{
-		ERROR("Problem loading simulation configuration file");
+		avrs::load_config_file(argv[1], config);
+	}
+	catch (char const* msg)
+	{
+		cerr << msg << endl;
 		exit(EXIT_FAILURE);
 	}
 
-	//print_about(); // TODO if quiet option is activated, not shown
 
 	//avrs::show_sim_config(config_sim);
 
+	System::ptr_t sys;
+	string end_message;
+
+	struct timeval start;
+	struct timeval end;
+	float elapsed_sec;
 
 	// create auto_ptr pointer to the system
-	sys = System::create(&config_sim);
+	sys = System::create(&config);
 	assert(sys.get() != NULL);
 	printf("Running... (end with \'q\' + Enter)\n");
 	// get start time
 	// precision is not necessary, only for informative purposes (gettimeofday have a precision about 40-50 us)
 	gettimeofday(&start, 0);
 	// run the auralization system
-	ok = sys->run();
+	bool ok = sys->run();
 	// get end time
 	gettimeofday(&end, 0);
 	// calculate running time
