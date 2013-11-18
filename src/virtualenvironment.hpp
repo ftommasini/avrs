@@ -323,7 +323,6 @@ inline void VirtualEnvironment::_calc_vs_orientation(virtualsource_t *vs)
 //			+ vs->ref_listener_pos(Y) * vs->ref_listener_pos(Y));
 //	vs->initial_orientation.el =
 //			-((atan2(r, vs->ref_listener_pos(Z)) * mathtools::PIdiv180_inverse) - 90.0f); // in degrees
-
 }
 
 inline bool VirtualEnvironment::_listener_is_moved()

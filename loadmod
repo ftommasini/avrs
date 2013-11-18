@@ -1,0 +1,23 @@
+#!/bin/bash
+
+PREFIX=`rtai-config --prefix`
+INSMOD=/sbin/insmod
+
+if [ "$PREFIX" == "" ]; then 
+	echo "ERROR: please set your PATH variable to <rtai-install>/bin"
+	exit
+fi
+
+if test \! "x`type -t sudo`" = x; then
+	SUDO=sudo
+fi
+
+sync
+
+if [ "`lsmod | grep rtai`" == "" ]; then
+	for MODULE in rtai_hal rtai_sched rtai_sem rtai_mbx rtai_fifos; do
+		$SUDO $INSMOD $PREFIX/modules/$MODULE.ko
+	done
+fi
+
+sync

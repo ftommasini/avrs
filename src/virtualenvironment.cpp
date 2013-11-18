@@ -454,28 +454,28 @@ void VirtualEnvironment::_update_vs_orientations()
 	for (vis_it_t it = _vis.begin(); it != _vis.end(); it++)
 	{
 		virtualsource_t *vs = *it;
-		//vs->ref_listener_orientation = vs->initial_orientation - _listener->get_orientation();
+		vs->ref_listener_orientation = vs->initial_orientation - _listener->get_orientation();
 
 
 		// azimuth (-180, +180]
-		float az =  _listener->get_orientation().az - vs->initial_orientation.az;
-
-		if (az > 180)
-			vs->ref_listener_orientation.az = az - 360;
-		else if (az < -180)
-			vs->ref_listener_orientation.az = az + 360;
-		else
-			vs->ref_listener_orientation.az = az;
-
-		// elevation [-90, +90]
-		float el = _listener->get_orientation().el - vs->initial_orientation.el;
-
-		if (el > 90)
-			vs->ref_listener_orientation.el = 180 - el;
-		else if (el < -90)
-			vs->ref_listener_orientation.el = -180 - el;
-		else
-			vs->ref_listener_orientation.el = el;
+//		float az =  _listener->get_orientation().az - vs->initial_orientation.az;
+//
+//		if (az > 180)
+//			vs->ref_listener_orientation.az = az - 360;
+//		else if (az < -180)
+//			vs->ref_listener_orientation.az = az + 360;
+//		else
+//			vs->ref_listener_orientation.az = az;
+//
+//		// elevation [-90, +90]
+//		float el = _listener->get_orientation().el - vs->initial_orientation.el;
+//
+//		if (el > 90)
+//			vs->ref_listener_orientation.el = 180 - el;
+//		else if (el < -90)
+//			vs->ref_listener_orientation.el = -180 - el;
+//		else
+//			vs->ref_listener_orientation.el = el;
 	}
 
 //	vis_it_t tmp = _vis.begin();
