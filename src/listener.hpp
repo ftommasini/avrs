@@ -41,6 +41,7 @@ public:
     static ptr_t create();
 
     void set_orientation_reference(const avrs::orientation_angles_t &o);
+
     avrs::orientation_angles_t &get_orientation();
     void rotate(const avrs::orientation_angles_t &o);
 

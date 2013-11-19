@@ -18,12 +18,13 @@
 
 #include <cstdio>
 #include <cstdlib>
-#include <ctime>  // gettimeofday
 #include <exception>
 
 #include "common.hpp"
 #include "system.hpp"
 #include "configuration.hpp"
+#include "timer.hpp"
+#include "avrsexception.hpp"
 
 using namespace std;
 
@@ -46,9 +47,9 @@ using namespace std;
  * @author Sebastián P. Ferreyra (contributor)
  * @author G. Agustín Cravero (contributor)
  *
- * @version 0.1.1
+ * @version 0.2.0
  *
- * @date 2009-2012
+ * @date 2009-2013
  *
  * @section License
  *
@@ -63,8 +64,6 @@ using namespace std;
  * General Public License for more details at
  * http://www.gnu.org/copyleft/gpl.html
  */
-
-// Global variables
 
 // Prototypes
 static void usage();
@@ -96,35 +95,28 @@ int main(int argc, char *argv[])
 		//configuration_ptr config_ptr = cm.get_configuration();
 		config = cm.get_configuration();
 	}
-	catch (char const* msg)
+	catch (const AvrsException &e)
 	{
-		cerr << msg << endl;
+		cerr << e.what() << endl;
 		exit(EXIT_FAILURE);
 	}
 
 	cm.show_configuration();
-	//avrs::show_sim_config(config_sim);
 
 	System::ptr_t sys;
+	Timer t;
 	string end_message;
-
-	struct timeval start;
-	struct timeval end;
-	float elapsed_sec;
 
 	// create auto_ptr pointer to the system
 	sys = System::create(config);
 	assert(sys.get() != NULL);
 	printf("Running... (end with \'q\' + Enter)\n");
-	// get start time
-	// precision is not necessary, only for informative purposes (gettimeofday have a precision about 40-50 us)
-	gettimeofday(&start, 0);
+	// get start time (precision is not necessary, only for informative purposes)
+	t.start();
 	// run the auralization system
 	bool ok = sys->run();
 	// get end time
-	gettimeofday(&end, 0);
-	// calculate running time
-	elapsed_sec = (float) (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1E6;
+	t.stop();
 
 	if (ok)
 		end_message = "Ending...";
@@ -133,9 +125,9 @@ int main(int argc, char *argv[])
 
 	// show final messages
 	printf("%s ", end_message.c_str());
-	printf("Running time: %.2f s\n", elapsed_sec);
+	printf("Running time: %.2f s\n", t.get_elapsed_s());
 
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 void print_about()

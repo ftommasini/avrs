@@ -37,7 +37,7 @@ System::System(configuration_t *config_sim)
 
 System::~System()
 {
-	; // nothing to do
+	;  // nothing to do
 }
 
 // Singleton (static ptr_t)
@@ -64,7 +64,7 @@ bool System::_init()
 	_conv_l = Convolver::create(BUFFER_SAMPLES);
 	_conv_r = Convolver::create(BUFFER_SAMPLES);
 
-	uint read_interval_ms = 10; // ms (100 Hz)
+	uint read_interval_ms = 10;  // ms (100 Hz)
 
 //	_tracker = TrackerWiimote::create("Object4", "00:24:F3:2D:C0:BB", read_interval_ms);
 

@@ -17,7 +17,7 @@
  */
 
 /**
- * \file configuration.cpp
+ * @file configuration.cpp
  */
 
 #include <cstdio>
@@ -28,6 +28,7 @@
 #include "common.hpp"
 #include "tokenizer.hpp"
 #include "math.hpp"
+#include "avrsexception.hpp"
 
 namespace avrs
 {
@@ -127,39 +128,39 @@ void ConfigurationManager::load_configuration(const std::string filename)
 
 	// Room
 	if (!cfr.readInto(tmp, "ROOM_DXF_FILE"))
-		throw "Error in configuration file: ROOM_DXF_FILE is missing";
+		throw AvrsException("Error in configuration file: ROOM_DXF_FILE is missing");
 
 	_conf->dxf_file = full_path(tmp);
 
 	if (!cfr.readInto(_conf->volume, "ROOM_VOLUME"))
-		throw "Error in configuration file: ROOM_VOLUME is missing";
+		throw AvrsException("Error in configuration file: ROOM_VOLUME is missing");
 
 	if (!cfr.readInto(_conf->n_surfaces, "ROOM_N_SURFACES"))
-		throw "Error in configuration file: ROOM_N_SURFACES is missing";
+		throw AvrsException("Error in configuration file: ROOM_N_SURFACES is missing");
 
 	if (!cfr.readInto(tmp, "ROOM_FILTER_SURFACES_FILE"))
-		throw "Error in configuration file: ROOM_FILTER_SURFACES_FILE is missing";
+		throw AvrsException("Error in configuration file: ROOM_FILTER_SURFACES_FILE is missing");
 
 	_conf->filter_surf_file = full_path(tmp);
 
 	if (!load_surface_filters(_conf->filter_surf_file))
-		throw "Error loading surface filters";
+		throw AvrsException("Error loading surface filters");
 
 	// ISM parameters
 	if (!cfr.readInto(_conf->max_distance, "ISM_MAX_DISTANCE"))
-		throw "Error in configuration file: ISM_MAX_DISTANCE is missing";
+		throw AvrsException("Error in configuration file: ISM_MAX_DISTANCE is missing");
 
 	if (!cfr.readInto(_conf->max_order, "ISM_MAX_ORDER"))
-		throw "Error in configuration file: ISM_MAX_ORDER is missing";
+		throw AvrsException("Error in configuration file: ISM_MAX_ORDER is missing");
 
 	// Sound Source
 	if (!cfr.readInto(tmp, "SOUND_SOURCE_IR_FILE"))
-		throw "Error in configuration file: SOUND_SOURCE_IR_FILE is missing";
+		throw AvrsException("Error in configuration file: SOUND_SOURCE_IR_FILE is missing");
 
 	_conf->ir_file = full_path(tmp);;
 
 	if (!cfr.readInto(tmp, "SOUND_SOURCE_DIRECTIVITY_FILE"))
-		throw "Error in configuration file: SOUND_SOURCE_DIRECTIVITY_FILE is missing";
+		throw AvrsException("Error in configuration file: SOUND_SOURCE_DIRECTIVITY_FILE is missing");
 
 	_conf->directivity_file = full_path(tmp);
 
@@ -167,7 +168,7 @@ void ConfigurationManager::load_configuration(const std::string filename)
 	assert(_conf->sound_source.get() != NULL);
 
 	if (!cfr.readInto(tmp, "SOUND_SOURCE_POSITION"))
-		throw "Error in configuration file: SOUND_SOURCE_POSITION is missing";
+		throw AvrsException("Error in configuration file: SOUND_SOURCE_POSITION is missing");
 
 	Tokenizer t1(tmp, delimiter);
 	coord = 0;
@@ -185,7 +186,7 @@ void ConfigurationManager::load_configuration(const std::string filename)
 	assert(_conf->listener.get() != NULL);
 
 	if (!cfr.readInto(tmp, "LISTENER_POSITION"))
-		throw "Error in configuration file: LISTENER_POSITION is missing";
+		throw AvrsException("Error in configuration file: LISTENER_POSITION is missing");
 
 	point3d_t pos;
 	Tokenizer t2(tmp, delimiter);
@@ -200,7 +201,7 @@ void ConfigurationManager::load_configuration(const std::string filename)
 	_conf->listener->set_position_reference(pos);
 
 	if (!cfr.readInto(tmp, "LISTENER_ORIENTATION"))
-		throw "Error in configuration file: LISTENER_ORIENTATION is missing";
+		throw AvrsException("Error in configuration file: LISTENER_ORIENTATION is missing");
 
 	orientation_angles_t ori;
 	Tokenizer t3(tmp, delimiter);
@@ -209,9 +210,7 @@ void ConfigurationManager::load_configuration(const std::string filename)
 	t3.next_token();
 	ori.el = (float) atof(t3.get_token().c_str());
 
-
-
-	//c.listener->set_orientation_reference(ori);
+	_conf->listener->set_orientation_reference(ori);
 
 //	// azimuth (-180, +180]
 //	if (ori.az > 180)
@@ -225,41 +224,41 @@ void ConfigurationManager::load_configuration(const std::string filename)
 //	else if (ori.el < -90)
 //		ori.el = -180 - ori.el;
 
-	std::cout << ori.az << ", " << ori.el << std::endl;
+//	std::cout << ori.az << ", " << ori.el << std::endl;
 
 	_conf->listener->set_initial_point_of_view(ori, pos);
 
 	if (!cfr.readInto(tmp, "LISTENER_HRTF_FILE"))
-		throw "Error in configuration file: LISTENER_HRTF_FILE is missing";
+		throw AvrsException("Error in configuration file: LISTENER_HRTF_FILE is missing");
 
 	_conf->hrtf_file = full_path(tmp);
 
 	if (!cfr.readInto(tmp, "LISTENER_FILTER_HRTF_FILE"))  // IIR filters coefficients
-		throw "Error in configuration file: LISTENER_FILTER_HRTF_FILE is missing";
+		throw AvrsException("Error in configuration file: LISTENER_FILTER_HRTF_FILE is missing");
 
 	_conf->hrtf_filter_file = full_path(tmp);
 
 	// Input
 	if (!cfr.readInto(tmp, "ANECHOIC_FILE"))
-		throw "Error in configuration file: ANECHOIC_FILE is missing";
+		throw AvrsException("Error in configuration file: ANECHOIC_FILE is missing");
 
 	_conf->anechoic_file = full_path(tmp);
 
 	// Output
 	if (!cfr.readInto(_conf->master_gain_db, "MASTER_GAIN_DB"))
-		throw "Error in configuration file: MASTER_GAIN_DB is missing";
+		throw AvrsException("Error in configuration file: MASTER_GAIN_DB is missing");
 
 	// General
 	if (!cfr.readInto(_conf->temperature, "TEMPERATURE"))
-		throw "Error in configuration file: TEMPERATURE is missing";
+		throw AvrsException("Error in configuration file: TEMPERATURE is missing");
 
 	_conf->speed_of_sound = avrs::math::speed_of_sound(_conf->temperature);
 
 	if (!cfr.readInto(_conf->angle_threshold, "ANGLE_THRESHOLD"))
-		throw "Error in configuration file: ANGLE_THRESHOLD is missing";
+		throw AvrsException("Error in configuration file: ANGLE_THRESHOLD is missing");
 
 	if (!cfr.readInto(_conf->bir_length_sec, "BIR_LENGTH"))
-		throw "Error in configuration file: BIR_LENGTH is missing";
+		throw AvrsException("Error in configuration file: BIR_LENGTH is missing");
 
 	_conf->bir_length_samples = (unsigned long) (_conf->bir_length_sec * SAMPLE_RATE);
 }
