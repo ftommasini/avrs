@@ -21,7 +21,6 @@
  */
 
 #include <cstdio>
-#include <boost/format.hpp>
 #include <boost/filesystem.hpp>
 
 #include "configuration.hpp"
@@ -30,11 +29,94 @@
 #include "tokenizer.hpp"
 #include "mathtools.hpp"
 
-void avrs::load_config_file(const string filename, avrs::configuration_t &c)
+namespace avrs
 {
-	using namespace boost::filesystem;
 
-	path p_conf(filename);
+ConfigurationManager::ConfigurationManager()
+	//: _conf(boost::make_shared<configuration_t>())
+{
+	_conf = new configuration_t;
+	//load_configuration(filename);
+}
+
+ConfigurationManager::~ConfigurationManager()
+{
+	delete _conf;
+}
+
+configuration_ptr ConfigurationManager::get_configuration()
+{
+	return _conf;
+}
+
+void ConfigurationManager::show_configuration()
+{
+	printf("AVRS simulation configuration\n");
+	printf("-----------------------------\n");
+
+	printf("\nRoom section\n\n");
+	printf("ROOM_DXF_FILE = %s\n", _conf->dxf_file.c_str());
+	printf("ROOM_VOLUME = %.2f\n", _conf->volume);
+	printf("ROOM_N_SURFACES = %d\n", _conf->n_surfaces);
+	printf("ROOM_FILTER_SURFACES_FILE = %s\n", _conf->filter_surf_file.c_str());
+	printf("Coefficients:\n");
+
+	for (unsigned int i = 0; i < _conf->n_surfaces; i++)
+	{
+		std::vector<double> row_b = _conf->b_coeff.at(i);
+		printf("Surface %d\n", i + 1);
+		printf("b: ");
+
+		for (unsigned int j = 0; j < row_b.size(); j++)
+			printf("%.6f ", row_b[j]);
+
+		std::vector<double> row_a = _conf->a_coeff.at(i);
+		printf("\na: ");
+
+		for (unsigned int j = 0; j < row_a.size(); j++)
+			printf("%.6f ", row_a[j]);
+
+		printf("\n");
+	}
+
+	printf("ISM_MAX_ORDER = %d\n", _conf->max_order);
+	printf("ISM_MAX_DISTANCE = %.2f\n", _conf->max_distance);
+
+	printf("\nSound source section\n\n");
+	printf("SOUND_SOURCE_IR_FILE = %s\n", _conf->ir_file.c_str());
+	printf("SOUND_SOURCE_DIRECTIVITY_FILE = %s\n", _conf->directivity_file.c_str());
+	printf("SOUND_SOURCE_POSITION = %.2f, %.2f, %.2f\n",
+			_conf->sound_source->pos[0], _conf->sound_source->pos[1], _conf->sound_source->pos[2]);
+	printf("SOUND_SOURCE_ORIENTATION = \n");
+
+	printf("\nListener section\n\n");
+	printf("LISTENER_POSITION = %.2f, %.2f, %.2f\n",
+			(_conf->listener->get_position())[0],
+			(_conf->listener->get_position())[1],
+			(_conf->listener->get_position())[2]);
+	printf("LISTENER_ORIENTATION = %.2f, %.2f\n",
+			_conf->listener->get_orientation().az,
+			_conf->listener->get_orientation().el);
+	printf("LISTENER_HRTF_FILE = %s\n", _conf->hrtf_file.c_str());
+	printf("LISTENER_FILTER_HRTF_FILE = %s\n", _conf->hrtf_filter_file.c_str());
+
+	printf("\nInput section\n\n");
+	printf("ANECHOIC_FILE = %s\n", _conf->anechoic_file.c_str());
+
+	printf("\nOutput section\n\n");
+	printf("MASTER_GAIN_DB = %.2f\n", _conf->master_gain_db);
+
+	printf("\nGeneral section\n\n");
+	printf("TEMPERATURE = %.2f\n", _conf->temperature);
+	printf("ANGLE_THRESHOLD = %.2f\n", _conf->angle_threshold);
+	printf("BIR_LENGTH = %.2f\n", _conf->bir_length_sec);
+}
+
+void ConfigurationManager::load_configuration(const std::string filename)
+{
+	boost::filesystem::path p_conf(filename);
+	_filename = filename;
+	_path = p_conf.parent_path().string();
 	ConfigFileReader cfr(p_conf.string());
 	int coord;
 	string delimiter = ","; // delimiter for coordinates
@@ -47,50 +129,42 @@ void avrs::load_config_file(const string filename, avrs::configuration_t &c)
 	if (!cfr.readInto(tmp, "ROOM_DXF_FILE"))
 		throw "Error in configuration file: ROOM_DXF_FILE is missing";
 
-	path p_dxf(tmp);
-	path p_dxf_full = p_conf.parent_path() / p_dxf;
-	c.dxf_file = p_dxf_full.string();
+	_conf->dxf_file = full_path(tmp);
 
-	if (!cfr.readInto(c.volume, "ROOM_VOLUME"))
+	if (!cfr.readInto(_conf->volume, "ROOM_VOLUME"))
 		throw "Error in configuration file: ROOM_VOLUME is missing";
 
-	if (!cfr.readInto(c.n_surfaces, "ROOM_N_SURFACES"))
+	if (!cfr.readInto(_conf->n_surfaces, "ROOM_N_SURFACES"))
 		throw "Error in configuration file: ROOM_N_SURFACES is missing";
 
 	if (!cfr.readInto(tmp, "ROOM_FILTER_SURFACES_FILE"))
 		throw "Error in configuration file: ROOM_FILTER_SURFACES_FILE is missing";
 
-	path p_surf(tmp);
-	path p_surf_full = p_conf.parent_path() / p_surf;
-	c.filter_surf_file = p_surf_full.string();
+	_conf->filter_surf_file = full_path(tmp);
 
-	if (!load_surface_filters(c.filter_surf_file, c))
+	if (!load_surface_filters(_conf->filter_surf_file))
 		throw "Error loading surface filters";
 
 	// ISM parameters
-	if (!cfr.readInto(c.max_distance, "ISM_MAX_DISTANCE"))
+	if (!cfr.readInto(_conf->max_distance, "ISM_MAX_DISTANCE"))
 		throw "Error in configuration file: ISM_MAX_DISTANCE is missing";
 
-	if (!cfr.readInto(c.max_order, "ISM_MAX_ORDER"))
+	if (!cfr.readInto(_conf->max_order, "ISM_MAX_ORDER"))
 		throw "Error in configuration file: ISM_MAX_ORDER is missing";
 
 	// Sound Source
 	if (!cfr.readInto(tmp, "SOUND_SOURCE_IR_FILE"))
 		throw "Error in configuration file: SOUND_SOURCE_IR_FILE is missing";
 
-	path p_ir(tmp);
-	path p_ir_full = p_conf.parent_path() / p_ir;
-	c.ir_file = p_ir_full.string();
+	_conf->ir_file = full_path(tmp);;
 
 	if (!cfr.readInto(tmp, "SOUND_SOURCE_DIRECTIVITY_FILE"))
 		throw "Error in configuration file: SOUND_SOURCE_DIRECTIVITY_FILE is missing";
 
-	path p_dir(tmp);
-	path p_dir_full = p_conf.parent_path() / p_dir;
-	c.directivity_file = p_dir_full.string();
+	_conf->directivity_file = full_path(tmp);
 
-	c.sound_source = SoundSource::create(c.ir_file);
-	assert(c.sound_source.get() != NULL);
+	_conf->sound_source = SoundSource::create(_conf->ir_file);
+	assert(_conf->sound_source.get() != NULL);
 
 	if (!cfr.readInto(tmp, "SOUND_SOURCE_POSITION"))
 		throw "Error in configuration file: SOUND_SOURCE_POSITION is missing";
@@ -101,14 +175,14 @@ void avrs::load_config_file(const string filename, avrs::configuration_t &c)
 	while (t1.next_token())
 	{
 		assert(coord <= 3);
-		c.sound_source->pos.at(coord++) = (float) atof(t1.get_token().c_str());
+		_conf->sound_source->pos.at(coord++) = (float) atof(t1.get_token().c_str());
 	}
 
 	// orientation of sound source is discarded
 
 	// Listener
-	c.listener = Listener::create();
-	assert(c.listener.get() != NULL);
+	_conf->listener = Listener::create();
+	assert(_conf->listener.get() != NULL);
 
 	if (!cfr.readInto(tmp, "LISTENER_POSITION"))
 		throw "Error in configuration file: LISTENER_POSITION is missing";
@@ -123,7 +197,7 @@ void avrs::load_config_file(const string filename, avrs::configuration_t &c)
 		pos.at(coord++) = (float) atof(t2.get_token().c_str());
 	}
 
-	c.listener->set_position_reference(pos);
+	_conf->listener->set_position_reference(pos);
 
 	if (!cfr.readInto(tmp, "LISTENER_ORIENTATION"))
 		throw "Error in configuration file: LISTENER_ORIENTATION is missing";
@@ -134,6 +208,9 @@ void avrs::load_config_file(const string filename, avrs::configuration_t &c)
 	ori.az = (float) atof(t3.get_token().c_str());
 	t3.next_token();
 	ori.el = (float) atof(t3.get_token().c_str());
+
+
+
 	//c.listener->set_orientation_reference(ori);
 
 	// azimuth (-180, +180]
@@ -148,106 +225,53 @@ void avrs::load_config_file(const string filename, avrs::configuration_t &c)
 	else if (ori.el < -90)
 		ori.el = -180 - ori.el;
 
-	c.listener->set_initial_point_of_view(ori, pos);
+	std::cout << ori.az << ", " << ori.el << std::endl;
 
-	if (!cfr.readInto(c.hrtf_file, "LISTENER_HRTF_FILE"))
+	_conf->listener->set_initial_point_of_view(ori, pos);
+
+	if (!cfr.readInto(tmp, "LISTENER_HRTF_FILE"))
 		throw "Error in configuration file: LISTENER_HRTF_FILE is missing";
+
+	_conf->hrtf_file = full_path(tmp);
 
 	if (!cfr.readInto(tmp, "LISTENER_FILTER_HRTF_FILE"))  // IIR filters coefficients
 		throw "Error in configuration file: LISTENER_FILTER_HRTF_FILE is missing";
 
-	path p_hrtf(tmp);
-	path p_hrtf_full = p_conf.parent_path() / p_hrtf;
-	c.hrtf_filter_file = p_hrtf_full.string();
+	_conf->hrtf_filter_file = full_path(tmp);
 
 	// Input
 	if (!cfr.readInto(tmp, "ANECHOIC_FILE"))
 		throw "Error in configuration file: ANECHOIC_FILE is missing";
 
-	path p_a(tmp);
-	path p_a_full = p_conf.parent_path() / p_a;
-	c.anechoic_file = p_a_full.string();
+	_conf->anechoic_file = full_path(tmp);
 
 	// Output
-	if (!cfr.readInto(c.master_gain_db, "MASTER_GAIN_DB"))
+	if (!cfr.readInto(_conf->master_gain_db, "MASTER_GAIN_DB"))
 		throw "Error in configuration file: MASTER_GAIN_DB is missing";
 
 	// General
-	if (!cfr.readInto(c.temperature, "TEMPERATURE"))
+	if (!cfr.readInto(_conf->temperature, "TEMPERATURE"))
 		throw "Error in configuration file: TEMPERATURE is missing";
 
-	c.speed_of_sound = mathtools::speed_of_sound(c.temperature);
+	_conf->speed_of_sound = mathtools::speed_of_sound(_conf->temperature);
 
-	if (!cfr.readInto(c.angle_threshold, "ANGLE_THRESHOLD"))
+	if (!cfr.readInto(_conf->angle_threshold, "ANGLE_THRESHOLD"))
 		throw "Error in configuration file: ANGLE_THRESHOLD is missing";
 
-	if (!cfr.readInto(c.bir_length_sec, "BIR_LENGTH"))
+	if (!cfr.readInto(_conf->bir_length_sec, "BIR_LENGTH"))
 		throw "Error in configuration file: BIR_LENGTH is missing";
 
-	c.bir_length_samples = (unsigned long) (c.bir_length_sec * SAMPLE_RATE);
+	_conf->bir_length_samples = (unsigned long) (_conf->bir_length_sec * SAMPLE_RATE);
 }
 
-void avrs::show_config(const avrs::configuration_t &c)
+std::string ConfigurationManager::full_path(const std::string relative_path)
 {
-	printf("AVRS simulation configuration\n");
-	printf("-----------------------------\n");
-
-	printf("\nRoom section\n\n");
-	printf("ROOM_DXF_FILE = %s\n", c.dxf_file.c_str());
-	printf("ROOM_VOLUME = %.2f\n", c.volume);
-	printf("ROOM_N_SURFACES = %d\n", c.n_surfaces);
-	printf("ROOM_FILTER_SURFACES_FILE = %s\n", c.filter_surf_file.c_str());
-	printf("Coefficients:\n");
-
-	for (unsigned int i = 0; i < c.n_surfaces; i++)
-	{
-		std::vector<double> row_b = c.b_coeff.at(i);
-		printf("Surface %d\n", i + 1);
-		printf("b: ");
-
-		for (unsigned int j = 0; j < row_b.size(); j++)
-			printf("%.6f ", row_b[j]);
-
-		std::vector<double> row_a = c.a_coeff.at(i);
-		printf("\na: ");
-
-		for (unsigned int j = 0; j < row_a.size(); j++)
-			printf("%.6f ", row_a[j]);
-
-		printf("\n");
-	}
-
-	printf("ISM_MAX_ORDER = %d\n", c.max_order);
-	printf("ISM_MAX_DISTANCE = %.2f\n", c.max_distance);
-
-	printf("\nSound source section\n\n");
-	printf("SOUND_SOURCE_IR_FILE = %s\n", c.ir_file.c_str());
-	printf("SOUND_SOURCE_DIRECTIVITY_FILE = %s\n", c.directivity_file.c_str());
-	printf("SOUND_SOURCE_POSITION = %.2f, %.2f, %.2f\n",
-			c.sound_source->pos[0], c.sound_source->pos[1], c.sound_source->pos[2]);
-	printf("SOUND_SOURCE_ORIENTATION = \n");
-
-	printf("\nListener section\n\n");
-	printf("LISTENER_POSITION = %.2f, %.2f, %.2f\n",
-			(c.listener->get_position())[0], (c.listener->get_position())[1], (c.listener->get_position())[2]);
-	printf("LISTENER_ORIENTATION = %.2f, %.2f\n",
-			c.listener->get_orientation().az, c.listener->get_orientation().el);
-	printf("LISTENER_HRTF_FILE = %s\n", c.hrtf_file.c_str());
-	printf("LISTENER_FILTER_HRTF_FILE = %s\n", c.hrtf_filter_file.c_str());
-
-	printf("\nInput section\n\n");
-	printf("ANECHOIC_FILE = %s\n", c.anechoic_file.c_str());
-
-	printf("\nOutput section\n\n");
-	printf("MASTER_GAIN_DB = %.2f\n", c.master_gain_db);
-
-	printf("\nGeneral section\n\n");
-	printf("TEMPERATURE = %.2f\n", c.temperature);
-	printf("ANGLE_THRESHOLD = %.2f\n", c.angle_threshold);
-	printf("BIR_LENGTH = %.2f\n", c.bir_length_sec);
+	boost::filesystem::path p_rel(relative_path);
+	boost::filesystem::path p_full = _path / p_rel;
+	return p_full.string();
 }
 
-bool avrs::load_surface_filters(string filename, avrs::configuration_t &c)
+bool ConfigurationManager::load_surface_filters(string filename)
 {
 	FILE *p_file;
 	size_t n;
@@ -281,7 +305,7 @@ bool avrs::load_surface_filters(string filename, avrs::configuration_t &c)
 		if (n != order + 1)
 			goto error;
 
-		c.b_coeff.push_back(row_b);
+		_conf->b_coeff.push_back(row_b);
 		std::vector<double> row_a(order + 1);
 
 		n = fread(&row_a[0], sizeof(double), order + 1, p_file);
@@ -289,7 +313,7 @@ bool avrs::load_surface_filters(string filename, avrs::configuration_t &c)
 		if (n != order + 1)
 			goto error;
 
-		c.a_coeff.push_back(row_a);
+		_conf->a_coeff.push_back(row_a);
 	}
 
 	fclose(p_file);
@@ -300,3 +324,4 @@ error: // read error management
 	return false;
 }
 
+}  // namespace avrs

@@ -87,12 +87,14 @@ int main(int argc, char *argv[])
 	}
 
 	//print_about(); // TODO if quiet option is activated, not shown
-
-	configuration_t config;
+	ConfigurationManager cm;
+	configuration_t *config;
 
 	try
 	{
-		avrs::load_config_file(argv[1], config);
+		cm.load_configuration(argv[1]);
+		//configuration_ptr config_ptr = cm.get_configuration();
+		config = cm.get_configuration();
 	}
 	catch (char const* msg)
 	{
@@ -100,7 +102,7 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-
+	cm.show_configuration();
 	//avrs::show_sim_config(config_sim);
 
 	System::ptr_t sys;
@@ -111,7 +113,7 @@ int main(int argc, char *argv[])
 	float elapsed_sec;
 
 	// create auto_ptr pointer to the system
-	sys = System::create(&config);
+	sys = System::create(config);
 	assert(sys.get() != NULL);
 	printf("Running... (end with \'q\' + Enter)\n");
 	// get start time

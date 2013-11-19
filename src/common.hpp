@@ -231,9 +231,6 @@ typedef struct TrackerData
 
 } trackerdata_t;
 
-}  // namespace
-
-
 // Definitions for all the system
 
 // for linear algebra
@@ -282,5 +279,7 @@ typedef struct TrackerData
 #define HRTF_IIR
 //#define RTCONV_THREADS
 //#define VSFILTER_THREADS
+
+}  // namespace
 
 #endif // COMMON_HPP_

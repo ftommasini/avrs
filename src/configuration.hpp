@@ -24,6 +24,8 @@
 #define CONFIGURATION_HPP_
 
 #include <string>
+//#include <boost/shared_ptr.hpp>
+//#include <boost/make_shared.hpp>
 
 #include "soundsource.hpp"
 #include "listener.hpp"
@@ -31,7 +33,7 @@
 namespace avrs
 {
 
-// Simulation config
+// Simulation configuration
 typedef struct
 {
 	// General
@@ -70,13 +72,30 @@ typedef struct
 
 	// Input
 	std::string anechoic_file;
-
-
 } configuration_t;
 
-void load_config_file(const std::string filename, avrs::configuration_t &c);
-void show_config(const avrs::configuration_t &conf);
-bool load_surface_filters(std::string filename, avrs::configuration_t &c);
+//typedef boost::shared_ptr<configuration_t> configuration_ptr;
+typedef configuration_t* configuration_ptr;
+
+class ConfigurationManager
+{
+public:
+	ConfigurationManager();
+	virtual ~ConfigurationManager();
+
+	void load_configuration(const std::string filename);
+	configuration_ptr get_configuration();
+	void show_configuration();
+
+private:
+	//configuration_ptr _conf;
+	configuration_ptr _conf;
+	std::string _filename;
+	std::string _path;
+
+	std::string full_path(const std::string relative_path);
+	bool load_surface_filters(std::string filename);
+};
 
 } // namespace
 

@@ -111,7 +111,6 @@ inline mat::fixed<4,4> &Listener::get_rotation_matrix()
 	return _Rc;
 }
 
-
 inline mat::fixed<4,4> Listener::_calculate_rotation_matrix(const avrs::orientation_angles_t &o)
 {
     // To radians
