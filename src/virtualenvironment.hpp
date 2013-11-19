@@ -36,7 +36,7 @@
 #include "tree.hpp"
 
 #include "rttools.hpp"
-#include "mathtools.hpp"
+#include "math.hpp"
 #include "tracker.hpp"
 #include "trackerwiimote.hpp"
 #include "convolver.hpp"
@@ -300,13 +300,13 @@ inline void VirtualEnvironment::_calc_vs_orientation(virtualsource_t *vs)
 	// azimuth calculus
 	vs->ref_listener_pos = vs->pos - _listener->get_position();
 	vs->initial_orientation.az =
-			-((atan2(vs->ref_listener_pos(Y), vs->ref_listener_pos(X)) * mathtools::PIdiv180_inverse) - 90.0f); // in degrees
+			-((atan2(vs->ref_listener_pos(Y), vs->ref_listener_pos(X)) * avrs::math::PIdiv180_inverse) - 90.0f); // in degrees
 
 	// elevation calculus
 	float r = sqrt(vs->ref_listener_pos(X) * vs->ref_listener_pos(X)
 			+ vs->ref_listener_pos(Y) * vs->ref_listener_pos(Y));
 	vs->initial_orientation.el =
-			-((atan2(r, vs->ref_listener_pos(Z)) * mathtools::PIdiv180_inverse) - 90.0f); // in degrees
+			-((atan2(r, vs->ref_listener_pos(Z)) * avrs::math::PIdiv180_inverse) - 90.0f); // in degrees
 
 	vs->initial_orientation = vs->initial_orientation - _listener->get_orientation();
 

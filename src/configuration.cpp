@@ -27,7 +27,7 @@
 #include "configfilereader.hpp"
 #include "common.hpp"
 #include "tokenizer.hpp"
-#include "mathtools.hpp"
+#include "math.hpp"
 
 namespace avrs
 {
@@ -213,17 +213,17 @@ void ConfigurationManager::load_configuration(const std::string filename)
 
 	//c.listener->set_orientation_reference(ori);
 
-	// azimuth (-180, +180]
-	if (ori.az > 180)
-		ori.az -= 360;
-	else if (ori.az  < -180)
-		ori.az += 360;
-
-	// elevation [-90, +90]
-	if (ori.el > 90)
-		ori.el = 180 - ori.el;
-	else if (ori.el < -90)
-		ori.el = -180 - ori.el;
+//	// azimuth (-180, +180]
+//	if (ori.az > 180)
+//		ori.az -= 360;
+//	else if (ori.az  < -180)
+//		ori.az += 360;
+//
+//	// elevation [-90, +90]
+//	if (ori.el > 90)
+//		ori.el = 180 - ori.el;
+//	else if (ori.el < -90)
+//		ori.el = -180 - ori.el;
 
 	std::cout << ori.az << ", " << ori.el << std::endl;
 
@@ -253,7 +253,7 @@ void ConfigurationManager::load_configuration(const std::string filename)
 	if (!cfr.readInto(_conf->temperature, "TEMPERATURE"))
 		throw "Error in configuration file: TEMPERATURE is missing";
 
-	_conf->speed_of_sound = mathtools::speed_of_sound(_conf->temperature);
+	_conf->speed_of_sound = avrs::math::speed_of_sound(_conf->temperature);
 
 	if (!cfr.readInto(_conf->angle_threshold, "ANGLE_THRESHOLD"))
 		throw "Error in configuration file: ANGLE_THRESHOLD is missing";

@@ -26,7 +26,7 @@
 #include <rtai_fifos.h>
 #include "common.hpp"
 #include "rttools.hpp"
-#include "mathtools.hpp"
+#include "math.hpp"
 #include "system.hpp"
 
 System::System(configuration_t *config_sim)
@@ -59,7 +59,7 @@ System::ptr_t System::create(configuration_t *config_sim)
 bool System::_init()
 {
 	_in = InputWaveLoop::create(_config_sim->anechoic_file);
-	_out = Player::create(mathtools::dB2linear(_config_sim->master_gain_db));
+	_out = Player::create(avrs::math::dB2linear(_config_sim->master_gain_db));
 
 	_conv_l = Convolver::create(BUFFER_SAMPLES);
 	_conv_r = Convolver::create(BUFFER_SAMPLES);

@@ -50,7 +50,7 @@ bool Listener::_init()
 void Listener::set_initial_point_of_view(const avrs::orientation_angles_t &o, const avrs::point3d_t &p)
 {
     // Initial Rotation matrix
-    _R0 = _calculate_rotation_matrix(o);
+    _R0 = avrs::math::rotation_matrix_from_angles(o);
 
 	 // Initial Translation matrix
 	_T0 << 1 << 0 << 0 << p(0) << endr
