@@ -26,15 +26,11 @@
 #include <sys/time.h>
 #include <cstdio>
 #include <stddef.h>
-
 #include <rtai_mbx.h>
-
-
 #include <Iir.h>
 #include <Delay.h>
 
 #include "tree.hpp"
-
 #include "rttools.hpp"
 #include "math.hpp"
 #include "tracker.hpp"

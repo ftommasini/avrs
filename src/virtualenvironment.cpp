@@ -16,9 +16,10 @@
  *
  */
 
-#include "virtualenvironment.hpp"
+#include <cstring>
+#include <dxflib/dl_dxf.h>
 
-#include "dxflib/dl_dxf.h"
+#include "virtualenvironment.hpp"
 #include "dxfreader.hpp"
 
 VirtualEnvironment::VirtualEnvironment(configuration_t *cs, TrackerBase::ptr_t tracker)
@@ -715,28 +716,20 @@ binauraldata_t VirtualEnvironment::_hrtf_iir_filter(data_t &input, const orienta
 	stk::StkFrames out_l(input.size(), 1);  // one channel
 	stk::StkFrames out_r(input.size(), 1);  // one channel
 
-	//DPRINT("Az: %f, El: %f", ori.az, ori.el);
-
 	_hcdb->get_HRTF_coeff(&_hc, ori.az, ori.el);  // get the best-fit HRTF for both ears
 
 	// TODO PARALELIZE!!
 	_filter_l.setCoefficients(_hc.b_left, _hc.a_left, true);
 	_filter_r.setCoefficients(_hc.b_right, _hc.a_right, true);
 
+	// HRTF filtering
 	for (uint i = 0; i < input.size(); i++)
 	{
-		out_l[i] = input[i];
-		out_r[i] = input[i];
+		out_l[i] = _filter_l.tick(input[i]);
+		out_r[i] = _filter_r.tick(input[i]);
 	}
 
-	// HRTF filtering
-//	for (uint i = 0; i < input.size(); i++)
-//	{
-//		out_l[i] = _filter_l.tick(input[i]);
-//		out_r[i] = _filter_r.tick(input[i]);
-//	}
-
-	//DPRINT("delay %d", _hc.itd);
+//	DPRINT("Az: %f, El: %f, Delay: %d", ori.az, ori.el, _hc.itd);
 
 //	_delay.clear();
 //
@@ -751,6 +744,11 @@ binauraldata_t VirtualEnvironment::_hrtf_iir_filter(data_t &input, const orienta
 //		_delay.setDelay((-1) * _hc.itd);  // change the sign
 //		out_r = _delay.tick(out_r);
 //	}
+
+//	output.left.resize(out_l.size());
+//	output.right.resize(out_r.size());
+//	memcpy(&output.left[0], &out_l[0], out_l.size() * sizeof(sample_t));
+//	memcpy(&output.right[0], &out_r[0], out_r.size() * sizeof(sample_t));
 
 	for (uint i = 0; i < out_l.size(); i++)
 	{

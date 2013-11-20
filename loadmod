@@ -14,10 +14,10 @@ fi
 
 sync
 
-if [ "`lsmod | grep rtai`" == "" ]; then
-	for MODULE in rtai_hal rtai_sched rtai_sem rtai_mbx rtai_fifos; do
+for MODULE in rtai_hal rtai_sched rtai_sem rtai_mbx rtai_fifos; do
+	if [ "`lsmod | grep $MODULE`" == "" ]; then
 		$SUDO $INSMOD $PREFIX/modules/$MODULE.ko
-	done
-fi
+	fi
+done
 
 sync
