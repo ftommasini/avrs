@@ -16,7 +16,6 @@
  *
  */
 
-//#include <cstring>
 #include <dxflib/dl_dxf.h>
 
 #include "virtualenvironment.hpp"
@@ -536,7 +535,8 @@ void VirtualEnvironment::renderize()
 
 		// HRTF filtering
 #ifndef HRTF_IIR
-		output = _hrtf_filter(input, vs->ref_listener_orientation);
+		//output = _hrtf_filter(input, vs->ref_listener_orientation);  // HRTF spectrums
+
 #else
 		output = _hrtf_iir_filter(input, vs->ref_listener_orientation);
 #endif
@@ -554,8 +554,6 @@ void VirtualEnvironment::renderize()
 		}
 
 		_new_bir = true;
-
-		// TODO NORMALIZE!!!
 	}
 }
 
@@ -623,15 +621,7 @@ void *VirtualEnvironment::_vs_filter_wrapper(void *arg)
 //	virtualsource_t *vs = *(td->it);
 
 	return td->ve->_vs_filter_thread(td->it, td->index);
-
-	return 0;  // TODO maybe the index
 }
-
-//void *VirtualEnvironment::_vs_filter_wrapper(void *arg)
-//{
-//	VirtualEnvironment *ve = reinterpret_cast<VirtualEnvironment *> (arg);
-//	return ve->_vs_filter_thread(ve->_current_it, ve->_current_index);
-//}
 
 void *VirtualEnvironment::_vs_filter_thread(tree_it_t it, uint index)
 {
@@ -665,6 +655,15 @@ binauraldata_t VirtualEnvironment::_hrtf_filter(data_t &input, const orientation
 
 	_hrtfdb->get_HRTF(&_hrtf, ori.az, ori.el);  // get the best-fit HRTF for both ears
 
+
+//	DPRINT("************\nSTART\n");
+//	for (uint i = 0; i < input.size(); i++)
+//	{
+//		DPRINT("%f", input[i]);
+//	}
+//
+//	DPRINT("************\nEND\n");
+
 	// convolution with 1 image-source
 	_hrtf_conv_l->setSKernel(_hrtf.left, N_FFT);
 	_hrtf_conv_r->setSKernel(_hrtf.right, N_FFT);
@@ -680,6 +679,35 @@ binauraldata_t VirtualEnvironment::_hrtf_filter(data_t &input, const orientation
 
 //	l = _left;
 //	r = _right;
+	return output;
+}
+
+// filter for single reflection
+binauraldata_t VirtualEnvironment::_hrtf_fir_filter(data_t &input, const orientation_angles_t &ori)
+{
+	binauraldata_t output(BUFFER_SAMPLES);
+	stk::StkFrames out_l(input.size(), 1);  // one channel
+	stk::StkFrames out_r(input.size(), 1);  // one channel
+
+	// get the best-fit HRTF for both ears
+	_hrtfdb->get_HRTF(&_hrtf, ori.az, ori.el);
+
+	_fir_l.setCoefficients(_hc.left, true);
+	_fir_r.setCoefficients(_hc.rigth, true);
+
+	// HRIR filtering
+	for (uint i = 0; i < input.size(); i++)
+	{
+		out_l[i] = _fir_l.tick(input[i]);
+		out_r[i] = _fir_r.tick(input[i]);
+	}
+
+	for (uint i = 0; i < out_l.size(); i++)
+	{
+		output.left[i] = (sample_t) out_l[i];
+		output.right[i] = (sample_t) out_r[i];
+	}
+
 	return output;
 }
 
@@ -706,8 +734,6 @@ binauraldata_t VirtualEnvironment::_hrtf_iir_filter(data_t &input, const orienta
 		out_r[i] = _filter_r.tick(input[i]);
 	}
 
-//	DPRINT("Az: %f, El: %f, Delay: %d", ori.az, ori.el, _hc.itd);
-
 	_delay.clear();
 
 	// ITD
@@ -722,14 +748,7 @@ binauraldata_t VirtualEnvironment::_hrtf_iir_filter(data_t &input, const orienta
 		_delay.tick(out_r);
 	}
 
-//	DPRINT("input %d, buffer % d, out %d", input.size(), BUFFER_SAMPLES, out_l.size());
-
-//	output.left.resize(out_l.size());
-//	output.right.resize(out_r.size());
-//	memcpy(&output.left[0], &out_l[0], out_l.size() * sizeof(sample_t));
-//	memcpy(&output.right[0], &out_r[0], out_r.size() * sizeof(sample_t));
-
-	for (uint i = 0; i < out_l.size() + 50; i++)
+	for (uint i = 0; i < out_l.size(); i++)
 	{
 		output.left[i] = (sample_t) out_l[i];
 		output.right[i] = (sample_t) out_r[i];

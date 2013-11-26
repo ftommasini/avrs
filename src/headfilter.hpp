@@ -110,10 +110,6 @@ inline void HrtfSet::get_HRTF(hrtf_t *h, float az, float el)
 //	DPRINT("\tAz: %+1.4f [%+1.4f]\tEl: %+1.4f [%+1.4f]",
 //			_az_values[az_idx], az, _el_values[el_idx], el);
 
-	// if is in-range (1 degree), use the previous values
-//	if (abs(_previous_az - az) < 1.0f && abs(_previous_el - el) < 1.0f)
-//		return;
-
 	uint az_idx = _get_closest(az, _az_values, _n_az);
 	uint el_idx = _get_closest(el, _el_values, _n_el);
 
@@ -124,9 +120,6 @@ inline void HrtfSet::get_HRTF(hrtf_t *h, float az, float el)
 	h->left = &_hrtf_l[az_idx][el_idx][0];
 	h->right = &_hrtf_r[az_idx][el_idx][0];
 	h->length = _n_sc;
-
-//	_previous_az = az;
-//	_previous_el = el;
 }
 
 

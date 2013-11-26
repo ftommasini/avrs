@@ -28,6 +28,7 @@
 #include <stddef.h>
 #include <rtai_mbx.h>
 #include <Iir.h>
+#include <Fir.h>
 #include <Delay.h>
 
 #include "tree.hpp"
@@ -137,30 +138,25 @@ private:
 	bool _init();
 
 	configuration_t *_config_sim;
-//	config_t *_config;
-
 	data_t _input_buffer;
-
 	binauraldata_t _render_buffer;  // keep the complete BIR
-
 	unsigned long _length_bir;
-
 	data_t _zeros;
 	bool _new_bir;
 
+	// Tracker
 	TrackerBase::ptr_t _tracker;
-
 	MBX *_mbx_tracker;
 	trackerdata_t _tracker_data;
 	trackerdata_t _prev_tracker_data;
 
+	// Surfaces
 	std::vector<Surface *> _surfaces;
 	typedef std::vector<Surface *>::iterator surfaces_it_t;
 	float _area;
 	float _volume;
 	volatile bool _new_data; // flag that indicates new surfaces data
 
-	// TODO: many sound sources
 	SoundSource::ptr_t _sound_source;
 	Listener::ptr_t _listener;
 
@@ -204,6 +200,8 @@ private:
 	hrtf_t _hrtf;
 	HrtfConvolver::ptr_t _hrtf_conv_l;
 	HrtfConvolver::ptr_t _hrtf_conv_r;
+	stk::Fir _fir_l;
+	stk::Fir _fir_r;
 #else
 	HrtfCoeffSet::ptr_t _hcdb;
 	hrtfcoeff_t _hc;
@@ -215,9 +213,9 @@ private:
 	stk::Iir _filter_surfaces;
 
 	// Filter methods
-
 #ifndef HRTF_IIR
 	binauraldata_t _hrtf_filter(data_t &input, const orientation_angles_t &ori);
+	binauraldata_t _hrtf_fir_filter(data_t &input, const orientation_angles_t &ori);
 #else
 	binauraldata_t _hrtf_iir_filter(data_t &input, const orientation_angles_t &ori);
 #endif

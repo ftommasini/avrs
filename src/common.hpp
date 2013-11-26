@@ -297,7 +297,7 @@ typedef struct TrackerData
 #endif
 
 
-//#define HRTF_IIR
+#define HRTF_IIR
 //#define RTCONV_THREADS
 //#define VSFILTER_THREADS
 
