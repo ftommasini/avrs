@@ -21,8 +21,8 @@
  */
 
 /**
- * \file math.hpp
- * \brief
+ * @file math.hpp
+ * @brief
  * Stores mathematical constants and helper functions.
  **/
 
@@ -33,6 +33,8 @@
 #include <cmath>
 #include <armadillo>
 #include <boost/math/constants/constants.hpp>
+
+#include "common.hpp"
 
 namespace avrs
 {

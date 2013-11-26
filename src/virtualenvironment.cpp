@@ -16,7 +16,7 @@
  *
  */
 
-#include <cstring>
+//#include <cstring>
 #include <dxflib/dl_dxf.h>
 
 #include "virtualenvironment.hpp"
@@ -201,8 +201,6 @@ void VirtualEnvironment::_propagate_ISM(virtualsource_t *vs, tree_it_t node, con
 {
 	if (order > _max_order)  // break condition for recursive function (for safety)
 		return;
-
-
 
 	// for each surface
 	for (unsigned int i = 0; i < _surfaces.size(); i++)
@@ -415,9 +413,6 @@ void VirtualEnvironment::_update_vis()
 // todo maybe in a thread
 bool VirtualEnvironment::update_listener_orientation()
 {
-//	if (_tracker.get() == NULL)
-//		return false;
-
 	trackerdata_t tmp_data;
 
 	// receive message from TRACKER mailbox
@@ -435,14 +430,17 @@ bool VirtualEnvironment::update_listener_orientation()
 	{
 		if (tmp_data.timestamp != 0)
 		{
-			//DPRINT("az %f, el %f", _tracker_data.ori.az, _tracker_data.ori.el);
-
 			_tracker_data = tmp_data;  // save the current tracker data
 			_listener->rotate(tmp_data.ori);  // update listener orientation
 			//_listener->move(tmp_data.pos.to_point3d());  // update listener position
 			_update_vs_orientations();  // and update VS orientations
 
-			//DPRINT("az: %3.1f, el: %3.1f", _listener->get_orientation().az, _listener->get_orientation().el);
+			DPRINT("%+1.3f %+1.3f \t %+1.3f %+1.3f",
+					_tracker_data.ori.az,
+					_listener->get_orientation().az,
+					_tracker_data.ori.el,
+					_listener->get_orientation().el);
+//			DPRINT("az: %3.1f, el: %3.1f", _listener->get_orientation().az, _listener->get_orientation().el);
 		}
 	}
 
@@ -716,9 +714,9 @@ binauraldata_t VirtualEnvironment::_hrtf_iir_filter(data_t &input, const orienta
 	stk::StkFrames out_l(input.size(), 1);  // one channel
 	stk::StkFrames out_r(input.size(), 1);  // one channel
 
-	_hcdb->get_HRTF_coeff(&_hc, ori.az, ori.el);  // get the best-fit HRTF for both ears
+	// get the best-fit HRTF for both ears
+	_hcdb->get_HRTF_coeff(&_hc, ori.az, ori.el);
 
-	// TODO PARALELIZE!!
 	_filter_l.setCoefficients(_hc.b_left, _hc.a_left, true);
 	_filter_r.setCoefficients(_hc.b_right, _hc.a_right, true);
 
@@ -731,26 +729,39 @@ binauraldata_t VirtualEnvironment::_hrtf_iir_filter(data_t &input, const orienta
 
 //	DPRINT("Az: %f, El: %f, Delay: %d", ori.az, ori.el, _hc.itd);
 
+
+//	std::cout << "\n************\nRIGHT HEAR\n";
+//
+//	for (uint i = 0; i < out_r.size(); i++)
+//		std::cout << out_r[i] << "\n";
+//
+//	std::cout << "\n************\n\n";
+
 //	_delay.clear();
+//
+//	int sign = 1;
 //
 //	// ITD
 //	if (_hc.itd > 0)  // left is delayed
 //	{
 //		_delay.setDelay(_hc.itd);
-//		out_l = _delay.tick(out_l);
+//		_delay.tick(out_l);
 //	}
 //	else if (_hc.itd < 0)  // right is delayed
 //	{
-//		_delay.setDelay((-1) * _hc.itd);  // change the sign
-//		out_r = _delay.tick(out_r);
+//		sign = -1;
+//		_delay.setDelay(sign * _hc.itd);  // change the sign
+//		_delay.tick(out_r);
 //	}
+
+//	DPRINT("input %d, buffer % d, out %d", input.size(), BUFFER_SAMPLES, out_l.size());
 
 //	output.left.resize(out_l.size());
 //	output.right.resize(out_r.size());
 //	memcpy(&output.left[0], &out_l[0], out_l.size() * sizeof(sample_t));
 //	memcpy(&output.right[0], &out_r[0], out_r.size() * sizeof(sample_t));
 
-	for (uint i = 0; i < out_l.size(); i++)
+	for (uint i = 0; i < out_l.size() + 50; i++)
 	{
 		output.left[i] = (sample_t) out_l[i];
 		output.right[i] = (sample_t) out_r[i];

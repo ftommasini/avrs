@@ -253,10 +253,8 @@ void* TrackerSimulation::_thread(void *arg)
 		}
 
 		_data.timestamp = (unsigned long) rt_get_time_ns();
+
 		// send message (non-blocking)
-
-		//DPRINT("(az, el, ro) = (%3.1f, %3.1f, %3.1f)", _data.ori.az, _data.ori.el, _data.ori.ro);
-
 		val = rt_mbx_send_if(mbx_tracker, &_data, sizeof(trackerdata_t));
 
 		if (-EINVAL == val)
@@ -343,17 +341,11 @@ void TrackerSimulation::simPositionCalculatedEl()
 void TrackerSimulation::simPositionFromFile()
 {
 	static float data[6]; // data to be read
-	static size_t n;
 	bool ok;
 
 	do
 	{
-		n = fread(data, sizeof(float), 6, _file);
-
-		if (n == 6)
-			ok = true;
-		else
-			ok = false;
+		ok = (fread(data, sizeof(float), 6, _file) == 6);
 
 		if (feof(_file))
 		{
@@ -368,4 +360,6 @@ void TrackerSimulation::simPositionFromFile()
 	_data.ori.az = data[3];
 	_data.ori.el = data[4];
 	_data.ori.ro = data[5];
+
+//	DPRINT("Az: %+1.3f\tEl: %+1.3f", _data.ori.az, _data.ori.el);
 }

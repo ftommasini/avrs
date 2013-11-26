@@ -219,25 +219,18 @@ private:
 
 	uint _order;
 	uint _n_coeff;  // must be: order + 1
-
-//	float _previous_az; ///< Previous azimuth value
-//	float _previous_el; ///< Previous elevation value
 };
 
 inline void HrtfCoeffSet::get_HRTF_coeff(hrtfcoeff_t *val, float az, float el)
 {
 	assert(val != NULL);
 
-	// if not changed, use the previous values
-//	if (az == _previous_az && el == _previous_el)
-//		return;
-
 	uint az_index = get_closest(az, _az_values, _n_az);
 	uint el_index = get_closest(el, _el_values, _n_el);
 	int itd = _itd[az_index * _n_el + el_index];
 
-//	DPRINT("\tAz: %+1.4f [%+1.4f]\tEl: %+1.4f [%+1.4f]\t ITD: add to %s %d samples",
-//			_az_values[azIndex], az, _el_values[elIndex], el,
+//	DPRINT("\tAz: %+1.3f [%+1.3f]\tEl: %+1.3f [%+1.3f]\t ITD: %s %d samples",
+//			_az_values[az_index], az, _el_values[el_index], el,
 //			itd >= 0 ? "L" : "R", itd >= 0 ? itd : -itd);
 
 	memcpy(&val->b_left[0], &_b_left[az_index][el_index][0], sizeof(double) * _n_coeff);
@@ -245,10 +238,6 @@ inline void HrtfCoeffSet::get_HRTF_coeff(hrtfcoeff_t *val, float az, float el)
 	memcpy(&val->b_right[0], &_b_right[az_index][el_index][0], sizeof(double) * _n_coeff);
 	memcpy(&val->a_right[0], &_a_right[az_index][el_index][0], sizeof(double) * _n_coeff);
 	val->itd = itd;
-
-//	_previous_az = az;
-//	_previous_el = el;
 }
-
 
 #endif // HEADFILTER_HPP_

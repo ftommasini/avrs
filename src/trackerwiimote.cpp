@@ -304,11 +304,6 @@ void TrackerWiimote::_posit(ir_points_t *ir_points, ir2object_points_t *ir2obj)
 		_current_position.pos.x = (float) _camera.translation[0]; // not referenced
 		_current_position.pos.y = (float) _camera.translation[1]; // not referenced
 		_current_position.pos.z = (float) _camera.translation[2]; // not referenced
-
-//		DPRINT("(az, el, ro) = (%3.1f, %3.1f, %3.1f)",
-//				_current_position.ori.az,
-//				_current_position.ori.el,
-//				_current_position.ori.ro);
 	}
 	
 	first_run = false;

@@ -32,11 +32,8 @@ namespace avrs
 
 // typedefs
 typedef fftwf_complex complex_t;  // for spectral data
-
 typedef float sample_t;  // for time data
-
 typedef std::vector<sample_t> data_t;
-
 typedef arma::frowvec3 point3d_t;
 
 typedef struct BinauralData
@@ -126,55 +123,79 @@ typedef struct OrientationAngles
 	{
 		OrientationAngles res;
 
-		// azimuth (-180, +180]
-		float az2 = az + val.az;
+		res.az = az + val.az;
+		res.el = el + val.el;
+		res.ro = ro + val.ro;
+		correct_angles(res);
 
-		if (az2 > 180)
-			res.az = az2 - 360;
-		else if (az < -180)
-			res.az = az2 + 360;
-		else
-			res.az = az2;
-
-		// elevation [-90, +90]
-		float el2 = el + val.el;
-
-		if (el2 > 90)
-			res.el = 180 - el2;
-		else if (el < -90)
-			res.el = -180 - el2;
-		else
-			res.el = el2;
+//		// azimuth (-180, +180]
+//		float az2 = az + val.az;
+//
+//		if (az2 > 180)
+//			res.az = az2 - 360;
+//		else if (az < -180)
+//			res.az = az2 + 360;
+//		else
+//			res.az = az2;
+//
+//		// elevation [-90, +90]
+//		float el2 = el + val.el;
+//
+//		if (el2 > 90)
+//			res.el = 180 - el2;
+//		else if (el < -90)
+//			res.el = -180 - el2;
+//		else
+//			res.el = el2;
 
 	    return res;
 	}
 
 	OrientationAngles operator-(const OrientationAngles &val) const
 	{
-
 		OrientationAngles res;
 
-		// azimuth (-180, +180]
-		float az2 = az - val.az;
+		res.az = az - val.az;
+		res.el = el - val.el;
+		res.ro = ro - val.ro;
+		correct_angles(res);
 
-		if (az2 > 180)
-			res.az = az2 - 360;
-		else if (az2 < -180)
-			res.az = az2 + 360;
-		else
-			res.az = az2;
-
-		// elevation [-90, +90]
-		float el2 = el - val.el;
-
-		if (el2 > 90)
-			res.el = 180 - el2;
-		else if (el2 < -90)
-			res.el = -180 - el2;
-		else
-			res.el = el2;
+//		// azimuth (-180, +180]
+//		float az2 = az - val.az;
+//
+//		if (az2 > 180)
+//			res.az = az2 - 360;
+//		else if (az2 < -180)
+//			res.az = az2 + 360;
+//		else
+//			res.az = az2;
+//
+//		// elevation [-90, +90]
+//		float el2 = el - val.el;
+//
+//		if (el2 > 90)
+//			res.el = 180 - el2;
+//		else if (el2 < -90)
+//			res.el = -180 - el2;
+//		else
+//			res.el = el2;
 
 	    return res;
+	}
+
+	void correct_angles(OrientationAngles &ori) const
+	{
+		// azimuth (-180, +180]
+		if (ori.az > 180)
+			ori.az = ori.az - 360;
+		else if (ori.az  < -180)
+			ori.az = ori.az + 360;
+
+		// elevation [-90, +90]
+		if (ori.el > 90)
+			ori.el = 180 - ori.el;
+		else if (ori.el < -90)
+			ori.el = -180 - ori.el;
 	}
 } orientation_angles_t;
 
@@ -193,28 +214,28 @@ typedef struct TrackerData
 	{
 		TrackerData res;
 
-//		res.pos = pos - val.pos;
-//		res.ori = ori - val.ori;
+		res.pos = pos + val.pos;
+		res.ori = ori - val.ori;
 
-		// azimuth (-180, +180]
-		float az = ori.az - val.ori.az;
-
-		if (az > 180)
-			res.ori.az = az - 360;
-		else if (az < -180)
-			res.ori.az = az + 360;
-		else
-			res.ori.az = az;
-
-		// elevation [-90, +90]
-		float el = ori.el - val.ori.el;
-
-		if (el > 90)
-			res.ori.el = 180 - el;
-		else if (el < -90)
-			res.ori.el = -180 - el;
-		else
-			res.ori.el = el;
+//		// azimuth (-180, +180]
+//		float az = ori.az - val.ori.az;
+//
+//		if (az > 180)
+//			res.ori.az = az - 360;
+//		else if (az < -180)
+//			res.ori.az = az + 360;
+//		else
+//			res.ori.az = az;
+//
+//		// elevation [-90, +90]
+//		float el = ori.el - val.ori.el;
+//
+//		if (el > 90)
+//			res.ori.el = 180 - el;
+//		else if (el < -90)
+//			res.ori.el = -180 - el;
+//		else
+//			res.ori.el = el;
 
 		return res;
 	}

@@ -212,21 +212,7 @@ void ConfigurationManager::load_configuration(const std::string filename)
 
 	_conf->listener->set_orientation_reference(ori);
 
-//	// azimuth (-180, +180]
-//	if (ori.az > 180)
-//		ori.az -= 360;
-//	else if (ori.az  < -180)
-//		ori.az += 360;
-//
-//	// elevation [-90, +90]
-//	if (ori.el > 90)
-//		ori.el = 180 - ori.el;
-//	else if (ori.el < -90)
-//		ori.el = -180 - ori.el;
-
-//	std::cout << ori.az << ", " << ori.el << std::endl;
-
-	_conf->listener->set_initial_point_of_view(ori, pos);
+//	_conf->listener->set_initial_point_of_view(ori, pos);
 
 	if (!cfr.readInto(tmp, "LISTENER_HRTF_FILE"))
 		throw AvrsException("Error in configuration file: LISTENER_HRTF_FILE is missing");
