@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
 void print_about()
 {
 	const string about = "AVRS (Acoustic Virtual Reality System)\n" //	" "PACKAGE_STRING" aka "NICKNAME"\n\n"
-				"Version 0.1.1 (2009-2012)\n"
+				"Version 0.2 (2009-2012)\n"
 				"\n"
 				"Main developer: Fabián C. Tommasini\n"
 				"Scientific supervision: Oscar A. Ramos\n"
