@@ -22,7 +22,8 @@ OBJF =	surface.o \
         wiimote.o \
         trackerwiimote.o \
         posit.o \
-        timer.o
+        timer.o \
+        hrtfconvolver.o
 
 OUT_OBJF = $(addprefix $(OBJ_DIR)/,$(OBJF))        
         

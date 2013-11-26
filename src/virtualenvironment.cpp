@@ -63,7 +63,7 @@ VirtualEnvironment::VirtualEnvironment(configuration_t *cs, TrackerBase::ptr_t t
 
 	// create and load HRTF DB into program
 #ifndef HRTF_IIR
-	_hrtfdb = HrtfSet::create(_config_sim->hrtf_db_file);
+	_hrtfdb = HrtfSet::create(_config_sim->hrtf_file);
 	// for left ear
 	_hrtf_conv_l = HrtfConvolver::create(N_FFT);
 	_hrtf_conv_l->setKernelLength(KERNEL_LENGTH);
@@ -435,11 +435,11 @@ bool VirtualEnvironment::update_listener_orientation()
 			//_listener->move(tmp_data.pos.to_point3d());  // update listener position
 			_update_vs_orientations();  // and update VS orientations
 
-			DPRINT("%+1.3f %+1.3f \t %+1.3f %+1.3f",
-					_tracker_data.ori.az,
-					_listener->get_orientation().az,
-					_tracker_data.ori.el,
-					_listener->get_orientation().el);
+//			DPRINT("%+1.3f %+1.3f \t %+1.3f %+1.3f",
+//					_tracker_data.ori.az,
+//					_listener->get_orientation().az,
+//					_tracker_data.ori.el,
+//					_listener->get_orientation().el);
 //			DPRINT("az: %3.1f, el: %3.1f", _listener->get_orientation().az, _listener->get_orientation().el);
 		}
 	}
@@ -454,27 +454,6 @@ void VirtualEnvironment::_update_vs_orientations()
 	{
 		virtualsource_t *vs = *it;
 		vs->ref_listener_orientation = vs->initial_orientation - _listener->get_orientation();
-
-
-		// azimuth (-180, +180]
-//		float az =  _listener->get_orientation().az - vs->initial_orientation.az;
-//
-//		if (az > 180)
-//			vs->ref_listener_orientation.az = az - 360;
-//		else if (az < -180)
-//			vs->ref_listener_orientation.az = az + 360;
-//		else
-//			vs->ref_listener_orientation.az = az;
-//
-//		// elevation [-90, +90]
-//		float el = _listener->get_orientation().el - vs->initial_orientation.el;
-//
-//		if (el > 90)
-//			vs->ref_listener_orientation.el = 180 - el;
-//		else if (el < -90)
-//			vs->ref_listener_orientation.el = -180 - el;
-//		else
-//			vs->ref_listener_orientation.el = el;
 	}
 
 //	vis_it_t tmp = _vis.begin();
@@ -680,7 +659,7 @@ void *VirtualEnvironment::_vs_filter_thread(tree_it_t it, uint index)
 }
 
 // filter for single reflection
-binauraldata_t VirtualEnvironment::_hrtf_filter(data_t &input, const orientation_t &ori)
+binauraldata_t VirtualEnvironment::_hrtf_filter(data_t &input, const orientation_angles_t &ori)
 {
 	binauraldata_t output(BUFFER_SAMPLES);
 
@@ -729,30 +708,19 @@ binauraldata_t VirtualEnvironment::_hrtf_iir_filter(data_t &input, const orienta
 
 //	DPRINT("Az: %f, El: %f, Delay: %d", ori.az, ori.el, _hc.itd);
 
+	_delay.clear();
 
-//	std::cout << "\n************\nRIGHT HEAR\n";
-//
-//	for (uint i = 0; i < out_r.size(); i++)
-//		std::cout << out_r[i] << "\n";
-//
-//	std::cout << "\n************\n\n";
-
-//	_delay.clear();
-//
-//	int sign = 1;
-//
-//	// ITD
-//	if (_hc.itd > 0)  // left is delayed
-//	{
-//		_delay.setDelay(_hc.itd);
-//		_delay.tick(out_l);
-//	}
-//	else if (_hc.itd < 0)  // right is delayed
-//	{
-//		sign = -1;
-//		_delay.setDelay(sign * _hc.itd);  // change the sign
-//		_delay.tick(out_r);
-//	}
+	// ITD
+	if (_hc.itd > 0)  // left is delayed
+	{
+		_delay.setDelay(_hc.itd);
+		_delay.tick(out_l);
+	}
+	else if (_hc.itd < 0)  // right is delayed
+	{
+		_delay.setDelay((-1) * _hc.itd);  // change the sign
+		_delay.tick(out_r);
+	}
 
 //	DPRINT("input %d, buffer % d, out %d", input.size(), BUFFER_SAMPLES, out_l.size());
 

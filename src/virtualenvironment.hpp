@@ -44,6 +44,8 @@
 #include "common.hpp"
 #include "configuration.hpp"
 
+#include "hrtfconvolver.hpp"
+
 typedef struct VirtualSource
 {
 	unsigned int id;
@@ -210,12 +212,12 @@ private:
 	stk::Delay _delay;
 #endif
 
-	stk::Iir _filter_surfaces;;
+	stk::Iir _filter_surfaces;
 
 	// Filter methods
 
 #ifndef HRTF_IIR
-	binauraldata_t _hrtf_filter(data_t &input, const orientation_t &ori);
+	binauraldata_t _hrtf_filter(data_t &input, const orientation_angles_t &ori);
 #else
 	binauraldata_t _hrtf_iir_filter(data_t &input, const orientation_angles_t &ori);
 #endif
