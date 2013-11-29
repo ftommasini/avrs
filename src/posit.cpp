@@ -24,7 +24,7 @@
 double **read_object(const char *name, int *nbPts)
 {
 	FILE *fp;
-	int i, j;
+	int i, j, res;
 	float coord;
 	double **objectPts;
 
@@ -33,7 +33,7 @@ double **read_object(const char *name, int *nbPts)
 	{
 		if (debug_posit)
 			printf("Object data read from file:\n");
-		fscanf(fp, "%d", nbPts);
+		res = fscanf(fp, "%d", nbPts);
 		if (debug_posit)
 			printf("%6d\n", *nbPts);
 
@@ -44,7 +44,7 @@ double **read_object(const char *name, int *nbPts)
 		{
 			for (j = 0; j < nbObjectCoords; j++)
 			{
-				fscanf(fp, "%f", &coord);
+				res = fscanf(fp, "%f", &coord);
 				objectPts[i][j] = coord;
 				if (debug_posit)
 					printf("%.2f ", coord);
