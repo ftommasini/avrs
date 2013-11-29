@@ -225,8 +225,7 @@ void HrtfSet::_deallocate_memory()
 HrtfCoeffSet::HrtfCoeffSet(std::string filename)
 	: _filename(filename)
 {
-//	_previous_az = -500.0f;  // azimuth that doesn't exist
-//	_previous_el = -500.0f;  // elevation that doesn't exist
+	;
 }
 
 HrtfCoeffSet::~HrtfCoeffSet()
@@ -365,14 +364,12 @@ void HrtfCoeffSet::_allocate_memory()
 	_a_left = (double ***) malloc(sizeof(double) * _n_az);
 	_b_right = (double ***) malloc(sizeof(double) * _n_az);
 	_a_right = (double ***) malloc(sizeof(double) * _n_az);
-//	itd_ = (int **) malloc(sizeof(int) * _n_az);
 
 	for (i = 0; i < _n_az; i++) {
 		_b_left[i] = (double **) malloc(sizeof(double) * _n_el);
 		_a_left[i] = (double **) malloc(sizeof(double) * _n_el);
 		_b_right[i] = (double **) malloc(sizeof(double) * _n_el);
 		_a_right[i] = (double **) malloc(sizeof(double) * _n_el);
-//		itd_[i] = (int *) malloc(sizeof(int) * _n_el);
 
 		for (j = 0; j < _n_el; j++) {
 			_b_left[i][j] = (double *) malloc(sizeof(double) * _n_coeff);
@@ -383,9 +380,6 @@ void HrtfCoeffSet::_allocate_memory()
 	}
 
 	_itd = (int *) malloc(sizeof(int) * _n_az * _n_el);
-
-//	for (i = 0; i < _n_az; i++)
-//		itd_[i] = (int *) malloc(sizeof(int) * _n_el);
 
 	// Clear arrays
 	for (i = 0; i < _n_az; i++) {
@@ -398,10 +392,11 @@ void HrtfCoeffSet::_allocate_memory()
 				_b_right[i][j][k] = 0.0;
 				_a_right[i][j][k] = 0.0;
 			}
-
-//			itd_[i] = 0;
 		}
 	}
+
+	for (i = 0; i < _n_az * _n_el; i++)
+		_itd[i] = 0;
 
 	_az_values = (float *) malloc(sizeof(float) * _n_az);
 	_el_values = (float *) malloc(sizeof(float) * _n_el);
@@ -422,16 +417,12 @@ void HrtfCoeffSet::_deallocate_memory()
 		free(_a_left[i]);
 		free(_b_right[i]);
 		free(_a_right[i]);
-//		free(itd_[i]);
 	}
 
 	free(_b_left);
 	free(_a_left);
 	free(_b_right);
 	free(_a_right);
-
-//	for (uint i = 0; i < _n_az; i++)
-//		free(itd_[i]);
 
 	free(_itd);
 
