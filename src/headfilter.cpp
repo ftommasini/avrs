@@ -243,6 +243,23 @@ HrtfCoeffSet::ptr_t HrtfCoeffSet::create(std::string filename)
 	return p_tmp;
 }
 
+void HrtfCoeffSet::get_HRTF_coeff(hrtfcoeff_t *val, float az, float el)
+{
+	assert(val != NULL);
+
+	uint az_index = get_closest(az, _az_values, _n_az);
+	uint el_index = get_closest(el, _el_values, _n_el);
+	val->itd = _itd[az_index * _n_el + el_index];
+	memcpy(&val->b_left[0], &_b_left[az_index][el_index][0], sizeof(double) * _n_coeff);
+	memcpy(&val->a_left[0], &_a_left[az_index][el_index][0], sizeof(double) * _n_coeff);
+	memcpy(&val->b_right[0], &_b_right[az_index][el_index][0], sizeof(double) * _n_coeff);
+	memcpy(&val->a_right[0], &_a_right[az_index][el_index][0], sizeof(double) * _n_coeff);
+
+	DPRINT("\tAz: %+1.3f [%+1.3f]\t El: %+1.3f [%+1.3f]\t ITD: %s %d samples",
+			az, _az_values[az_index], el, _el_values[el_index],
+			val->itd >= 0 ? "L" : "R", val->itd >= 0 ? val->itd : -(val->itd));
+}
+
 bool HrtfCoeffSet::_init()
 {
 	uint i, j, k;
