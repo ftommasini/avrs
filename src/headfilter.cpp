@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2012 Fabián C. Tommasini <fabian@tommasini.com.ar>
+ * Copyright (C) 2009-2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,8 @@
  *
  */
 
-#include <string.h>
+#include <cstring>
+#include <fstream>
 
 #include "headfilter.hpp"
 
@@ -255,121 +256,123 @@ void HrtfCoeffSet::get_HRTF_coeff(hrtfcoeff_t *val, float az, float el)
 	memcpy(&val->b_right[0], &_b_right[az_index][el_index][0], sizeof(double) * _n_coeff);
 	memcpy(&val->a_right[0], &_a_right[az_index][el_index][0], sizeof(double) * _n_coeff);
 
-	DPRINT("\tAz: %+1.3f [%+1.3f]\t El: %+1.3f [%+1.3f]\t ITD: %s %d samples",
-			az, _az_values[az_index], el, _el_values[el_index],
-			val->itd >= 0 ? "L" : "R", val->itd >= 0 ? val->itd : -(val->itd));
+//	DPRINT("\tAz: %+1.3f [%+1.3f]\t El: %+1.3f [%+1.3f]\t ITD: %s %d samples",
+//			az, _az_values[az_index], el, _el_values[el_index],
+//			val->itd >= 0 ? "L" : "R", val->itd >= 0 ? val->itd : -(val->itd));
 }
 
 bool HrtfCoeffSet::_init()
 {
-	uint i, j, k;
-	FILE *p_file;
-	size_t n;
+	return _load();
+}
 
-	p_file = fopen(_filename.c_str(), "rb");
+bool HrtfCoeffSet::_load()
+{
+	bool ok = true;
+	std::ifstream file;
+	file.exceptions(std::ifstream::failbit | std::ifstream::badbit );
 
-	if (p_file == 0)
-	{
-		ERROR("Error opening the HRTF coefficients database");
-		return false;
-	}
+	try {
+		file.open(_filename.c_str(), std::ios::in | std::ios::binary);
 
-	char format[4 + 1];  // AVRS + null-character
+		// AVRS format
+		char format[4 + 1];
+		file.read(format, 4);
+		format[4] = '\0';
+		std::string sformat(format);
 
-	n = fread(format, sizeof(char), 4, p_file);
+		if (sformat.compare("AVRS") != 0)
+			throw std::string("Wrong file format");
 
-	if (n != 4)
-		goto error;
+		// Version of AVRS format
+		unsigned short version;
+		file.read(reinterpret_cast<char *>(&version), sizeof(unsigned short));
 
-	format[4] = '\0';  // null-character added
+		if (version != 3)
+			throw std::string("Wrong format version");
 
-	if (strcmp(format, "AVRS") != 0)
-	{
-		ERROR("Wrong file format");
-		goto error;
-	}
+		// Type of data
+		unsigned short data_type;
+		file.read(reinterpret_cast<char *>(&data_type), sizeof(unsigned short));
+		// nothing to do...
 
-	DPRINT("Loading HRTF coefficients database");
+		file.read(reinterpret_cast<char *>(&_n_az), sizeof(unsigned int));
+		file.read(reinterpret_cast<char *>(&_n_el), sizeof(unsigned int));
+		file.read(reinterpret_cast<char *>(&_n_filters), sizeof(unsigned int));
+		file.read(reinterpret_cast<char *>(&_order), sizeof(unsigned int));
+		_n_coeff = _order + 1;
 
-	n = fread(&_n_az, sizeof(uint), 1, p_file);
+		// Allocate memory for this data
+		_allocate_memory();
 
-	if (n != 1)
-		goto error;
+		int az_index = 0;  // index of azimuth row
+		int el_index = 0;  // index of elevation column
 
-	n = fread(&_n_el, sizeof(uint), 1, p_file);
+		int az_next_index = 0;
+		int el_next_index = 0;
 
-	if (n != 1)
-		goto error;
+		map_t::iterator it;
 
-	n = fread(&_order, sizeof(uint), 1, p_file);
-
-	if (n != 1)
-		goto error;
-
-	_n_coeff = _order + 1;
-
-	DPRINT("Nº Az: %d, Nº El: %d, Order: %d", _n_az, _n_el, _order);
-
-	// Allocate memory for this
-	_allocate_memory();
-
-	n = fread(_az_values, sizeof(float), _n_az, p_file);
-
-	if (n != _n_az)
-		goto error;
-
-	n = fread(_el_values, sizeof(float), _n_el, p_file);
-
-	if (n != _n_el)
-		goto error;
-
-	k = 0;
-
-	for (i = 0; i < _n_az; i++)
-	{
-		_az_map[_az_values[i]] = i;
-
-		for (j = 0; j < _n_el; j++)
+		for (unsigned int i = 0; i < _n_filters; i++)
 		{
-			if (i == 0)
-				_el_map[_el_values[j]] = j;
+			// Azimuth value
+			float az;
+			file.read(reinterpret_cast<char *>(&az), sizeof(float));
 
-			n = fread(&_itd[k++], sizeof(int), 1, p_file);
+			it = _az_map.find(az);
 
-			if (n != 1)
-				goto error;
+			if (it == _az_map.end())  // not found
+			{
+				_az_map[az] = az_next_index;
+				az_index = az_next_index;
+				az_next_index++;
+			}
+			else  // found
+				az_index = it->second;
 
-			n = fread(&_b_left[i][j][0], sizeof(double), _n_coeff, p_file);
+			// Elevation value
+			float el;
+			file.read(reinterpret_cast<char *>(&el), sizeof(float));
 
-			if (n != _n_coeff)
-				goto error;
+			it = _el_map.find(el);
 
-			n = fread(&_a_left[i][j][0], sizeof(double), _n_coeff, p_file);
+			if (it == _el_map.end())  // not found
+			{
+				_el_map[el] = el_next_index;
+				el_index = el_next_index;
+				el_next_index++;
+			}
+			else  // found
+				el_index = it->second;
 
-			if (n != _n_coeff)
-				goto error;
+			// ITD value
+			int itd;
+			file.read(reinterpret_cast<char *>(&itd), sizeof(int));
 
-			n = fread(&_b_right[i][j][0], sizeof(double), _n_coeff, p_file);
+			// Left ear
+			file.read(reinterpret_cast<char *>(&_b_left[az_index][el_index][0]), sizeof(double) * _n_coeff);
+			file.read(reinterpret_cast<char *>(&_a_left[az_index][el_index][0]), sizeof(double) * _n_coeff);
 
-			if (n != _n_coeff)
-				goto error;
-
-			n = fread(&_a_right[i][j][0], sizeof(double), _n_coeff, p_file);
-
-			if (n != _n_coeff)
-				goto error;
+			// Right ear
+			file.read(reinterpret_cast<char *>(&_b_right[az_index][el_index][0]), sizeof(double) * _n_coeff);
+			file.read(reinterpret_cast<char *>(&_a_right[az_index][el_index][0]), sizeof(double) * _n_coeff);
 		}
+
+		file.close();
+		ok = true;
+	}
+	catch (std::ifstream::failure ex)
+	{
+		std::cout << ex.what() << std::endl;
+		ok = false;
+	}
+	catch (std::string ex)
+	{
+		std::cout << ex << std:: endl;
+		ok = false;
 	}
 
-	fclose(p_file);
-
-	return true;
-
-error:   // read error management
-	DPRINT("Error loading HRTF coefficients database");
-	fclose(p_file);
-	_deallocate_memory();
-	return false;
+	return ok;
 }
 
 void HrtfCoeffSet::_allocate_memory()

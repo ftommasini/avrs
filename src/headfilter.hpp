@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2013 Fabián C. Tommasini <fabian@tommasini.com.ar>
+ * Copyright (C) 2009-2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -148,10 +148,10 @@ typedef struct HrtfCoeff
  * HRTF coefficients set for listener model
  * For use with IIR filters (Steiglitz-McBride method)
  */
-class HrtfCoeffSet  // TODO inherit class for both class
+class HrtfCoeffSet
 {
 public:
-	typedef std::auto_ptr<HrtfCoeffSet> ptr_t;
+	typedef std::unique_ptr<HrtfCoeffSet> ptr_t;
 	~HrtfCoeffSet();
 
 	/// Static factory function for HrtfSet objects
@@ -160,10 +160,11 @@ public:
 	void get_HRTF_coeff(hrtfcoeff_t *val, float az, float el);
 
 private:
-	typedef std::map<float, uint> map_t;
+	typedef std::map<float, unsigned int> map_t;
 
 	HrtfCoeffSet(std::string filename);
 	bool _init();
+	bool _load();
 	void _allocate_memory();
 	void _deallocate_memory();
 
@@ -211,6 +212,7 @@ private:
 	uint _n_el;   ///< number of elevation values
 
 	uint _order;
+	uint _n_filters;
 	uint _n_coeff;  // must be: order + 1
 };
 
