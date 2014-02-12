@@ -151,7 +151,7 @@ typedef struct HrtfCoeff
 class HrtfCoeffSet
 {
 public:
-	typedef std::unique_ptr<HrtfCoeffSet> ptr_t;
+	typedef std::auto_ptr<HrtfCoeffSet> ptr_t;
 	~HrtfCoeffSet();
 
 	/// Static factory function for HrtfSet objects
@@ -160,7 +160,8 @@ public:
 	void get_HRTF_coeff(hrtfcoeff_t *val, float az, float el);
 
 private:
-	typedef std::map<float, unsigned int> map_t;
+	typedef std::map<float, unsigned int> map_orientation_t;
+	typedef std::map<unsigned int, int> map_itd_t;
 
 	HrtfCoeffSet(std::string filename);
 	bool _init();
@@ -193,8 +194,8 @@ private:
 
 	std::string _filename;
 
-	map_t _az_map;  ///< map of azimuths (azimuth, index)
-	map_t _el_map;  ///< map of elevations (elevation, index)
+	map_orientation_t _az_map;  ///< map of azimuths (azimuth, index)
+	map_orientation_t _el_map;  ///< map of elevations (elevation, index)
 
 	// left ear
 	double ***_b_left; // cube
@@ -203,12 +204,12 @@ private:
 	double ***_b_right; // cube
 	double ***_a_right; // cube
 
-	int *_itd;
+	map_itd_t _itd_map;
 
-	float *_az_values;  ///< array with the azimuth values
+	std::vector<float> _az_values;  ///< array with the azimuth values
 	uint _n_az;  ///< number of azimuth values
 
-	float *_el_values;  ///< array with the elevation values
+	std::vector<float> _el_values;  ///< array with the elevation values
 	uint _n_el;   ///< number of elevation values
 
 	uint _order;

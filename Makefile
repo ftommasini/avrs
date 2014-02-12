@@ -35,7 +35,7 @@ INCLUDES = -I/usr/local/include/stk \
            -I/usr/realtime/include \
            -I/usr/src/linux/include 
            
-CXXFLAGS = -O2  -pipe # -Wall #-std=c++11
+CXXFLAGS = -O2  -pipe #-std=c++11 #-Wall
 CFLAGS = -O2 -Wall -pipe
 
 LDFLAGS = -L/usr/realtime/lib

@@ -248,17 +248,22 @@ void HrtfCoeffSet::get_HRTF_coeff(hrtfcoeff_t *val, float az, float el)
 {
 	assert(val != NULL);
 
-	uint az_index = get_closest(az, _az_values, _n_az);
-	uint el_index = get_closest(el, _el_values, _n_el);
-	val->itd = _itd[az_index * _n_el + el_index];
+	uint az_vector_index = get_closest(az, &_az_values[0], _n_az);
+	uint el_vector_index = get_closest(el, &_el_values[0], _n_el);
+	uint az_index = _az_map[_az_values[az_vector_index]];
+	uint el_index = _el_map[_el_values[el_vector_index]];
+
+	// TODO check if coefficients are not null!!!
+
+	val->itd = _itd_map[az_index * _n_el + el_index];
 	memcpy(&val->b_left[0], &_b_left[az_index][el_index][0], sizeof(double) * _n_coeff);
 	memcpy(&val->a_left[0], &_a_left[az_index][el_index][0], sizeof(double) * _n_coeff);
 	memcpy(&val->b_right[0], &_b_right[az_index][el_index][0], sizeof(double) * _n_coeff);
 	memcpy(&val->a_right[0], &_a_right[az_index][el_index][0], sizeof(double) * _n_coeff);
 
-//	DPRINT("\tAz: %+1.3f [%+1.3f]\t El: %+1.3f [%+1.3f]\t ITD: %s %d samples",
-//			az, _az_values[az_index], el, _el_values[el_index],
-//			val->itd >= 0 ? "L" : "R", val->itd >= 0 ? val->itd : -(val->itd));
+	DPRINT("\tAz: %+1.3f [%+1.3f]\t El: %+1.3f [%+1.3f]\t ITD: %s %d samples",
+			az, _az_values[az_index], el, _el_values[el_index],
+			val->itd >= 0 ? "L" : "R", val->itd >= 0 ? val->itd : -(val->itd));
 }
 
 bool HrtfCoeffSet::_init()
@@ -311,7 +316,7 @@ bool HrtfCoeffSet::_load()
 		int az_next_index = 0;
 		int el_next_index = 0;
 
-		map_t::iterator it;
+		map_orientation_t::iterator it;
 
 		for (unsigned int i = 0; i < _n_filters; i++)
 		{
@@ -324,6 +329,7 @@ bool HrtfCoeffSet::_load()
 			if (it == _az_map.end())  // not found
 			{
 				_az_map[az] = az_next_index;
+				_az_values.push_back(az);
 				az_index = az_next_index;
 				az_next_index++;
 			}
@@ -339,6 +345,7 @@ bool HrtfCoeffSet::_load()
 			if (it == _el_map.end())  // not found
 			{
 				_el_map[el] = el_next_index;
+				_el_values.push_back(el);
 				el_index = el_next_index;
 				el_next_index++;
 			}
@@ -348,6 +355,7 @@ bool HrtfCoeffSet::_load()
 			// ITD value
 			int itd;
 			file.read(reinterpret_cast<char *>(&itd), sizeof(int));
+			_itd_map[az_index * _n_el + el_index] = itd;
 
 			// Left ear
 			file.read(reinterpret_cast<char *>(&_b_left[az_index][el_index][0]), sizeof(double) * _n_coeff);
@@ -399,7 +407,7 @@ void HrtfCoeffSet::_allocate_memory()
 		}
 	}
 
-	_itd = (int *) malloc(sizeof(int) * _n_az * _n_el);
+//	_itd = (int *) malloc(sizeof(int) * _n_az * _n_el);
 
 	// Clear arrays
 	for (i = 0; i < _n_az; i++) {
@@ -415,11 +423,8 @@ void HrtfCoeffSet::_allocate_memory()
 		}
 	}
 
-	for (i = 0; i < _n_az * _n_el; i++)
-		_itd[i] = 0;
-
-	_az_values = (float *) malloc(sizeof(float) * _n_az);
-	_el_values = (float *) malloc(sizeof(float) * _n_el);
+//	for (i = 0; i < _n_az * _n_el; i++)
+//		_itd[i] = 0;
 }
 
 void HrtfCoeffSet::_deallocate_memory()
@@ -444,8 +449,5 @@ void HrtfCoeffSet::_deallocate_memory()
 	free(_b_right);
 	free(_a_right);
 
-	free(_itd);
-
-	free(_az_values);
-	free(_el_values);
+//	free(_itd);
 }
