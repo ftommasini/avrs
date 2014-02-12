@@ -248,10 +248,34 @@ void HrtfCoeffSet::get_HRTF_coeff(hrtfcoeff_t *val, float az, float el)
 {
 	assert(val != NULL);
 
+	// get closest azimuth value
 	uint az_vector_index = get_closest(az, &_az_values[0], _n_az);
-	uint el_vector_index = get_closest(el, &_el_values[0], _n_el);
 	uint az_index = _az_map[_az_values[az_vector_index]];
+	// get closest elevation value
+	uint el_vector_index = get_closest(el, &_el_values[0], _n_el);
 	uint el_index = _el_map[_el_values[el_vector_index]];
+
+//	bool change_el = true;
+//
+//	while (_a_left[az_index][el_index][0] != 1.0 || _a_right[az_index][el_index][0] != 1.0)
+//	{
+//		if (az_vector_index < _az_values.size() - 1)
+//			az_vector_index++;
+//		else
+//			az_vector_index--;
+//
+//		if (el_vector_index < _el_values.size() - 1)
+//			el_vector_index++;
+//		else
+//			el_vector_index--;
+//
+//		uint az_index = _az_map[_az_values[az_vector_index]];
+//		uint el_index = _el_map[_el_values[el_vector_index]];
+//	}
+
+//	DPRINT("a[0] left: %f\t a[0] right: %f",
+//			_a_left[az_index][el_index][0],
+//			_a_right[az_index][el_index][0]);
 
 	// TODO check if coefficients are not null!!!
 
@@ -367,6 +391,8 @@ bool HrtfCoeffSet::_load()
 		}
 
 		file.close();
+//		std::sort(_az_values.begin(), _az_values.end());
+//		std::sort(_el_values.begin(), _el_values.end());
 		ok = true;
 	}
 	catch (std::ifstream::failure ex)
