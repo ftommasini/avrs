@@ -3,7 +3,7 @@
  *                         Deutsche Telekom Laboratories, TU Berlin
  *                         Ernst-Reuter-Platz 7, 10587 Berlin, Germany
  *                         <SoundScapeRenderer@telekom.de>
- * Copyright (C) 2011-2013 Fabián C. Tommasini <fabian@tommasini.com.ar>
+ * Copyright (C) 2011-2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,9 +32,10 @@
 #include <limits>
 #include <cmath>
 #include <armadillo>
-#include <boost/math/constants/constants.hpp>
 
 #include "common.hpp"
+
+#define _USE_MATH_DEFINES
 
 namespace avrs
 {
@@ -46,7 +47,7 @@ namespace math
 /// \f$\pi\f$ (@b float representation).
 /// @warning if you need @b double precision, you should change this!
 // 9 digits are needed for float, 17 digits for double
-const float PI = boost::math::constants::pi<float>();
+const float PI = M_PI;
 const float PIdiv180 = PI / 180.0f; ///< \f$\pi\f$ divided by 180
 const float PIdiv180_inverse = 180.0f / PI; ///< 180 divided by \f$\pi\f$
 

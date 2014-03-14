@@ -20,6 +20,7 @@
 #include <fstream>
 
 #include "headfilter.hpp"
+#include "avrsexception.hpp"
 
 /*
  * HrtfSet
@@ -28,8 +29,7 @@
 HrtfSet::HrtfSet(std::string filename)
 	: _filename(filename)
 {
-//	_previous_az = -500.0f;  // azimuth that doesn't exist
-//	_previous_el = -500.0f;  // elevation that doesn't exist
+	;
 }
 
 HrtfSet::~HrtfSet()
@@ -41,13 +41,13 @@ HrtfSet::ptr_t HrtfSet::create(std::string filename)
 {
 	ptr_t p_tmp(new HrtfSet(filename));
 
-	if (!p_tmp->_init())
-		p_tmp.release();
+	if (!p_tmp->_load())
+		throw avrs::AvrsException("Initialization fail");
 
 	return p_tmp;
 }
 
-bool HrtfSet::_init()
+bool HrtfSet::_load()
 {
 	uint i, j, k;
 	FILE *p_file;
@@ -238,8 +238,8 @@ HrtfCoeffSet::ptr_t HrtfCoeffSet::create(std::string filename)
 {
 	ptr_t p_tmp(new HrtfCoeffSet(filename));
 
-	if (!p_tmp->_init())
-		p_tmp.release();
+	if (!p_tmp->_load())
+		throw avrs::AvrsException("Initialization fail");
 
 	return p_tmp;
 }
@@ -290,10 +290,10 @@ void HrtfCoeffSet::get_HRTF_coeff(hrtfcoeff_t *val, float az, float el)
 			val->itd >= 0 ? "L" : "R", val->itd >= 0 ? val->itd : -(val->itd));
 }
 
-bool HrtfCoeffSet::_init()
-{
-	return _load();
-}
+//bool HrtfCoeffSet::_init()
+//{
+//	return _load();
+//}
 
 bool HrtfCoeffSet::_load()
 {
@@ -391,8 +391,6 @@ bool HrtfCoeffSet::_load()
 		}
 
 		file.close();
-//		std::sort(_az_values.begin(), _az_values.end());
-//		std::sort(_el_values.begin(), _el_values.end());
 		ok = true;
 	}
 	catch (std::ifstream::failure ex)

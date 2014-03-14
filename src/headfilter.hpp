@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <cmath>
 #include <memory>
+//#include <boost/shared_ptr.hpp>
 
 #include "common.hpp"
 
@@ -56,7 +57,7 @@ private:
 
 	/// Initialize the HRTF Set
 	/// \return \b true if successful, \b false otherwise
-	bool _init();
+	bool _load();
 
 	typedef struct CompareDistance
 	{
@@ -152,6 +153,7 @@ class HrtfCoeffSet
 {
 public:
 	typedef std::auto_ptr<HrtfCoeffSet> ptr_t;
+
 	~HrtfCoeffSet();
 
 	/// Static factory function for HrtfSet objects
@@ -164,7 +166,7 @@ private:
 	typedef std::map<unsigned int, int> map_itd_t;
 
 	HrtfCoeffSet(std::string filename);
-	bool _init();
+
 	bool _load();
 	void _allocate_memory();
 	void _deallocate_memory();
