@@ -27,7 +27,7 @@ OBJF =	surface.o \
 
 OUT_OBJF = $(addprefix $(OBJ_DIR)/,$(OBJF))        
         
-LIBS = -lfftw3f -lc -lm -lstk -lasound -lpthread -ldxflib -larmadillo -lbluetooth -lcwiid \
+LIBS = -lfftw3f -lc -lm -lstk -lasound -lpthread -ldxflib -larmadillo -lbluetooth -lcwiid -lANN \
        -lboost_system -lboost_filesystem
 
 INCLUDES = -I/usr/local/include/stk \

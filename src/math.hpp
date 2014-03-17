@@ -237,8 +237,8 @@ inline float speed_of_sound(float temp)
 inline arma::mat::fixed<4,4> rotation_matrix_from_angles(const avrs::orientation_angles_t &o)
 {
     // To radians
-    double az = (o.az * M_PI) / 180.0;
-    double el = (o.el * M_PI) / 180.0;
+    double az = (o.az * PI) / 180.0;
+    double el = (o.el * PI) / 180.0;
 
 	// Rotation matrix ZXZ convention
 	arma::mat::fixed<4,4> R;  // 4 x 4 matrix
@@ -252,6 +252,25 @@ inline arma::mat::fixed<4,4> rotation_matrix_from_angles(const avrs::orientation
 	  << 0                << 0                << 0      << 1 << arma::endr;
 
 	return R;
+}
+
+inline void polar2rectangular(float az_deg, float el_deg, double *point)
+{
+	// vertical-polar to rectangular conversion
+	float az_r = deg2rad(az_deg);
+	float el_r = deg2rad(el_deg);
+	point[X] = cos(az_r) * cos(el_r);
+	point[Y] = sin(az_r) * cos(el_r);
+	point[Z] = sin(el_r);
+}
+
+inline void rectangular2polar(double *point, float *az_deg, float *el_deg)
+{
+	// rectangular to vertical-polar conversion
+	float az_r = (float)atan2(point[Y], point[X]);
+	float el_r = (float)atan2(point[Z], sqrt(point[X] * point[X] + point[Y] * point[Y]));
+	*az_deg = rad2deg(az_r);
+	*el_deg = rad2deg(el_r);
 }
 
 }  // namespace math

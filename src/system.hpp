@@ -83,8 +83,6 @@ private:
 
 	TrackerBase::ptr_t _tracker;
 
-	HrtfSet::ptr_t _hf;
-
     // thread related stuff
     pthread_t _thread_id;
     static void *_rt_wrapper(void *arg);

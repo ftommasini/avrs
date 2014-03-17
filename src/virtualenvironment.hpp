@@ -195,20 +195,20 @@ private:
 	data_t _late_buffer;
 
 	// renderer
-#ifndef HRTF_IIR
-	HrtfSet::ptr_t _hrtfdb;
-	hrtf_t _hrtf;
-	HrtfConvolver::ptr_t _hrtf_conv_l;
-	HrtfConvolver::ptr_t _hrtf_conv_r;
-	stk::Fir _fir_l;
-	stk::Fir _fir_r;
-#else
+//#ifndef HRTF_IIR
+//	HrtfSet::ptr_t _hrtfdb;
+//	hrtf_t _hrtf;
+//	HrtfConvolver::ptr_t _hrtf_conv_l;
+//	HrtfConvolver::ptr_t _hrtf_conv_r;
+//	stk::Fir _fir_l;
+//	stk::Fir _fir_r;
+//#else
 	HrtfCoeffSet::ptr_t _hcdb;
 	hrtfcoeff_t _hc;
 	stk::Iir _filter_l;
 	stk::Iir _filter_r;
 	stk::Delay _delay;
-#endif
+//#endif
 
 	stk::Iir _filter_surfaces;
 
