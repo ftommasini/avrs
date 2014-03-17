@@ -61,20 +61,20 @@ VirtualEnvironment::VirtualEnvironment(configuration_t *cs, TrackerBase::ptr_t t
 	_late_buffer.resize(_length_bir, 0.0f);
 
 	// create and load HRTF DB into program
-#ifndef HRTF_IIR
-	_hrtfdb = HrtfSet::create(_config_sim->hrtf_file);
-	// for left ear
-	_hrtf_conv_l = HrtfConvolver::create(N_FFT);
-	_hrtf_conv_l->setKernelLength(KERNEL_LENGTH);
-	_hrtf_conv_l->setSegmentLength(SEGMENT_LENGTH);
-	// for right ear
-	_hrtf_conv_r = HrtfConvolver::create(N_FFT);
-	_hrtf_conv_r->setKernelLength(KERNEL_LENGTH);
-	_hrtf_conv_r->setSegmentLength(SEGMENT_LENGTH);
-#else
-	_hcdb = HrtfCoeffSet::create(_config_sim->hrtf_filter_file);
+//#ifndef HRTF_IIR
+//	_hrtfdb = HrtfSet::create(_config_sim->hrtf_file);
+//	// for left ear
+//	_hrtf_conv_l = HrtfConvolver::create(N_FFT);
+//	_hrtf_conv_l->setKernelLength(KERNEL_LENGTH);
+//	_hrtf_conv_l->setSegmentLength(SEGMENT_LENGTH);
+//	// for right ear
+//	_hrtf_conv_r = HrtfConvolver::create(N_FFT);
+//	_hrtf_conv_r->setKernelLength(KERNEL_LENGTH);
+//	_hrtf_conv_r->setSegmentLength(SEGMENT_LENGTH);
+//#else
+	_hcdb = HrtfCoeffSet::create(_config_sim->hrtf_file);
 	_delay.setMaximumDelay(BUFFER_SAMPLES);
-#endif
+//#endif
 }
 
 VirtualEnvironment::~VirtualEnvironment()

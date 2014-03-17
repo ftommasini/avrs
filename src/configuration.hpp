@@ -64,7 +64,6 @@ typedef struct
 
 	// Listener
 	std::string hrtf_file;
-	std::string hrtf_filter_file;
 	Listener::ptr_t listener;
 
 	// Output

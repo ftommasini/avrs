@@ -34,10 +34,8 @@ namespace avrs
 {
 
 ConfigurationManager::ConfigurationManager()
-	//: _conf(boost::make_shared<configuration_t>())
 {
 	_conf = new configuration_t;
-	//load_configuration(filename);
 }
 
 ConfigurationManager::~ConfigurationManager()
@@ -99,7 +97,6 @@ void ConfigurationManager::show_configuration()
 			_conf->listener->get_orientation().az,
 			_conf->listener->get_orientation().el);
 	printf("LISTENER_HRTF_FILE = %s\n", _conf->hrtf_file.c_str());
-	printf("LISTENER_FILTER_HRTF_FILE = %s\n", _conf->hrtf_filter_file.c_str());
 
 	printf("\nInput section\n\n");
 	printf("ANECHOIC_FILE = %s\n", _conf->anechoic_file.c_str());
@@ -219,11 +216,6 @@ void ConfigurationManager::load_configuration(const std::string filename)
 		throw AvrsException("Error in configuration file: LISTENER_HRTF_FILE is missing");
 
 	_conf->hrtf_file = full_path(tmp);
-
-	if (!cfr.readInto(tmp, "LISTENER_FILTER_HRTF_FILE"))  // IIR filters coefficients
-		throw AvrsException("Error in configuration file: LISTENER_FILTER_HRTF_FILE is missing");
-
-	_conf->hrtf_filter_file = full_path(tmp);
 
 	// Input
 	if (!cfr.readInto(tmp, "ANECHOIC_FILE"))
