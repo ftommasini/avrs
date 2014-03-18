@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2013 Fabián C. Tommasini <fabian@tommasini.com.ar>
+ * Copyright (C) 2009-2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -69,21 +69,17 @@ bool System::_init()
 
 	uint read_interval_ms = 10;  // ms (100 Hz)
 
-//	_tracker = TrackerWiimote::create("tracker_points", "00:24:F3:2D:C0:BB", read_interval_ms);
-
+#ifdef WIIMOTE_TRACKER
+	_tracker = TrackerWiimote::create(
+			"tracker_points",
+			_config_sim->tracker_params,
+			read_interval_ms);
+#else
 	_tracker = TrackerSim::create(
 			TrackerSim::from_file,
 			read_interval_ms,
-			"data/movdb/c_r_l_c.movdb");
-
-//	_tracker = TrackerSimulation::create(TrackerSimulation::calculation,
-//			read_interval_ms, "");
-
-//	avrs::position_t pos;
-//	avrs::orientation_angles_t ori;
-//	ori.az = 0.0;
-//	ori.el = 0.0;
-//	_tracker = TrackerConstant::create(pos, ori, read_interval_ms);
+			_config_sim->tracker_sim_file);
+#endif
 
 	assert(_tracker.get() != NULL);
 

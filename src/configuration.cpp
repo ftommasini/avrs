@@ -227,6 +227,12 @@ void ConfigurationManager::load_configuration(const std::string filename)
 	if (!cfr.readInto(_conf->master_gain_db, "MASTER_GAIN_DB"))
 		throw AvrsException("Error in configuration file: MASTER_GAIN_DB is missing");
 
+	// Tracker
+	if (!cfr.readInto(tmp, "TRACKER_SIM_FILE"))
+		throw AvrsException("Error in configuration file: TRACKER_SIM_FILE is missing");
+
+	_conf->tracker_sim_file = full_path(tmp);
+
 	// General
 	if (!cfr.readInto(_conf->temperature, "TEMPERATURE"))
 		throw AvrsException("Error in configuration file: TEMPERATURE is missing");

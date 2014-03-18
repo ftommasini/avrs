@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2013 Fabián C. Tommasini <fabian@tommasini.com.ar>
+ * Copyright (C) 2009-2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,8 +41,7 @@ TrackerSim::~TrackerSim()
 	this->stop();
 }
 
-TrackerSim::ptr_t TrackerSim::create(sim_t sim,
-		unsigned int read_interval_ms, std::string filename)
+TrackerSim::ptr_t TrackerSim::create(sim_t sim, unsigned int read_interval_ms, std::string filename)
 {
 	ptr_t p_tmp(new TrackerSim(sim, read_interval_ms, filename));
 

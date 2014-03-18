@@ -69,6 +69,9 @@ typedef struct
 
 	// Input
 	std::string anechoic_file;
+
+	// Tracker
+	std::string tracker_sim_file;
 } configuration_t;
 
 //typedef boost::shared_ptr<configuration_t> configuration_ptr;
