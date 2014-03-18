@@ -28,7 +28,7 @@ OBJF =	surface.o \
 OUT_OBJF = $(addprefix $(OBJ_DIR)/,$(OBJF))        
         
 LIBS = -lfftw3f -lc -lm -lstk -lasound -lpthread -ldxflib -larmadillo -lbluetooth -lcwiid -lANN \
-       -lboost_system -lboost_filesystem
+       -lboost_system -lboost_filesystem -lboost_program_options
 
 INCLUDES = -I/usr/realtime/include \
            -I/usr/src/linux/include 
