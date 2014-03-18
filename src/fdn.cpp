@@ -30,8 +30,8 @@ Fdn::Fdn(unsigned int N, double gain_A, const double *b, const double *c,
 	_lp_filter.resize(_N);
 //	_filter.resize(_N);
 
-//	_b.reshape(_N, 1);
-//	_c.reshape(_N, 1);
+	_b.reshape(_N, 1);
+	_c.reshape(_N, 1);
 
 	for (unsigned int i = 0; i < _N; i++)
 	{

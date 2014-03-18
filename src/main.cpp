@@ -107,6 +107,8 @@ int main(int argc, char *argv[])
 	Timer t;
 	string end_message;
 
+
+
 	// create auto_ptr pointer to the system
 	sys = System::create(config);
 	assert(sys.get() != NULL);

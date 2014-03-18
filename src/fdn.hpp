@@ -55,6 +55,8 @@
 #include <stk/OnePole.h>
 #include <armadillo>
 
+#include "common.hpp"
+
 using namespace stk;
 using namespace arma;
 
@@ -99,8 +101,8 @@ private:
 	double _t60_0;
 	double _t60_pi;
 
-	mat _b_coeff;
-	mat _a_coeff;
+//	mat _b_coeff;
+//	mat _a_coeff;
 
 	std::vector<unsigned long> _m; // length of delay lines
 	std::vector<Delay *> _delayline; // array of pointers to delay line objects
