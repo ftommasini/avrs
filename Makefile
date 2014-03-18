@@ -33,8 +33,8 @@ LIBS = -lfftw3f -lc -lm -lstk -lasound -lpthread -ldxflib -larmadillo -lbluetoot
 INCLUDES = -I/usr/realtime/include \
            -I/usr/src/linux/include 
            
-CXXFLAGS = -O2  -pipe #-std=c++11 #-Wall
-CFLAGS = -O2 -Wall -pipe
+CXXFLAGS = -O2 -pipe
+CFLAGS = -O2 -pipe
 
 LDFLAGS = -L/usr/realtime/lib
 
