@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2013 Fabián C. Tommasini <fabian@tommasini.com.ar>
+ * Copyright (C) 2009-2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,10 +28,10 @@ Fdn::Fdn(unsigned int N, double gain_A, const double *b, const double *c,
 	_m.resize(_N);
 	_delayline.resize(_N);
 	_lp_filter.resize(_N);
-	_filter.resize(_N);
+//	_filter.resize(_N);
 
-	_b.reshape(_N, 1);
-	_c.reshape(_N, 1);
+//	_b.reshape(_N, 1);
+//	_c.reshape(_N, 1);
 
 	for (unsigned int i = 0; i < _N; i++)
 	{
@@ -44,9 +44,8 @@ Fdn::Fdn(unsigned int N, double gain_A, const double *b, const double *c,
 	_s_delayed.reshape(_N, 1);
 	_s_filtered.reshape(_N, 1);
 
-	// TODO parameter for this
-	_b_coeff.load("data/filters_num.txt", raw_ascii);
-	_a_coeff.load("data/filters_den.txt", raw_ascii);
+//	_b_coeff.load("data/filters_num.txt", raw_ascii);
+//	_a_coeff.load("data/filters_den.txt", raw_ascii);
 }
 
 Fdn::~Fdn()
@@ -55,7 +54,7 @@ Fdn::~Fdn()
 	{
 		delete _delayline[i];
 		delete _lp_filter[i];
-		delete _filter[i];
+//		delete _filter[i];
 	}
 
 	delete _tc;
@@ -111,27 +110,25 @@ bool Fdn::_init()
 		_lp_filter[i]->setB0(g[i] * (1 - a[i]));
 		_lp_filter[i]->setA1(a[i]);
 
-//		printf("[%d] b0 %f, a1 %f\n", i, g[i] * (1 - a[i]), a[i]);
-
-		std::vector<StkFloat> b;
-		mat::row_iterator bfrom = _b_coeff.begin_row(i); // start of row i
-		mat::row_iterator bto = _b_coeff.end_row(i); // end of row i
-
-		for (mat::row_iterator ri = bfrom; ri != bto; ri++)
-		{
-			b.push_back(*ri);
-		}
-
-		std::vector<StkFloat> a;
-		mat::row_iterator afrom = _a_coeff.begin_row(i); // start of row i
-		mat::row_iterator ato = _a_coeff.end_row(i); // end of row i
-
-		for (mat::row_iterator ri = afrom; ri != ato; ri++)
-		{
-			a.push_back(*ri);
-		}
-
-		_filter[i] = new Iir(b, a);
+//		std::vector<StkFloat> b;
+//		mat::row_iterator bfrom = _b_coeff.begin_row(i); // start of row i
+//		mat::row_iterator bto = _b_coeff.end_row(i); // end of row i
+//
+//		for (mat::row_iterator ri = bfrom; ri != bto; ri++)
+//		{
+//			b.push_back(*ri);
+//		}
+//
+//		std::vector<StkFloat> a;
+//		mat::row_iterator afrom = _a_coeff.begin_row(i); // start of row i
+//		mat::row_iterator ato = _a_coeff.end_row(i); // end of row i
+//
+//		for (mat::row_iterator ri = afrom; ri != ato; ri++)
+//		{
+//			a.push_back(*ri);
+//		}
+//
+//		_filter[i] = new Iir(b, a);
 	}
 
 	// Feedback matrix (A) calculation
@@ -155,7 +152,7 @@ void Fdn::clear(void)
 	{
 		_delayline[i]->clear();
 		_lp_filter[i]->clear();
-		_filter[i]->clear();
+//		_filter[i]->clear();
 
 		_s[i] = 0.0;
 		_s_delayed[i] = 0.0;

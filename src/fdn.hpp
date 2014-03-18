@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2013 Fabián C. Tommasini <fabian@tommasini.com.ar>
+ * Copyright (C) 2009-2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -104,7 +104,7 @@ private:
 
 	std::vector<unsigned long> _m; // length of delay lines
 	std::vector<Delay *> _delayline; // array of pointers to delay line objects
-	std::vector<Iir *> _filter; // array of pointers to filter objects
+	//std::vector<Iir *> _filter; // array of pointers to filter objects
 	std::vector<OnePole *> _lp_filter;  // array of pointers to low-pass filter objects
 	OneZero *_tc; // pointer to tone correction filter
 };
