@@ -208,7 +208,7 @@ void parse_program_options(int argc, char** argv, parameters_t *params)
 void usage()
 {
 	std::cout << "Usage:\n";
-	std::cout << "\tavrs <configuration file> [options]\n";
+	std::cout << "\tavrs [options] [-f] <configuration file>\n";
 }
 
 void print_version()
