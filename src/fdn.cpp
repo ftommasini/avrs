@@ -18,7 +18,7 @@
 
 #include "fdn.hpp"
 
-#include "Stk.h"
+#include <stk/Stk.h>
 #include <math.h> // for basic math functions
 
 Fdn::Fdn(unsigned int N, double gain_A, const double *b, const double *c,

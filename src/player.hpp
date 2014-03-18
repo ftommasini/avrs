@@ -21,9 +21,7 @@
 
 #include <cassert>
 #include <memory>
-
-// STK headers
-#include <RtAudio.h>
+#include <stk/RtAudio.h>
 
 // AVRS headers
 #include "common.hpp"

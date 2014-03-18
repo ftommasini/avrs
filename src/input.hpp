@@ -26,10 +26,8 @@
 
 #include <cstdlib>
 #include <string>
-
-// STK headers
-#include <FileWvIn.h>
-#include <FileLoop.h>
+#include <stk/FileWvIn.h>
+#include <stk/FileLoop.h>
 
 // AVRS headers
 #include "common.hpp"

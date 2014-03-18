@@ -49,13 +49,11 @@
 #define _FDN_HPP_
 
 #include <memory>
-
-#include "Delay.h"
-#include "Iir.h"
-#include "OneZero.h"
-#include "OnePole.h"
-
-#include "armadillo"
+#include <stk/Delay.h>
+#include <stk/Iir.h>
+#include <stk/OneZero.h>
+#include <stk/OnePole.h>
+#include <armadillo>
 
 using namespace stk;
 using namespace arma;

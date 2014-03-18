@@ -19,7 +19,7 @@
 #include "soundsource.hpp"
 
 // STK headers
-#include <FileWvIn.h>
+#include <stk/FileWvIn.h>
 
 #include <cmath>
 

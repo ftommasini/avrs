@@ -7,9 +7,7 @@
 
 #include <cstring>
 #include <memory>
-
-// STK headers
-#include <Stk.h>
+#include <stk/Stk.h>
 
 // AVRS headers
 #include "common.hpp"

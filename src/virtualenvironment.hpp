@@ -27,9 +27,9 @@
 #include <cstdio>
 #include <stddef.h>
 #include <rtai_mbx.h>
-#include <Iir.h>
-#include <Fir.h>
-#include <Delay.h>
+#include <stk/Iir.h>
+#include <stk/Fir.h>
+#include <stk/Delay.h>
 
 #include "tree.hpp"
 #include "rttools.hpp"
