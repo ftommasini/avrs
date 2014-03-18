@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2013 Fabián C. Tommasini
+ * Copyright (C) 2009-2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,9 @@
 
 #include "virtualenvironment.hpp"
 #include "dxfreader.hpp"
+
+namespace avrs
+{
 
 VirtualEnvironment::VirtualEnvironment(configuration_t *cs, TrackerBase::ptr_t tracker)
 {
@@ -840,3 +843,5 @@ void VirtualEnvironment::calc_late_reverberation()
 		_late_buffer[i] = (sample_t) output[i];
 	}
 }
+
+}  // namespace avrs

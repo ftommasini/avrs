@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2013 Fabián C. Tommasini <fabian@tommasini.com.ar>
+ * Copyright (C) 2009-2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,9 @@
 
 #include "rttools.hpp"
 #include "trackerwiimote.hpp"
+
+namespace avrs
+{
 
 TrackerWiimote::TrackerWiimote(std::string object, std::string address,
 		const unsigned int read_interval) :
@@ -330,3 +333,5 @@ void TrackerWiimote::printPoints(const ir_points_t *ir)
 
 	printf("\n");
 }
+
+}  // namespace avrs

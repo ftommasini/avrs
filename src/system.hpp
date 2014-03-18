@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2013 Fabián C. Tommasini <fabian@tommasini.com.ar>
+ * Copyright (C) 2009-2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,9 +28,12 @@
 #include "configuration.hpp"
 #include "input.hpp"
 #include "player.hpp"
-#include "tracker.hpp"
+#include "trackersim.hpp"
 #include "headfilter.hpp"
 #include "virtualenvironment.hpp"
+
+namespace avrs
+{
 
 // Ending system stuff
 static int g_end_system = 0;
@@ -99,4 +102,7 @@ private:
     void *_convolve_right_thread(void *arg);
 };
 
+}  // namespace avrs
+
 #endif  // SYSTEM_HPP_
+

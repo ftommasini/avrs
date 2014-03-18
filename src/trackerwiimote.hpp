@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2013 Fabián C. Tommasini <fabian@tommasini.com.ar>
+ * Copyright (C) 2009-2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,10 @@
 #include "posit.hpp"
 #include "wiimote.hpp"
 #include "common.hpp"
-#include "tracker.hpp"
+#include "trackerbase.hpp"
+
+namespace avrs
+{
 
 class TrackerWiimote : public TrackerBase
 {
@@ -95,5 +98,7 @@ inline avrs::trackerdata_t TrackerWiimote::get_data()
 {
 	return _corrected_position;
 }
+
+}  // namespace avrs
 
 #endif  // TRACKERWIIMOTE_HPP_

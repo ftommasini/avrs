@@ -199,59 +199,6 @@ typedef struct OrientationAngles
 	}
 } orientation_angles_t;
 
-typedef struct TrackerData
-{
-	position_t pos;
-	orientation_angles_t ori;
-	unsigned long timestamp;
-
-	TrackerData()
-	{
-		timestamp = 0;
-	}
-
-	TrackerData operator-(const TrackerData &val) const
-	{
-		TrackerData res;
-
-		res.pos = pos + val.pos;
-		res.ori = ori - val.ori;
-
-//		// azimuth (-180, +180]
-//		float az = ori.az - val.ori.az;
-//
-//		if (az > 180)
-//			res.ori.az = az - 360;
-//		else if (az < -180)
-//			res.ori.az = az + 360;
-//		else
-//			res.ori.az = az;
-//
-//		// elevation [-90, +90]
-//		float el = ori.el - val.ori.el;
-//
-//		if (el > 90)
-//			res.ori.el = 180 - el;
-//		else if (el < -90)
-//			res.ori.el = -180 - el;
-//		else
-//			res.ori.el = el;
-
-		return res;
-	}
-
-	TrackerData operator+(const TrackerData &val) const
-	{
-		TrackerData res;
-
-		res.pos = pos + val.pos;
-		res.ori = ori + val.ori;
-
-		return res;
-	}
-
-} trackerdata_t;
-
 // Definitions for all the system
 
 // for linear algebra

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2013 Fabián C. Tommasini
+ * Copyright (C) 2009-2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@
 #include "tree.hpp"
 #include "rttools.hpp"
 #include "math.hpp"
-#include "tracker.hpp"
+#include "trackersim.hpp"
 #include "trackerwiimote.hpp"
 #include "convolver.hpp"
 #include "surface.hpp"
@@ -46,6 +46,9 @@
 #include "configuration.hpp"
 
 #include "hrtfconvolver.hpp"
+
+namespace avrs
+{
 
 typedef struct VirtualSource
 {
@@ -332,5 +335,7 @@ inline bool VirtualEnvironment::_listener_is_moved()
 
 	return false;
 }
+
+}  // namespace avrs
 
 #endif  // VIRTUALENVIRONMENT_HPP_

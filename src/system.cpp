@@ -29,6 +29,9 @@
 #include "math.hpp"
 #include "system.hpp"
 
+namespace avrs
+{
+
 System::System(configuration_t *config_sim)
 	: _config_sim(config_sim)
 {
@@ -66,10 +69,12 @@ bool System::_init()
 
 	uint read_interval_ms = 10;  // ms (100 Hz)
 
-//	_tracker = TrackerWiimote::create("Object4", "00:24:F3:2D:C0:BB", read_interval_ms);
+//	_tracker = TrackerWiimote::create("tracker_points", "00:24:F3:2D:C0:BB", read_interval_ms);
 
-	_tracker = TrackerSimulation::create(TrackerSimulation::from_file,
-			read_interval_ms, "data/movdb/c_r_l_c.movdb");
+	_tracker = TrackerSim::create(
+			TrackerSim::from_file,
+			read_interval_ms,
+			"data/movdb/c_r_l_c.movdb");
 
 //	_tracker = TrackerSimulation::create(TrackerSimulation::calculation,
 //			read_interval_ms, "");
@@ -331,3 +336,5 @@ void *System::_convolve_right_thread(void *arg)
 
 	return _conv_r->convolve_signal(_input.data());
 }
+
+}  // namespace avrs

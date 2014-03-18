@@ -92,7 +92,6 @@ int main(int argc, char *argv[])
 	try
 	{
 		cm.load_configuration(argv[1]);
-		//configuration_ptr config_ptr = cm.get_configuration();
 		config = cm.get_configuration();
 	}
 	catch (const AvrsException &e)
@@ -101,13 +100,11 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	cm.show_configuration();
+//	cm.show_configuration();
 
 	System::ptr_t sys;
 	Timer t;
 	string end_message;
-
-
 
 	// create auto_ptr pointer to the system
 	sys = System::create(config);

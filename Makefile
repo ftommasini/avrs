@@ -12,7 +12,7 @@ OBJF =	surface.o \
        	convolver.o \
         virtualenvironment.o \
         headfilter.o \
-        tracker.o \
+        trackersim.o \
         rttools.o \
         player.o \
         input.o \

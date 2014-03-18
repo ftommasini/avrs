@@ -168,11 +168,9 @@ StkFloat Fdn::tick(StkFloat sample)
 	for (unsigned int i = 0; i < _N; i++)
 	{
 		_s_delayed[i] = _delayline[i]->tick(_s[i]);
-
 		//_s_filtered[i] = _s_delayed[i];  // wihtout attenuation
 
 		_s_filtered[i] = _lp_filter[i]->tick(_s_delayed[i]);
-
 		//_s_filtered[i] = _filter[i]->tick(_s_delayed[i]);
 	}
 

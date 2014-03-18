@@ -18,145 +18,33 @@
 
 /**
  * \file tracker.cpp
- * \brief
  */
 
 #include <rtai_lxrt.h>
 
-#include "tracker.hpp"
+#include "trackersim.hpp"
 #include "rttools.hpp"
 
-/*
- * TrackerConstant
- */
-
-TrackerConstant::TrackerConstant(position_t pos, orientation_angles_t ori, unsigned int read_interval_ms)
-: _running(false)
+namespace avrs
 {
-	_data.pos = pos;
-	_data.ori = ori;
-	_read_interval_ms = read_interval_ms;
-}
 
-TrackerConstant::~TrackerConstant()
-{
-	stop();
-}
-
-TrackerConstant::ptr_t TrackerConstant::create(position_t pos, orientation_angles_t ori,
-		unsigned int read_interval_ms)
-{
-	ptr_t p_tmp(new TrackerConstant(pos, ori, read_interval_ms));
-
-	if (!p_tmp->_init())
-		p_tmp.reset();
-
-	return p_tmp;
-}
-
-bool TrackerConstant::_init()
-{
-	return true;
-}
-
-void TrackerConstant::start()
-{
-	if (_running)
-		return;
-
-	_running = true;
-	pthread_create(&_thread_id, NULL, TrackerConstant::_threadWrapper, this); // create thread
-	//VERBOSE("Starting tracker ...");
-}
-
-void TrackerConstant::stop()
-{
-	if (!_running)
-		return;
-
-	void *thread_exit_status;
-	_running = false;
-	pthread_join(_thread_id, &thread_exit_status);
-}
-
-void *TrackerConstant::_threadWrapper(void *arg)
-{
-	return reinterpret_cast<TrackerConstant*> (arg)->_thread(NULL);
-}
-
-void* TrackerConstant::_thread(void *arg)
-{
-	RT_TASK *rt_task;
-	RTIME interval = nano2count(_read_interval_ms * 1E6);
-
-	rt_allow_nonroot_hrt();
-	mlockall(MCL_CURRENT | MCL_FUTURE);
-
-	// create task
-	rt_task = rt_task_init_schmod(nam2num("TSKTRA"), 2, 0, 0, SCHED_FIFO, rttools::cpu_id(0));
-
-	if (!rt_task)
-	{
-		ERROR("Cannot init TRACKER task");
-		pthread_exit(NULL);
-	}
-
-	MBX *mbx_tracker = rttools::get_mbx(MBX_TRACKER_NAME, MBX_TRACKER_BLOCK * sizeof(trackerdata_t));
-
-	if (!mbx_tracker)
-	{
-		ERROR("Cannot init TRACKER mailbox");
-		rt_task_delete(rt_task);
-		pthread_exit(NULL);
-	}
-
-	int val;
-
-	while (_running)
-	{
-		_data.timestamp = (unsigned long) rt_get_time_ns();
-		// send message (non-blocking)
-		val = rt_mbx_send_if(mbx_tracker, &_data, sizeof(trackerdata_t));
-
-		if (-EINVAL == val)
-		{
-			ERROR("Mailbox is invalid");
-			break;
-		}
-
-		rt_sleep(interval);
-	}
-
-	rt_task_delete(rt_task);
-	rttools::del_mbx(MBX_TRACKER_NAME);
-
-	return arg;
-}
-
-
-
-/*
- * TrackerSimulation
- */
-
-TrackerSimulation::TrackerSimulation(sim_t sim, unsigned int read_interval_ms,
-		std::string filename)
-: _running(false)
+TrackerSim::TrackerSim(sim_t sim, unsigned int read_interval_ms, std::string filename)
+	: _running(false)
 {
 	_sim_type = sim;
 	_read_interval_ms = read_interval_ms;
 	_filename = filename;
 }
 
-TrackerSimulation::~TrackerSimulation()
+TrackerSim::~TrackerSim()
 {
 	this->stop();
 }
 
-TrackerSimulation::ptr_t TrackerSimulation::create(sim_t sim,
+TrackerSim::ptr_t TrackerSim::create(sim_t sim,
 		unsigned int read_interval_ms, std::string filename)
 {
-	ptr_t p_tmp(new TrackerSimulation(sim, read_interval_ms, filename));
+	ptr_t p_tmp(new TrackerSim(sim, read_interval_ms, filename));
 
 	if (!p_tmp->_init())
 		p_tmp.release();
@@ -164,7 +52,7 @@ TrackerSimulation::ptr_t TrackerSimulation::create(sim_t sim,
 	return p_tmp;
 }
 
-bool TrackerSimulation::_init()
+bool TrackerSim::_init()
 {
 	if (_sim_type == from_file)
 	{
@@ -177,18 +65,18 @@ bool TrackerSimulation::_init()
 	return true;
 }
 
-void TrackerSimulation::start()
+void TrackerSim::start()
 {
 	if (_running)
 		return;
 
 	_running = true;
-	pthread_create(&_thread_id, NULL, TrackerSimulation::_threadWrapper, this); // create thread
+	pthread_create(&_thread_id, NULL, TrackerSim::_threadWrapper, this); // create thread
 
 	DPRINT("Starting tracker");
 }
 
-void TrackerSimulation::stop()
+void TrackerSim::stop()
 {
 	if (!_running)
 		return;
@@ -201,12 +89,18 @@ void TrackerSimulation::stop()
 		fclose(_file);
 }
 
-void *TrackerSimulation::_threadWrapper(void *arg)
+inline void TrackerSim::calibrate()
 {
-	return reinterpret_cast<TrackerSimulation*> (arg)->_thread(NULL);
+	;  // nothing to do
 }
 
-void* TrackerSimulation::_thread(void *arg)
+
+void *TrackerSim::_threadWrapper(void *arg)
+{
+	return reinterpret_cast<TrackerSim*> (arg)->_thread(NULL);
+}
+
+void* TrackerSim::_thread(void *arg)
 {
 	RT_TASK *rt_task;
 	RTIME interval = nano2count(_read_interval_ms * 1E6);
@@ -239,16 +133,21 @@ void* TrackerSimulation::_thread(void *arg)
 		// simulate the current position
 		switch (_sim_type)
 		{
+		case constant:
+			sim_constant();
+			break;
+
+		case calculated:
+			sim_calculated_az();
+			//sim_calculated_el();
+			break;
+
 		case from_file:
-			simPositionFromFile();
+			sim_from_file();
 			break;
 
-		case calculation:
-			simPositionCalculatedAz();
-			break;
-
-		case cipic_measurements:
-			simPositionCIPIC();
+		case cipic_angles:
+			sim_cipic_angles();
 			break;
 		}
 
@@ -272,7 +171,7 @@ void* TrackerSimulation::_thread(void *arg)
 	return arg;
 }
 
-void TrackerSimulation::simPositionCIPIC()
+void TrackerSim::sim_cipic_angles()
 {
 	// Azimuth values
 	static float az[] =
@@ -298,7 +197,7 @@ void TrackerSimulation::simPositionCIPIC()
 	el_idx = (el_idx + 1) % el_size;
 }
 
-void TrackerSimulation::simPositionCalculatedAz()
+void TrackerSim::sim_calculated_az()
 {
 	static orientation_angles_t ori_tmp(80.0f, 0.0f, 0.0f);
 	static float step = 0.5f;
@@ -318,7 +217,7 @@ void TrackerSimulation::simPositionCalculatedAz()
 	_data.ori = ori_tmp;
 }
 
-void TrackerSimulation::simPositionCalculatedEl()
+void TrackerSim::sim_calculated_el()
 {
 	static orientation_angles_t ori_tmp(0.0f, 0.0f, 0.0f);
 	static float step = 1.0f;
@@ -338,7 +237,7 @@ void TrackerSimulation::simPositionCalculatedEl()
 	_data.ori = ori_tmp;
 }
 
-void TrackerSimulation::simPositionFromFile()
+void TrackerSim::sim_from_file()
 {
 	static float data[6]; // data to be read
 	bool ok;
@@ -363,3 +262,17 @@ void TrackerSimulation::simPositionFromFile()
 
 //	DPRINT("Az: %+1.3f\tEl: %+1.3f", _data.ori.az, _data.ori.el);
 }
+
+void TrackerSim::sim_constant()
+{
+	// hardcoded values
+	_data.pos.x = 5.0f;
+	_data.pos.y = 3.0f;
+	_data.pos.z = 1.0f;
+
+	_data.ori.az = -15.0f;
+	_data.ori.el = -2.5f;
+	_data.ori.ro = 0.0f;
+}
+
+}  // namespace avrs
