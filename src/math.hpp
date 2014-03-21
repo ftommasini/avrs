@@ -1,60 +1,56 @@
-/******************************************************************************
- * Copyright (c) 2006-2010 Quality & Usability Lab                            *
- *                         Deutsche Telekom Laboratories, TU Berlin           *
- *                         Ernst-Reuter-Platz 7, 10587 Berlin, Germany        *
- *                                                                            *
- * This file is part of the SoundScape Renderer (SSR).                        *
- *                                                                            *
- * The SSR is free software:  you can redistribute it and/or modify it  under *
- * the terms of the  GNU  General  Public  License  as published by the  Free *
- * Software Foundation, either version 3 of the License,  or (at your option) *
- * any later version.                                                         *
- *                                                                            *
- * The SSR is distributed in the hope that it will be useful, but WITHOUT ANY *
- * WARRANTY;  without even the implied warranty of MERCHANTABILITY or FITNESS *
- * FOR A PARTICULAR PURPOSE.                                                  *
- * See the GNU General Public License for more details.                       *
- *                                                                            *
- * You should  have received a copy  of the GNU General Public License  along *
- * with this program.  If not, see <http://www.gnu.org/licenses/>.            *
- *                                                                            *
- * The SSR is a tool  for  real-time  spatial audio reproduction  providing a *
- * variety of rendering algorithms.                                           *
- *                                                                            *
- * http://tu-berlin.de/?id=ssr                  SoundScapeRenderer@telekom.de *
- ******************************************************************************/
+/*
+ * Copyright (c) 2006-2010 Quality & Usability Lab
+ *                         Deutsche Telekom Laboratories, TU Berlin
+ *                         Ernst-Reuter-Platz 7, 10587 Berlin, Germany
+ *                         <SoundScapeRenderer@telekom.de>
+ * Copyright (C) 2011-2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see http://www.gnu.org/licenses/.
+ *
+ */
 
 /**
- * \file mathtools.hpp
- * \brief
+ * @file math.hpp
+ * @brief
  * Stores mathematical constants and helper functions.
  **/
 
-#ifndef MATHTOOLS_HPP_
-#define MATHTOOLS_HPP_
+#ifndef MATH_HPP_
+#define MATH_HPP_
 
-#include <limits> // for numeric_limits<>
+#include <limits>
 #include <cmath>
-#undef PI         // one of the headers included by cmath defines PI
+#include <armadillo>
+
+#include "common.hpp"
+
+#define _USE_MATH_DEFINES
+
+namespace avrs
+{
 
 /// Contains mathematical variables, constants and helper functions
-namespace mathtools
+namespace math
 {
+
 /// \f$\pi\f$ (@b float representation).
 /// @warning if you need @b double precision, you should change this!
 // 9 digits are needed for float, 17 digits for double
-const float PI = 3.14159265f; // 3.14159265358979323846...
+const float PI = M_PI;
 const float PIdiv180 = PI / 180.0f; ///< \f$\pi\f$ divided by 180
 const float PIdiv180_inverse = 180.0f / PI; ///< 180 divided by \f$\pi\f$
 
-/** Product of a number with itself
- * @param x number (any numeric type)
- * @return @a x squared.
- **/
-//  template<typename T> inline T square(const T& x)
-//  {
-//	  return x*x;
-//  }
 /// @name dB2linear()
 /// three overloaded versions for float, double and long double.
 //@{
@@ -219,21 +215,6 @@ inline long double wrap_angle(long double angle)
 }
 //@}
 
-//  /**
-//   * Find next higher power of 2 above input
-//   * @param number number for which to find next higher power of 2
-//   * @return next higher power of 2 above \b number
-//   **/
-//  template<typename T>
-//  inline T get_next_higher_power_of_2(const T number)
-//  {
-//    T power_of_2 = 1;
-//
-//    while(power_of_2 < number) power_of_2 *= 2;
-//
-//    return power_of_2;
-//  }
-
 /**
  * Rounds each element of X to the nearest multiple of 10^N.
  * N must be scalar, and integer-valued.
@@ -253,6 +234,47 @@ inline float speed_of_sound(float temp)
 	return 331.4 * sqrt(1 + (temp / 273));
 }
 
+inline arma::mat::fixed<4,4> rotation_matrix_from_angles(const avrs::orientation_angles_t &o)
+{
+    // To radians
+    double az = (o.az * PI) / 180.0;
+    double el = (o.el * PI) / 180.0;
+
+	// Rotation matrix ZXZ convention
+	arma::mat::fixed<4,4> R;  // 4 x 4 matrix
+	double sin_az = sin(az);
+	double cos_az = cos(az);
+	double sin_el = sin(el);
+	double cos_el = cos(el);
+	R << cos_az           << sin_az           << 0      << 0 << arma::endr
+	  << -sin_az * cos_el << cos_az * cos_el  << sin_el << 0 << arma::endr
+	  << sin_az * sin_el  << -cos_az * sin_el << cos_el << 0 << arma::endr
+	  << 0                << 0                << 0      << 1 << arma::endr;
+
+	return R;
 }
 
-#endif  // MATHTOOLS_HPP_
+inline void polar2rectangular(float az_deg, float el_deg, double *point)
+{
+	// vertical-polar to rectangular conversion
+	float az_r = deg2rad(az_deg);
+	float el_r = deg2rad(el_deg);
+	point[X] = cos(az_r) * cos(el_r);
+	point[Y] = sin(az_r) * cos(el_r);
+	point[Z] = sin(el_r);
+}
+
+inline void rectangular2polar(double *point, float *az_deg, float *el_deg)
+{
+	// rectangular to vertical-polar conversion
+	float az_r = (float)atan2(point[Y], point[X]);
+	float el_r = (float)atan2(point[Z], sqrt(point[X] * point[X] + point[Y] * point[Y]));
+	*az_deg = rad2deg(az_r);
+	*el_deg = rad2deg(el_r);
+}
+
+}  // namespace math
+
+}  // namespace avrs
+
+#endif  // MATH_HPP_

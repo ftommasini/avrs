@@ -1,5 +1,19 @@
-/**
- * @file system.cpp
+/*
+ * Copyright (C) 2009-2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see http://www.gnu.org/licenses/.
+ *
  */
 
 #include <sys/mman.h>
@@ -12,10 +26,13 @@
 #include <rtai_fifos.h>
 #include "common.hpp"
 #include "rttools.hpp"
-#include "mathtools.hpp"
+#include "math.hpp"
 #include "system.hpp"
 
-System::System(avrs::config_sim_t *config_sim)
+namespace avrs
+{
+
+System::System(configuration_t *config_sim)
 	: _config_sim(config_sim)
 {
 	;  // nothing to do
@@ -23,11 +40,11 @@ System::System(avrs::config_sim_t *config_sim)
 
 System::~System()
 {
-	; // nothing to do
+	;  // nothing to do
 }
 
 // Singleton (static ptr_t)
-System::ptr_t System::create(avrs::config_sim_t *config_sim)
+System::ptr_t System::create(configuration_t *config_sim)
 {
 	static ptr_t p_tmp(new System(config_sim));
 	static bool is_init = false;
@@ -45,30 +62,36 @@ System::ptr_t System::create(avrs::config_sim_t *config_sim)
 bool System::_init()
 {
 	_in = InputWaveLoop::create(_config_sim->anechoic_file);
-	_out = Player::create(mathtools::dB2linear(_config_sim->master_gain_db));
+	_out = Player::create(avrs::math::dB2linear(_config_sim->master_gain_db));
 
 	_conv_l = Convolver::create(BUFFER_SAMPLES);
 	_conv_r = Convolver::create(BUFFER_SAMPLES);
 
-	uint read_interval_ms = 10; // ms (100 Hz)
+	uint read_interval_ms = 10;  // ms (100 Hz)
 
-//	_tracker = TrackerWiimote::create("Object4", "00:24:F3:2D:C0:BB", read_interval_ms);
-
-	_tracker = TrackerSimulation::create(TrackerSimulation::from_file,
-			read_interval_ms, "data/movdb/der_izq.movdb");
-
-//	_tracker = TrackerSimulation::create(TrackerSimulation::calculation,
-//			read_interval_ms, "");
-
-//	avrs::position_t pos;
-//	avrs::orientation_angles_t ori;
-//	ori.az = 0.0;
-//	ori.el = 0.0;
-//	_tracker = TrackerConstant::create(pos, ori, read_interval_ms);
+#ifdef WIIMOTE_TRACKER
+	std::cout << "Starting Wiimote tracker\n";
+	_tracker = TrackerWiimote::create(
+			"tracker_points",
+			_config_sim->tracker_params,
+			read_interval_ms);
+#else
+	std::cout << "Starting simulated tracker\n";
+	_tracker = TrackerSim::create(
+			TrackerSim::from_file,
+			read_interval_ms,
+			_config_sim->tracker_sim_file);
+#endif
 
 	assert(_tracker.get() != NULL);
 
 	_ve = VirtualEnvironment::create(_config_sim, _tracker);
+	assert(_ve.get() != NULL);
+
+	//_ve->print_vis();  // for debug only
+	// Print information of ISM
+	std::cout << "Total VSs calculated: " << _ve->n_vs()  << std::endl;
+	std::cout << "Visilbe VSs: " << _ve->n_visible_vs() << std::endl;
 
 	return true;
 }
@@ -138,7 +161,7 @@ bool System::run()
 
 	// Why error? (segmentation fault)
 	//stop_rt_timer();
-	//rt_task_delete(wait_task);
+	rt_task_delete(wait_task);
 
 	printf("Quit\n");
 
@@ -273,7 +296,8 @@ void *System::_rt_thread(void *arg)
 		elapsed_loop = (float) (end_loop - start_loop) / 1E6; // in ms
 		elapsed_render = (float) (end_render - start_render) / 1E6; // in ms
 		elapsed_conv = (float) (end_conv - start_conv) / 1E6; // in ms
-		//DPRINT("Render: %6.3f - RT Convolution: %6.3f - Loop: %6.3f ms", elapsed_render, elapsed_conv, elapsed_loop);
+//		DPRINT("Render: %6.3f - RT Convolution: %6.3f - Loop: %6.3f - Tick: %6.3f ms",
+//				elapsed_render, elapsed_conv, elapsed_loop, TICK_TIME / 1.0e+6f);
 
 		rt_task_wait_period();
 	}
@@ -315,3 +339,5 @@ void *System::_convolve_right_thread(void *arg)
 
 	return _conv_r->convolve_signal(_input.data());
 }
+
+}  // namespace avrs

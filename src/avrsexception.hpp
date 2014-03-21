@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2013 Fabián C. Tommasini <fabian@tommasini.com.ar>
+ * Copyright (C) 2013 Fabián C. Tommasini <fabian@tommasini.com.ar>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,34 +16,38 @@
  *
  */
 
-#ifndef SOUNDSOURCE_HPP_
-#define SOUNDSOURCE_HPP_
+#ifndef AVRSEXCEPTION_HPP_
+#define AVRSEXCEPTION_HPP_
 
-#include "common.hpp"
+#include <string>
+#include <exception>
 
-class SoundSource
+namespace avrs
+{
+
+class AvrsException: public std::exception
 {
 public:
-	typedef std::auto_ptr<SoundSource> ptr_t;
+	AvrsException(const std::string m = "AVRS exception")
+			:_msg(m)
+	{
+		;
+	}
 
-	virtual ~SoundSource();
-    static ptr_t create(std::string filename);
-    // todo Can return reference???
-	avrs::data_t get_IR(avrs::orientation_angles_t &ori);
+	virtual ~AvrsException() throw()
+	{
+		;
+	}
 
-	avrs::point3d_t pos;
+	virtual const char* what() const throw()
+	{
+		return _msg.c_str();
+	}
 
 private:
-	SoundSource(std::string filename);
-	bool _init();
-
-	std::string _filename;
-	avrs::data_t _ir;
+	std::string _msg;
 };
 
-inline avrs::data_t SoundSource::get_IR(avrs::orientation_angles_t &ori)
-{
-	return _ir;
-}
+} // namespace
 
-#endif // SOUNDSOURCE_HPP_
+#endif /* AVRSEXCEPTION_HPP_ */

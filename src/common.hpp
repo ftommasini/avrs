@@ -1,6 +1,19 @@
-/**
- * \file common.hpp
- * \brief Common variables, definitions and macros
+/*
+ * Copyright (C) 2009-2013 Fabián C. Tommasini <fabian@tommasini.com.ar>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see http://www.gnu.org/licenses/.
+ *
  */
 
 #ifndef COMMON_HPP_
@@ -19,11 +32,8 @@ namespace avrs
 
 // typedefs
 typedef fftwf_complex complex_t;  // for spectral data
-
 typedef float sample_t;  // for time data
-
 typedef std::vector<sample_t> data_t;
-
 typedef arma::frowvec3 point3d_t;
 
 typedef struct BinauralData
@@ -113,113 +123,41 @@ typedef struct OrientationAngles
 	{
 		OrientationAngles res;
 
-		// azimuth (-180, +180]
-		float az2 = az + val.az;
-
-		if (az2 > 180)
-			res.az = az2 - 360;
-		else if (az < -180)
-			res.az = az2 + 360;
-		else
-			res.az = az2;
-
-		// elevation [-90, +90]
-		float el2 = el + val.el;
-
-		if (el2 > 90)
-			res.el = 180 - el2;
-		else if (el < -90)
-			res.el = -180 - el2;
-		else
-			res.el = el2;
+		res.az = az + val.az;
+		res.el = el + val.el;
+		res.ro = ro + val.ro;
+		correct_angles(res);
 
 	    return res;
 	}
 
 	OrientationAngles operator-(const OrientationAngles &val) const
 	{
-
 		OrientationAngles res;
 
-		// azimuth (-180, +180]
-		float az2 = az - val.az;
-
-		if (az2 > 180)
-			res.az = az2 - 360;
-		else if (az2 < -180)
-			res.az = az2 + 360;
-		else
-			res.az = az2;
-
-		// elevation [-90, +90]
-		float el2 = el - val.el;
-
-		if (el2 > 90)
-			res.el = 180 - el2;
-		else if (el2 < -90)
-			res.el = -180 - el2;
-		else
-			res.el = el2;
+		res.az = az - val.az;
+		res.el = el - val.el;
+		res.ro = ro - val.ro;
+		correct_angles(res);
 
 	    return res;
 	}
-} orientation_angles_t;
 
-typedef struct TrackerData
-{
-	position_t pos;
-	orientation_angles_t ori;
-	unsigned long timestamp;
-
-	TrackerData()
+	void correct_angles(OrientationAngles &ori) const
 	{
-		timestamp = 0;
-	}
-
-	TrackerData operator-(const TrackerData &val) const
-	{
-		TrackerData res;
-
-//		res.pos = pos - val.pos;
-//		res.ori = ori - val.ori;
-
 		// azimuth (-180, +180]
-		float az = ori.az - val.ori.az;
-
-		if (az > 180)
-			res.ori.az = az - 360;
-		else if (az < -180)
-			res.ori.az = az + 360;
-		else
-			res.ori.az = az;
+		if (ori.az > 180)
+			ori.az = ori.az - 360;
+		else if (ori.az  < -180)
+			ori.az = ori.az + 360;
 
 		// elevation [-90, +90]
-		float el = ori.el - val.ori.el;
-
-		if (el > 90)
-			res.ori.el = 180 - el;
-		else if (el < -90)
-			res.ori.el = -180 - el;
-		else
-			res.ori.el = el;
-
-		return res;
+		if (ori.el > 90)
+			ori.el = 180 - ori.el;
+		else if (ori.el < -90)
+			ori.el = -180 - ori.el;
 	}
-
-	TrackerData operator+(const TrackerData &val) const
-	{
-		TrackerData res;
-
-		res.pos = pos + val.pos;
-		res.ori = ori + val.ori;
-
-		return res;
-	}
-
-} trackerdata_t;
-
-}  // namespace
-
+} orientation_angles_t;
 
 // Definitions for all the system
 
@@ -269,5 +207,7 @@ typedef struct TrackerData
 #define HRTF_IIR
 //#define RTCONV_THREADS
 //#define VSFILTER_THREADS
+
+}  // namespace
 
 #endif // COMMON_HPP_

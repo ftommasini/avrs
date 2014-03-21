@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2013 Fabián C. Tommasini <fabian@tommasini.com.ar>
+ * Copyright (C) 2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,34 +16,23 @@
  *
  */
 
-#ifndef SOUNDSOURCE_HPP_
-#define SOUNDSOURCE_HPP_
+#ifndef VERSION_HPP_
+#define VERSION_HPP_
 
-#include "common.hpp"
+#include <string>
+#include <boost/lexical_cast.hpp>
 
-class SoundSource
+// the configured options and settings
+#define VERSION_MAJOR 0
+#define VERSION_MINOR 2
+#define VERSION_PATCH 0
+
+inline std::string get_version()
 {
-public:
-	typedef std::auto_ptr<SoundSource> ptr_t;
-
-	virtual ~SoundSource();
-    static ptr_t create(std::string filename);
-    // todo Can return reference???
-	avrs::data_t get_IR(avrs::orientation_angles_t &ori);
-
-	avrs::point3d_t pos;
-
-private:
-	SoundSource(std::string filename);
-	bool _init();
-
-	std::string _filename;
-	avrs::data_t _ir;
-};
-
-inline avrs::data_t SoundSource::get_IR(avrs::orientation_angles_t &ori)
-{
-	return _ir;
+	std::string major = boost::lexical_cast<std::string>(VERSION_MAJOR);
+	std::string minor = "." + boost::lexical_cast<std::string>(VERSION_MINOR);
+	std::string patch = (VERSION_PATCH != 0 ? ("." + boost::lexical_cast<std::string>(VERSION_PATCH)) : "");
+	return (major + minor + patch);
 }
 
-#endif // SOUNDSOURCE_HPP_
+#endif /* VERSION_HPP_ */

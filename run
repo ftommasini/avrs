@@ -1,0 +1,17 @@
+#!/bin/bash
+
+WM_ADDRESS=00:24:F3:2D:C0:BB
+OBJECT_FILENAME=Object4
+
+./loadmod
+
+#$SUDO echo "Press buttons 1 and 2 on the Wiimote to connect... "
+#read -p "(then press Enter to continue)"
+#echo "Connecting..."
+#$SUDO /usr/bin/hcitool cc $WM_ADDRESS
+#echo "rv:" $?
+#read -p "Waiting... (press Enter)"
+echo "Launching AVRS..."
+./avrs $1
+
+exit 0

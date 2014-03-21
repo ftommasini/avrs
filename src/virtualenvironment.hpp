@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2012 Fabián C. Tommasini
+ * Copyright (C) 2009-2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,16 +26,15 @@
 #include <sys/time.h>
 #include <cstdio>
 #include <stddef.h>
-
 #include <rtai_mbx.h>
-
-#include <Iir.h>
-#include <Delay.h>
+#include <stk/Iir.h>
+#include <stk/Fir.h>
+#include <stk/Delay.h>
 
 #include "tree.hpp"
-
-#include "mathtools.hpp"
-#include "tracker.hpp"
+#include "rttools.hpp"
+#include "math.hpp"
+#include "trackersim.hpp"
 #include "trackerwiimote.hpp"
 #include "convolver.hpp"
 #include "surface.hpp"
@@ -45,6 +44,11 @@
 #include "fdn.hpp"
 #include "common.hpp"
 #include "configuration.hpp"
+
+#include "hrtfconvolver.hpp"
+
+namespace avrs
+{
 
 typedef struct VirtualSource
 {
@@ -85,7 +89,7 @@ public:
 
 	virtual ~VirtualEnvironment();
 	/// Static factory function for VirtualEnvironment objects
-	static ptr_t create(avrs::config_sim_t *cs, TrackerBase::ptr_t tracker);
+	static ptr_t create(configuration_t *cs, TrackerBase::ptr_t tracker);
 
 	// Room methods
 
@@ -132,35 +136,30 @@ public:
 	bool new_BIR() const;
 
 private:
-	VirtualEnvironment(avrs::config_sim_t *cs, TrackerBase::ptr_t tracker);
+	VirtualEnvironment(configuration_t *cs, TrackerBase::ptr_t tracker);
 
 	bool _init();
 
-	config_sim_t *_config_sim;
-//	config_t *_config;
-
+	configuration_t *_config_sim;
 	data_t _input_buffer;
-
 	binauraldata_t _render_buffer;  // keep the complete BIR
-
 	unsigned long _length_bir;
-
 	data_t _zeros;
 	bool _new_bir;
 
+	// Tracker
 	TrackerBase::ptr_t _tracker;
-
 	MBX *_mbx_tracker;
 	trackerdata_t _tracker_data;
 	trackerdata_t _prev_tracker_data;
 
+	// Surfaces
 	std::vector<Surface *> _surfaces;
 	typedef std::vector<Surface *>::iterator surfaces_it_t;
 	float _area;
 	float _volume;
 	volatile bool _new_data; // flag that indicates new surfaces data
 
-	// TODO: many sound sources
 	SoundSource::ptr_t _sound_source;
 	Listener::ptr_t _listener;
 
@@ -199,25 +198,27 @@ private:
 	data_t _late_buffer;
 
 	// renderer
-#ifndef HRTF_IIR
-	HrtfSet::ptr_t _hrtfdb;
-	hrtf_t _hrtf;
-	HrtfConvolver::ptr_t _hrtf_conv_l;
-	HrtfConvolver::ptr_t _hrtf_conv_r;
-#else
+//#ifndef HRTF_IIR
+//	HrtfSet::ptr_t _hrtfdb;
+//	hrtf_t _hrtf;
+//	HrtfConvolver::ptr_t _hrtf_conv_l;
+//	HrtfConvolver::ptr_t _hrtf_conv_r;
+//	stk::Fir _fir_l;
+//	stk::Fir _fir_r;
+//#else
 	HrtfCoeffSet::ptr_t _hcdb;
 	hrtfcoeff_t _hc;
 	stk::Iir _filter_l;
 	stk::Iir _filter_r;
 	stk::Delay _delay;
-#endif
+//#endif
 
-	stk::Iir _filter_surfaces;;
+	stk::Iir _filter_surfaces;
 
 	// Filter methods
-
 #ifndef HRTF_IIR
-	binauraldata_t _hrtf_filter(data_t &input, const orientation_t &ori);
+	binauraldata_t _hrtf_filter(data_t &input, const orientation_angles_t &ori);
+	binauraldata_t _hrtf_fir_filter(data_t &input, const orientation_angles_t &ori);
 #else
 	binauraldata_t _hrtf_iir_filter(data_t &input, const orientation_angles_t &ori);
 #endif
@@ -241,11 +242,8 @@ private:
 
 inline void VirtualEnvironment::start_simulation()
 {
-	if (_tracker.get() != NULL) {
+	if (_tracker.get() != NULL)
 		_tracker->start();
-
-		//_tracker->calibrate();
-	}
 }
 
 inline void VirtualEnvironment::calibrate_tracker()
@@ -301,13 +299,13 @@ inline void VirtualEnvironment::_calc_vs_orientation(virtualsource_t *vs)
 	// azimuth calculus
 	vs->ref_listener_pos = vs->pos - _listener->get_position();
 	vs->initial_orientation.az =
-			-((atan2(vs->ref_listener_pos(Y), vs->ref_listener_pos(X)) * mathtools::PIdiv180_inverse) - 90.0f); // in degrees
+			-((atan2(vs->ref_listener_pos(Y), vs->ref_listener_pos(X)) * avrs::math::PIdiv180_inverse) - 90.0f); // in degrees
 
 	// elevation calculus
 	float r = sqrt(vs->ref_listener_pos(X) * vs->ref_listener_pos(X)
 			+ vs->ref_listener_pos(Y) * vs->ref_listener_pos(Y));
 	vs->initial_orientation.el =
-			-((atan2(r, vs->ref_listener_pos(Z)) * mathtools::PIdiv180_inverse) - 90.0f); // in degrees
+			-((atan2(r, vs->ref_listener_pos(Z)) * avrs::math::PIdiv180_inverse) - 90.0f); // in degrees
 
 	vs->initial_orientation = vs->initial_orientation - _listener->get_orientation();
 
@@ -324,7 +322,6 @@ inline void VirtualEnvironment::_calc_vs_orientation(virtualsource_t *vs)
 //			+ vs->ref_listener_pos(Y) * vs->ref_listener_pos(Y));
 //	vs->initial_orientation.el =
 //			-((atan2(r, vs->ref_listener_pos(Z)) * mathtools::PIdiv180_inverse) - 90.0f); // in degrees
-
 }
 
 inline bool VirtualEnvironment::_listener_is_moved()
@@ -338,5 +335,7 @@ inline bool VirtualEnvironment::_listener_is_moved()
 
 	return false;
 }
+
+}  // namespace avrs
 
 #endif  // VIRTUALENVIRONMENT_HPP_

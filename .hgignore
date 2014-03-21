@@ -1,9 +1,11 @@
 syntax: glob
-conf/*
 data/*
-conf.tar.gz
-data.tar.gz
 bin/*
-aula_conf/*
 avrs
-aula.conf
+.project
+.cproject
+.nfs*
+demo/*
+tools/avrsconfig/conf/*
+*.tar.gz
+doc/doxygen/*

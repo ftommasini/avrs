@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2012 Fabián C. Tommasini
+ * Copyright (C) 2009-2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,14 +16,16 @@
  *
  */
 
+#include <dxflib/dl_dxf.h>
+#include <boost/format.hpp>
+
 #include "virtualenvironment.hpp"
-
-#include "dxflib/dl_dxf.h"
-
-#include "rttools.hpp"
 #include "dxfreader.hpp"
 
-VirtualEnvironment::VirtualEnvironment(avrs::config_sim_t *cs, TrackerBase::ptr_t tracker)
+namespace avrs
+{
+
+VirtualEnvironment::VirtualEnvironment(configuration_t *cs, TrackerBase::ptr_t tracker)
 {
 	assert(cs != NULL);
 
@@ -63,20 +65,20 @@ VirtualEnvironment::VirtualEnvironment(avrs::config_sim_t *cs, TrackerBase::ptr_
 	_late_buffer.resize(_length_bir, 0.0f);
 
 	// create and load HRTF DB into program
-#ifndef HRTF_IIR
-	_hrtfdb = HrtfSet::create(_config_sim->hrtf_db_file);
-	// for left ear
-	_hrtf_conv_l = HrtfConvolver::create(N_FFT);
-	_hrtf_conv_l->setKernelLength(KERNEL_LENGTH);
-	_hrtf_conv_l->setSegmentLength(SEGMENT_LENGTH);
-	// for right ear
-	_hrtf_conv_r = HrtfConvolver::create(N_FFT);
-	_hrtf_conv_r->setKernelLength(KERNEL_LENGTH);
-	_hrtf_conv_r->setSegmentLength(SEGMENT_LENGTH);
-#else
-	_hcdb = HrtfCoeffSet::create(_config_sim->hrtf_filter_file);
+//#ifndef HRTF_IIR
+//	_hrtfdb = HrtfSet::create(_config_sim->hrtf_file);
+//	// for left ear
+//	_hrtf_conv_l = HrtfConvolver::create(N_FFT);
+//	_hrtf_conv_l->setKernelLength(KERNEL_LENGTH);
+//	_hrtf_conv_l->setSegmentLength(SEGMENT_LENGTH);
+//	// for right ear
+//	_hrtf_conv_r = HrtfConvolver::create(N_FFT);
+//	_hrtf_conv_r->setKernelLength(KERNEL_LENGTH);
+//	_hrtf_conv_r->setSegmentLength(SEGMENT_LENGTH);
+//#else
+	_hcdb = HrtfCoeffSet::create(_config_sim->hrtf_file);
 	_delay.setMaximumDelay(BUFFER_SAMPLES);
-#endif
+//#endif
 }
 
 VirtualEnvironment::~VirtualEnvironment()
@@ -99,7 +101,7 @@ VirtualEnvironment::~VirtualEnvironment()
 	}
 }
 
-VirtualEnvironment::ptr_t VirtualEnvironment::create(avrs::config_sim_t *cs, TrackerBase::ptr_t tracker)
+VirtualEnvironment::ptr_t VirtualEnvironment::create(configuration_t *cs, TrackerBase::ptr_t tracker)
 {
 	ptr_t p_tmp(new VirtualEnvironment(cs, tracker));
 
@@ -136,19 +138,12 @@ bool VirtualEnvironment::_init()
 	delete dxf;
 	delete reader;
 
-	DPRINT("%s loaded", filename);
-
 	// updates and calculations
 	update_surfaces_data();
-
 	calc_ISM();  // calculate VSs by ISM
 
 	_update_vis();
 	_update_vs_orientations();
-
-	// for debug only
-	_sort_vis();
-	print_vis();
 
 	return true;
 }
@@ -161,10 +156,10 @@ void VirtualEnvironment::add_surface(Surface *s)
 
 void VirtualEnvironment::calc_ISM()
 {
-	RTIME startt, endt;
-	float elapsedt;
+//	RTIME startt, endt;
+//	float elapsedt;
 
-	startt = rt_get_time_ns();
+	//startt = rt_get_time_ns();
 
 	_max_dist = _config_sim->max_distance;
 	_max_order = _config_sim->max_order;
@@ -191,10 +186,11 @@ void VirtualEnvironment::calc_ISM()
 	// propagate first order... and then run recursively
 	_propagate_ISM(vs, _root_it, 1);
 
-	endt = rt_get_time_ns();
-	elapsedt = (float) (endt - startt) / 1E6; // in ms
-	DPRINT("ISM calculation time: %2.4f ms", elapsedt);
-	DPRINT("Max distance: %3.2f - Max order: %d", _max_dist, _max_order);
+	//endt = rt_get_time_ns();
+
+	//elapsedt = (float) (endt - startt) / 1E6; // in ms
+	//DPRINT("ISM calculation time: %2.4f ms", elapsedt);
+	//DPRINT("Max distance: %3.2f - Max order: %d", _max_dist, _max_order);
 }
 
 // recursive function
@@ -408,15 +404,12 @@ void VirtualEnvironment::_update_vis()
 
 	_outputs.resize(_vis.size());  // output per visible VS
 
-	DPRINT("Total VSs: %d - Visibles VSs: %d", (int) _tree.size(_root_it), (int) _vis.size());
+	//DPRINT("Total VSs: %d - Visibles VSs: %d", (int) _tree.size(_root_it), (int) _vis.size());
 }
 
 // todo maybe in a thread
 bool VirtualEnvironment::update_listener_orientation()
 {
-//	if (_tracker.get() == NULL)
-//		return false;
-
 	trackerdata_t tmp_data;
 
 	// receive message from TRACKER mailbox
@@ -432,13 +425,19 @@ bool VirtualEnvironment::update_listener_orientation()
 	// check for new data
 	if (_tracker_data.timestamp != tmp_data.timestamp)
 	{
-		if (tmp_data.timestamp != 0) {
+		if (tmp_data.timestamp != 0)
+		{
 			_tracker_data = tmp_data;  // save the current tracker data
 			_listener->rotate(tmp_data.ori);  // update listener orientation
 			//_listener->move(tmp_data.pos.to_point3d());  // update listener position
 			_update_vs_orientations();  // and update VS orientations
 
-			//DPRINT("az: %3.1f, el: %3.1f", _listener->get_orientation().az, _listener->get_orientation().el);
+//			DPRINT("%+1.3f %+1.3f \t %+1.3f %+1.3f",
+//					_tracker_data.ori.az,
+//					_listener->get_orientation().az,
+//					_tracker_data.ori.el,
+//					_listener->get_orientation().el);
+//			DPRINT("az: %3.1f, el: %3.1f", _listener->get_orientation().az, _listener->get_orientation().el);
 		}
 	}
 
@@ -451,28 +450,7 @@ void VirtualEnvironment::_update_vs_orientations()
 	for (vis_it_t it = _vis.begin(); it != _vis.end(); it++)
 	{
 		virtualsource_t *vs = *it;
-		//vs->ref_listener_orientation = vs->initial_orientation - _listener->get_orientation();
-
-
-		// azimuth (-180, +180]
-		float az =  _listener->get_orientation().az - vs->initial_orientation.az;
-
-		if (az > 180)
-			vs->ref_listener_orientation.az = az - 360;
-		else if (az < -180)
-			vs->ref_listener_orientation.az = az + 360;
-		else
-			vs->ref_listener_orientation.az = az;
-
-		// elevation [-90, +90]
-		float el = _listener->get_orientation().el - vs->initial_orientation.el;
-
-		if (el > 90)
-			vs->ref_listener_orientation.el = 180 - el;
-		else if (el < -90)
-			vs->ref_listener_orientation.el = -180 - el;
-		else
-			vs->ref_listener_orientation.el = el;
+		vs->ref_listener_orientation = vs->initial_orientation - _listener->get_orientation();
 	}
 
 //	vis_it_t tmp = _vis.begin();
@@ -487,34 +465,44 @@ void VirtualEnvironment::_sort_vis()
 
 void VirtualEnvironment::print_vis()
 {
-	float ref_time = (_vis[0]->dist_listener / _config_sim->speed_of_sound) * 1000.0f;
+	_sort_vis();
 
-	printf("\n  Abs\t  Rel\t  Az\t  El\tOrder\t  ID\t  Vis1\t  Vis2\n");
+	std::cout << "List of visible VSs\n" << std::endl;
+	boost::format fmter_title("%-15s\t%-15s\t%-15s\t%-7s\t%-7s\t%+10s\t%+10s\t%+10s\n");
+	boost::format fmter_content("%-15.3f\t%-15.3f\t%-15.3f\t%-7i\t%-7i\t%+10.3f\t%+10.3f\t%+10.3f\n");
+	std::cout << boost::format(fmter_title) % "Relative [ms]"
+					% "Absolute [ms]" % "Distance [m]" % "Order" % "Id"
+					% "X" % "Y" % "Z";
+	float time_ref_ms;
 
 	for (vis_it_t it = _vis.begin(); it != _vis.end(); it++)
 	{
 		virtualsource_t *vs = *it;
+		float time_abs_ms = (vs->dist_listener / _config_sim->speed_of_sound) * 1000.0f;
 
-		float abs_time = (vs->dist_listener / _config_sim->speed_of_sound) * 1000.0f;
-		printf("%7.2f\t", abs_time);
-		printf("%7.2f\t", abs_time - ref_time);
-		printf("%+7.2f\t", vs->ref_listener_orientation.az);
-		printf("%+7.2f\t", vs->ref_listener_orientation.el);
-		printf("%d\t", vs->order);
-		printf("%d\t", vs->id);
-		printf("%d\t", (int) vs->vis_test_1);
-		printf("%d\t", (int) vs->vis_test_2);
-		printf("\n");
+		if (it == _vis.begin())
+			time_ref_ms = time_abs_ms;
+
+		float time_rel_ms = time_abs_ms - time_ref_ms;
+
+		std::cout << boost::format(fmter_content)
+			% time_rel_ms
+			% time_abs_ms
+			% vs->dist_listener
+			% vs->order
+			% vs->id
+			% vs->pos(X)
+			% vs->pos(Y)
+			% vs->pos(Z);
 	}
 
-	printf("\n");
+	std::cout << std::endl;
 }
 
 #ifndef VSFILTER_THREADS
 
 void VirtualEnvironment::renderize()
 {
-	RTIME start, end;
 	float elapsed;
 
 	// check if the listener is moved
@@ -530,12 +518,9 @@ void VirtualEnvironment::renderize()
 	memcpy(&_render_buffer.left[0], &_zeros[0], _config_sim->bir_length_samples * sizeof(sample_t));
 	memcpy(&_render_buffer.right[0], &_zeros[0], _config_sim->bir_length_samples * sizeof(sample_t));
 
-	// TODO PARALELIZE!!!
 	// TODO SE PODRÍA MEJORAR SI SE GUARDAR EL ITERATOR EN CADA VS, ASI SE RECORRE SOLAMENTE LAS VISIBLES
-
 	// only for visible VSs
 	for (tree_it_t it = _tree.begin(); it != _tree.end(); it++)
-	//for (vis_it_t it = _vis.begin(); it != _vis.end(); it++)
 	{
 		virtualsource_t *vs = *it;
 
@@ -558,12 +543,11 @@ void VirtualEnvironment::renderize()
 
 		// HRTF filtering
 #ifndef HRTF_IIR
-		output = _hrtf_filter(input, vs->ref_listener_orientation);
+		output = _hrtf_filter(input, vs->ref_listener_orientation);  // HRTF spectrums
+
 #else
 		output = _hrtf_iir_filter(input, vs->ref_listener_orientation);
 #endif
-
-		start = rt_get_time_ns();
 
 		// calculate the sample from reflectogram where starts this reflection
 		// TODO delay menor a una muestra
@@ -577,17 +561,8 @@ void VirtualEnvironment::renderize()
 			_render_buffer.right[i] += output.right[j];
 		}
 
-		end = rt_get_time_ns();
-
 		_new_bir = true;
-
-		// TODO NORMALIZE!!!
-
-		elapsed = (float) (end - start) / 1E3; // in us
-
 	}
-
-	//DPRINT("Time: %6.3f us",  elapsed);
 }
 
 #else
@@ -654,15 +629,7 @@ void *VirtualEnvironment::_vs_filter_wrapper(void *arg)
 //	virtualsource_t *vs = *(td->it);
 
 	return td->ve->_vs_filter_thread(td->it, td->index);
-
-	return 0;  // TODO maybe the index
 }
-
-//void *VirtualEnvironment::_vs_filter_wrapper(void *arg)
-//{
-//	VirtualEnvironment *ve = reinterpret_cast<VirtualEnvironment *> (arg);
-//	return ve->_vs_filter_thread(ve->_current_it, ve->_current_index);
-//}
 
 void *VirtualEnvironment::_vs_filter_thread(tree_it_t it, uint index)
 {
@@ -690,11 +657,20 @@ void *VirtualEnvironment::_vs_filter_thread(tree_it_t it, uint index)
 }
 
 // filter for single reflection
-binauraldata_t VirtualEnvironment::_hrtf_filter(data_t &input, const orientation_t &ori)
+binauraldata_t VirtualEnvironment::_hrtf_filter(data_t &input, const orientation_angles_t &ori)
 {
 	binauraldata_t output(BUFFER_SAMPLES);
 
 	_hrtfdb->get_HRTF(&_hrtf, ori.az, ori.el);  // get the best-fit HRTF for both ears
+
+
+//	DPRINT("************\nSTART\n");
+//	for (uint i = 0; i < input.size(); i++)
+//	{
+//		DPRINT("%f", input[i]);
+//	}
+//
+//	DPRINT("************\nEND\n");
 
 	// convolution with 1 image-source
 	_hrtf_conv_l->setSKernel(_hrtf.left, N_FFT);
@@ -714,6 +690,35 @@ binauraldata_t VirtualEnvironment::_hrtf_filter(data_t &input, const orientation
 	return output;
 }
 
+// filter for single reflection
+binauraldata_t VirtualEnvironment::_hrtf_fir_filter(data_t &input, const orientation_angles_t &ori)
+{
+	binauraldata_t output(BUFFER_SAMPLES);
+	stk::StkFrames out_l(input.size(), 1);  // one channel
+	stk::StkFrames out_r(input.size(), 1);  // one channel
+
+	// get the best-fit HRTF for both ears
+	_hrtfdb->get_HRTF(&_hrtf, ori.az, ori.el);
+
+	_fir_l.setCoefficients(_hc.left, true);
+	_fir_r.setCoefficients(_hc.rigth, true);
+
+	// HRIR filtering
+	for (uint i = 0; i < input.size(); i++)
+	{
+		out_l[i] = _fir_l.tick(input[i]);
+		out_r[i] = _fir_r.tick(input[i]);
+	}
+
+	for (uint i = 0; i < out_l.size(); i++)
+	{
+		output.left[i] = (sample_t) out_l[i];
+		output.right[i] = (sample_t) out_r[i];
+	}
+
+	return output;
+}
+
 
 #else
 
@@ -724,9 +729,9 @@ binauraldata_t VirtualEnvironment::_hrtf_iir_filter(data_t &input, const orienta
 	stk::StkFrames out_l(input.size(), 1);  // one channel
 	stk::StkFrames out_r(input.size(), 1);  // one channel
 
-	_hcdb->get_HRTF_coeff(&_hc, ori.az, ori.el);  // get the best-fit HRTF for both ears
+	// get the best-fit HRTF for both ears
+	_hcdb->get_HRTF_coeff(&_hc, ori.az, ori.el);
 
-	// TODO PARALELIZE!!
 	_filter_l.setCoefficients(_hc.b_left, _hc.a_left, true);
 	_filter_r.setCoefficients(_hc.b_right, _hc.a_right, true);
 
@@ -743,12 +748,12 @@ binauraldata_t VirtualEnvironment::_hrtf_iir_filter(data_t &input, const orienta
 	if (_hc.itd > 0)  // left is delayed
 	{
 		_delay.setDelay(_hc.itd);
-		out_l = _delay.tick(out_l);
+		_delay.tick(out_l);
 	}
 	else if (_hc.itd < 0)  // right is delayed
 	{
 		_delay.setDelay((-1) * _hc.itd);  // change the sign
-		out_r = _delay.tick(out_r);
+		_delay.tick(out_r);
 	}
 
 	for (uint i = 0; i < out_l.size(); i++)
@@ -843,3 +848,5 @@ void VirtualEnvironment::calc_late_reverberation()
 		_late_buffer[i] = (sample_t) output[i];
 	}
 }
+
+}  // namespace avrs

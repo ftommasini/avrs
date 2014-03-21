@@ -1,5 +1,19 @@
-/**
- * @file trackerwiimote.h
+/*
+ * Copyright (C) 2009-2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see http://www.gnu.org/licenses/.
+ *
  */
 
 #ifndef TRACKERWIIMOTE_HPP_
@@ -14,7 +28,10 @@
 #include "posit.hpp"
 #include "wiimote.hpp"
 #include "common.hpp"
-#include "tracker.hpp"
+#include "trackerbase.hpp"
+
+namespace avrs
+{
 
 class TrackerWiimote : public TrackerBase
 {
@@ -81,5 +98,7 @@ inline avrs::trackerdata_t TrackerWiimote::get_data()
 {
 	return _corrected_position;
 }
+
+}  // namespace avrs
 
 #endif  // TRACKERWIIMOTE_HPP_

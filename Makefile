@@ -12,7 +12,7 @@ OBJF =	surface.o \
        	convolver.o \
         virtualenvironment.o \
         headfilter.o \
-        tracker.o \
+        trackersim.o \
         rttools.o \
         player.o \
         input.o \
@@ -21,23 +21,24 @@ OBJF =	surface.o \
         system.o \
         wiimote.o \
         trackerwiimote.o \
-        posit.o
+        posit.o \
+        timer.o \
+        hrtfconvolver.o
 
 OUT_OBJF = $(addprefix $(OBJ_DIR)/,$(OBJF))        
         
-LIBS = -lfftw3f -lc -lm -lstk -lasound -lpthread -ldxflib -larmadillo -lbluetooth -lcwiid -lncurses
+LIBS = -lfftw3f -lc -lm -lstk -lasound -lpthread -ldxflib -larmadillo -lbluetooth -lcwiid -lANN \
+       -lboost_system -lboost_filesystem -lboost_program_options
 
-INCLUDES = -I/usr/local/include/stk \
-           -I/usr/local/include/dxflib \
-           -I/usr/realtime/include \
-           -I/usr/src/linux/include
+INCLUDES = -I/usr/realtime/include \
+           -I/usr/src/linux/include 
            
-CXXFLAGS = -O2 -Wall -pipe
-CFLAGS = -O2 -Wall -pipe
+CXXFLAGS = -O2 -pipe
+CFLAGS = -O2 -pipe
 
-LDFLAGS = -L/usr/realtime/lib #-L../lib -ldxflib
+LDFLAGS = -L/usr/realtime/lib
 
-MACROS = -D__LINUX_ALSA__ -D__LITTLE_ENDIAN__ -D_REENTRANT #-DHRTF_IIR
+MACROS = -D__LINUX_ALSA__ -D__LITTLE_ENDIAN__ -D_REENTRANT  #-DWIIMOTE_TRACKER
 
 all: $(EXECF)
 

@@ -1,8 +1,28 @@
+/*
+ * Copyright (C) 2009-2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see http://www.gnu.org/licenses/.
+ *
+ */
 
 #include <rtai_lxrt.h>
 
 #include "rttools.hpp"
 #include "trackerwiimote.hpp"
+
+namespace avrs
+{
 
 TrackerWiimote::TrackerWiimote(std::string object, std::string address,
 		const unsigned int read_interval) :
@@ -287,11 +307,6 @@ void TrackerWiimote::_posit(ir_points_t *ir_points, ir2object_points_t *ir2obj)
 		_current_position.pos.x = (float) _camera.translation[0]; // not referenced
 		_current_position.pos.y = (float) _camera.translation[1]; // not referenced
 		_current_position.pos.z = (float) _camera.translation[2]; // not referenced
-
-//		DPRINT("(az, el, ro) = (%3.1f, %3.1f, %3.1f)",
-//				_current_position.ori.az,
-//				_current_position.ori.el,
-//				_current_position.ori.ro);
 	}
 	
 	first_run = false;
@@ -318,3 +333,5 @@ void TrackerWiimote::printPoints(const ir_points_t *ir)
 
 	printf("\n");
 }
+
+}  // namespace avrs

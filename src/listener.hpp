@@ -1,3 +1,22 @@
+/*
+ * Copyright (C) 2009-2013 Fabián C. Tommasini <fabian@tommasini.com.ar>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see http://www.gnu.org/licenses/.
+ *
+ */
+
+
 /**
  * @file listener.hpp
  */
@@ -5,9 +24,11 @@
 #ifndef LISTENER_HPP_
 #define LISTENER_HPP_
 
-#include <math.h>
+#include <cmath>
 #include <armadillo>
+
 #include "common.hpp"
+#include "math.hpp"
 
 using namespace arma;
 
@@ -20,6 +41,7 @@ public:
     static ptr_t create();
 
     void set_orientation_reference(const avrs::orientation_angles_t &o);
+
     avrs::orientation_angles_t &get_orientation();
     void rotate(const avrs::orientation_angles_t &o);
 
@@ -36,29 +58,30 @@ private:
 	Listener();
 
 	bool _init();
-	mat::fixed<4,4> _calculate_rotation_matrix(const avrs::orientation_angles_t &o);
+//	mat::fixed<4,4> _calculate_rotation_matrix(const avrs::orientation_angles_t &o);
 
 	avrs::point3d_t _pos;  // in room reference system
 	avrs::point3d_t _pos_ref;
 	avrs::orientation_angles_t _ori;
 	avrs::orientation_angles_t _ori_ref;  // TODO deprecated?
-	mat::fixed<4,4> _R0;  // Initial Rotation matrix
-	mat::fixed<4,4> _T0;  // Initial Rotation matrix
-	mat::fixed<4,4> _Tr;  // Transformation matrix
 
-	mat::fixed<4,4> _Rc;  // Current Rotation matrix
-	mat::fixed<4,4> _Tc;  // Current Translation matrix
+	arma::mat::fixed<4,4> _R0;  // Initial Rotation matrix
+	arma::mat::fixed<4,4> _T0;  // Initial Rotation matrix
+	arma::mat::fixed<4,4> _Tr;  // Transformation matrix
+
+	arma::mat::fixed<4,4> _Rc;  // Current Rotation matrix
+	arma::mat::fixed<4,4> _Tc;  // Current Translation matrix
 };
 
 inline void Listener::rotate(const avrs::orientation_angles_t &o)
 {
-	mat::fixed<4,4> Ri = _calculate_rotation_matrix(o);  // ZXZ
+	arma::mat::fixed<4,4> Ri = avrs::math::rotation_matrix_from_angles(o);  // ZXZ
 	_Rc = Ri * _Tr;
     //_Rc.print();
 
 	// Euler angles ZXZ (in degrees)
 	int sign1 = (_Rc(0,1) >= 0 ? 1 : -1);
-	_ori.az =  sign1 * (acos(_Rc(0,0)) * 180.0) / M_PI;
+	_ori.az = sign1 * (acos(_Rc(0,0)) * 180.0) / M_PI;
 	int sign2 = (_Rc(1,2) >= 0 ? 1 : -1);
 	_ori.el = sign2 * (acos(_Rc(2,2)) * 180.0) / M_PI;
 	_ori.ro = 0;  // always zero
@@ -92,25 +115,24 @@ inline mat::fixed<4,4> &Listener::get_rotation_matrix()
 	return _Rc;
 }
 
-
-inline mat::fixed<4,4> Listener::_calculate_rotation_matrix(const avrs::orientation_angles_t &o)
-{
-    // To radians
-    double az = (o.az * M_PI) / 180.0;
-    double el = (o.el * M_PI) / 180.0;
-
-	// Rotation matrix ZXZ convention
-	mat::fixed<4,4> R;  // 4 x 4 matrix
-	double sin_az = sin(az);
-	double cos_az = cos(az);
-	double sin_el = sin(el);
-	double cos_el = cos(el);
-	R << cos_az           << sin_az           << 0      << 0 << endr
-	  << -sin_az * cos_el << cos_az * cos_el  << sin_el << 0 << endr
-	  << sin_az * sin_el  << -cos_az * sin_el << cos_el << 0 << endr
-	  << 0                << 0                << 0      << 1 << endr;
-
-	return R;
-}
+//inline mat::fixed<4,4> Listener::_calculate_rotation_matrix(const avrs::orientation_angles_t &o)
+//{
+//    // To radians
+//    double az = (o.az * M_PI) / 180.0;
+//    double el = (o.el * M_PI) / 180.0;
+//
+//	// Rotation matrix ZXZ convention
+//	mat::fixed<4,4> R;  // 4 x 4 matrix
+//	double sin_az = sin(az);
+//	double cos_az = cos(az);
+//	double sin_el = sin(el);
+//	double cos_el = cos(el);
+//	R << cos_az           << sin_az           << 0      << 0 << endr
+//	  << -sin_az * cos_el << cos_az * cos_el  << sin_el << 0 << endr
+//	  << sin_az * sin_el  << -cos_az * sin_el << cos_el << 0 << endr
+//	  << 0                << 0                << 0      << 1 << endr;
+//
+//	return R;
+//}
 
 #endif // LISTENER_HPP_

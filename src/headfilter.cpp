@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2012 Fabián C. Tommasini
+ * Copyright (C) 2009-2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,413 +16,240 @@
  *
  */
 
-#include <string.h>
+#include <cstring>
+#include <fstream>
 
 #include "headfilter.hpp"
-
-/*
- * HrtfSet
- */
-
-HrtfSet::HrtfSet(std::string filename)
-	: _filename(filename)
-{
-//	_previous_az = -500.0f;  // azimuth that doesn't exist
-//	_previous_el = -500.0f;  // elevation that doesn't exist
-}
-
-HrtfSet::~HrtfSet()
-{
-	_deallocate_memory();
-}
-
-HrtfSet::ptr_t HrtfSet::create(std::string filename)
-{
-	ptr_t p_tmp(new HrtfSet(filename));
-
-	if (!p_tmp->_init())
-		p_tmp.release();
-
-	return p_tmp;
-}
-
-bool HrtfSet::_init()
-{
-	uint i, j, k;
-	FILE *p_file;
-	size_t n;
-
-	p_file = fopen(_filename.c_str(), "rb");
-
-	if (!p_file) {
-		ERROR("Error opening the HRTF database");
-		return false;
-	}
-
-	char format[4 + 1];  // AVRS + null-character
-
-	n = fread(format, sizeof(char), 4, p_file);
-
-	if (n != 4)
-		goto error;
-
-	format[4] = '\0';  // null-character added
-
-	if (strcmp(format, "AVRS") != 0)
-	{
-		ERROR("Wrong file format");
-		goto error;
-	}
-
-	DPRINT("Loading HRTF database");
-
-	// Number of azimuths to read
-	n = fread(&_n_az, sizeof(uint), 1, p_file);
-
-	if (n != 1)
-		goto error;
-
-	// Number of elevations to read
-	n = fread(&_n_el, sizeof(uint), 1, p_file);
-
-	if (n != 1)
-		goto error;
-
-	// Number of spectral components to read
-	n = fread(&_n_sc, sizeof(uint), 1, p_file);
-
-	if (n != 1)
-		goto error;
-
-	DPRINT("Nº Az: %d, Nº El: %d, Nº SC: %d", _n_az, _n_el, _n_sc);
-
-	// Allocate memory for this
-	_allocate_memory();
-
-	n = fread(_az_values, sizeof(float), _n_az, p_file);
-
-	if (n != _n_az)
-		goto error;
-
-	n = fread(_el_values, sizeof(float), _n_el, p_file);
-
-	if (n != _n_el)
-		goto error;
-
-	float buffer[_n_sc * 2];  // temporal buffer for real and imaginary part
-
-	for (i = 0; i < _n_az; i++) {
-		_az_map[_az_values[i]] = i;
-
-		for (j = 0; j < _n_el; j++) {
-			if (i == 0)  // only the first azimuth cycle
-				_el_map[_el_values[j]] = j;
-
-			n = fread(buffer, sizeof(float), _n_sc * 2, p_file);  // real and imaginary part
-
-			if (n != _n_sc * 2)
-				goto error;
-
-			// Assign left ear
-			for (k = 0; k < _n_sc; k++) {
-				_hrtf_l[i][j][k][0] = buffer[2 * k];  // real
-				_hrtf_l[i][j][k][1] = buffer[2 * k + 1];  // imaginary
-			}
-
-			n = fread(buffer, sizeof(float), _n_sc * 2, p_file);   // real and imaginary part
-
-			if (n != _n_sc * 2)
-				goto error;
-
-			// Assign right ear
-			for (k = 0; k < _n_sc; k++) {
-				_hrtf_r[i][j][k][0] = buffer[2 * k];  // real
-				_hrtf_r[i][j][k][1] = buffer[2* k + 1];  // imaginary
-			}
-		}
-	}
-
-	fclose(p_file);
-
-	return true;
-
-error:   // read error management
-	DPRINT("Error loading HRTF database");
-	fclose(p_file);
-	_deallocate_memory();
-	return false;
-}
-
-void HrtfSet::_allocate_memory()
-{
-	uint i, j, k;
-
-	// Allocate memory
-	_hrtf_l = (avrs::complex_t ***) malloc(sizeof(avrs::complex_t) * _n_az);
-	_hrtf_r = (avrs::complex_t ***) malloc(sizeof(avrs::complex_t) * _n_az);
-
-	for (i = 0; i < _n_az; i++)  // for each elevation
-	{
-		_hrtf_l[i] = (avrs::complex_t **) malloc(sizeof(avrs::complex_t) * _n_el);
-		_hrtf_r[i] = (avrs::complex_t **) malloc(sizeof(avrs::complex_t) * _n_el);
-
-		for (j = 0; j < _n_el; j++)  // for each elevation
-		{
-			_hrtf_l[i][j] = (avrs::complex_t *) malloc(sizeof(avrs::complex_t) * _n_sc);
-			_hrtf_r[i][j] = (avrs::complex_t *) malloc(sizeof(avrs::complex_t) * _n_sc);;
-		}
-	}
-
-	// Clear arrays
-	for (i = 0; i < _n_az; i++) {
-		for (j = 0; j < _n_el; j++) {
-			for (k = 0; k < _n_sc; k++) {
-				// left
-				_hrtf_l[i][j][k][0] = 0.0f;  // real
-				_hrtf_r[i][j][k][1] = 0.0f;  // imaginary
-				// right
-				_hrtf_l[i][j][k][0] = 0.0f;  // real
-				_hrtf_r[i][j][k][1] = 0.0f;  // imaginary
-			}
-		}
-	}
-
-	_az_values = (float *) malloc(sizeof(float) * _n_az);
-	_el_values = (float *) malloc(sizeof(float) * _n_el);
-}
-
-
-void HrtfSet::_deallocate_memory()
-{
-	uint i, j;
-
-	if (!_hrtf_l)  // verify previous allocation
-		return;
-
-	// De-allocate memory
-	for (i = 0; i < _n_az; i++) {
-		for (j = 0; j < _n_el; j++) {
-			free(_hrtf_l[i][j]);
-			free(_hrtf_r[i][j]);
-		}
-
-		free(_hrtf_l[i]);
-		free(_hrtf_r[i]);
-	}
-
-	free(_hrtf_l);
-	free(_hrtf_r);
-
-	free(_az_values);
-	free(_el_values);
-}
-
-
-/*
- * HrtfCoeffSet
- */
+#include "avrsexception.hpp"
+#include "math.hpp"
 
 HrtfCoeffSet::HrtfCoeffSet(std::string filename)
 	: _filename(filename)
 {
-//	_previous_az = -500.0f;  // azimuth that doesn't exist
-//	_previous_el = -500.0f;  // elevation that doesn't exist
+	;
 }
 
 HrtfCoeffSet::~HrtfCoeffSet()
 {
+	delete _kd_tree;
 	_deallocate_memory();
+	annClose();
 }
 
 HrtfCoeffSet::ptr_t HrtfCoeffSet::create(std::string filename)
 {
 	ptr_t p_tmp(new HrtfCoeffSet(filename));
 
-	if (!p_tmp->_init())
-		p_tmp.release();
+	if (!p_tmp->_load())
+		throw avrs::AvrsException("Initialization fail");
+
+	// build kd-tree
+	p_tmp->_build_kd_tree();
 
 	return p_tmp;
 }
 
-bool HrtfCoeffSet::_init()
+void HrtfCoeffSet::get_HRTF_coeff(hrtfcoeff_t *val, float az, float el)
 {
-	uint i, j, k;
-	FILE *p_file;
-	size_t n;
+	assert(val != NULL);
 
-	p_file = fopen(_filename.c_str(), "rb");
+	// vertical-polar to rectangular conversion
+	double point[3];
+	avrs::math::polar2rectangular(az, el, point);
 
-	if (p_file == 0)
-	{
-		ERROR("Error opening the HRTF coefficients database");
-		return false;
-	}
+	float az_2, el_2;
+	avrs::math::rectangular2polar(point, &az_2, &el_2);
 
-	char format[4 + 1];  // AVRS + null-character
+	// search in kd-tree
+	const int k = 1;
+	ANNidxArray nnIdx = new ANNidx[k];
+	ANNdistArray dists = new ANNdist[k];
 
-	n = fread(format, sizeof(char), 4, p_file);
+	_kd_tree->annkSearch(
+			point,
+			k,
+			nnIdx,
+			dists);
 
-	if (n != 4)
-		goto error;
+	int idx = nnIdx[0];  // index of nearest neighbor
 
-	format[4] = '\0';  // null-character added
+	// copy data
+	val->itd = _itd[idx];
+	memcpy(&val->b_left[0], &_b_left[idx][0], sizeof(double) * _n_coeff);
+	memcpy(&val->a_left[0], &_a_left[idx][0], sizeof(double) * _n_coeff);
+	memcpy(&val->b_right[0], &_b_right[idx][0], sizeof(double) * _n_coeff);
+	memcpy(&val->a_right[0], &_a_right[idx][0], sizeof(double) * _n_coeff);
 
-	if (strcmp(format, "AVRS") != 0)
-	{
-		ERROR("Wrong file format");
-		goto error;
-	}
+//	DPRINT("\tAz: %+1.3f [%+1.3f]\t El: %+1.3f [%+1.3f]\t ITD: %s %d samples",
+//			_az[idx], az, _el[idx], el,
+//			val->itd >= 0 ? "L" : "R", val->itd >= 0 ? val->itd : -(val->itd));
+}
 
-	DPRINT("Loading HRTF coefficients database");
+bool HrtfCoeffSet::_load()
+{
+	bool ok = true;
+	std::ifstream file;
+	file.exceptions(std::ifstream::failbit | std::ifstream::badbit );
 
-	n = fread(&_n_az, sizeof(uint), 1, p_file);
+	try {
+		file.open(_filename.c_str(), std::ios::in | std::ios::binary);
 
-	if (n != 1)
-		goto error;
+		// AVRS format
+		char format[4 + 1];
+		file.read(format, 4);
+		format[4] = '\0';
+		std::string sformat(format);
 
-	n = fread(&_n_el, sizeof(uint), 1, p_file);
+		if (sformat.compare("AVRS") != 0)
+			throw std::string("Wrong file format");
 
-	if (n != 1)
-		goto error;
+		// Version of AVRS format
+		unsigned short version;
+		file.read(reinterpret_cast<char *>(&version), sizeof(unsigned short));
 
-	n = fread(&_order, sizeof(uint), 1, p_file);
+		if (version != 3)
+			throw std::string("Wrong format version");
 
-	if (n != 1)
-		goto error;
+		// Type of data
+		unsigned short data_type;
+		file.read(reinterpret_cast<char *>(&data_type), sizeof(unsigned short));
+		// nothing to do...
 
-	_n_coeff = _order + 1;
+		file.read(reinterpret_cast<char *>(&_n_az), sizeof(unsigned int));
+		file.read(reinterpret_cast<char *>(&_n_el), sizeof(unsigned int));
+		file.read(reinterpret_cast<char *>(&_n_hrtf), sizeof(unsigned int));
+		file.read(reinterpret_cast<char *>(&_order), sizeof(unsigned int));
+		_n_coeff = _order + 1;
 
-	DPRINT("Nº Az: %d, Nº El: %d, Order: %d", _n_az, _n_el, _order);
+		// Allocate memory for this data
+		_allocate_memory();
 
-	// Allocate memory for this
-	_allocate_memory();
+		std::vector<float>::iterator it;
 
-	n = fread(_az_values, sizeof(float), _n_az, p_file);
-
-	if (n != _n_az)
-		goto error;
-
-	n = fread(_el_values, sizeof(float), _n_el, p_file);
-
-	if (n != _n_el)
-		goto error;
-
-	k = 0;
-
-	for (i = 0; i < _n_az; i++)
-	{
-		_az_map[_az_values[i]] = i;
-
-		for (j = 0; j < _n_el; j++)
+		for (uint i = 0; i < _n_hrtf; i++)
 		{
-			if (i == 0)
-				_el_map[_el_values[j]] = j;
+			// Azimuth value
+			float az;
+			file.read(reinterpret_cast<char *>(&az), sizeof(float));
+			_az[i] = az;
+			it = std::find(_az_values.begin(), _az_values.end(), az);
 
-			n = fread(&_itd[k++], sizeof(int), 1, p_file);
+			if (it == _az_values.end())  // not found
+				_az_values.push_back(az);  // added
 
-			if (n != 1)
-				goto error;
+			// Elevation value
+			float el;
+			file.read(reinterpret_cast<char *>(&el), sizeof(float));
+			_el[i] = el;
+			it = std::find(_el_values.begin(), _el_values.end(), el);
 
-			n = fread(&_b_left[i][j][0], sizeof(double), _n_coeff, p_file);
+			if (it == _el_values.end())  // not found
+				_el_values.push_back(el);  // added
 
-			if (n != _n_coeff)
-				goto error;
+			// Coordinate of points in space
+			file.read(reinterpret_cast<char *>(&_points[i][0]), sizeof(double) * 3);  // 3D point
 
-			n = fread(&_a_left[i][j][0], sizeof(double), _n_coeff, p_file);
+			// ITD value
+			file.read(reinterpret_cast<char *>(&_itd[i]), sizeof(int));
 
-			if (n != _n_coeff)
-				goto error;
+			// Left ear
+			file.read(reinterpret_cast<char *>(&_b_left[i][0]), sizeof(double) * _n_coeff);
+			file.read(reinterpret_cast<char *>(&_a_left[i][0]), sizeof(double) * _n_coeff);
 
-			n = fread(&_b_right[i][j][0], sizeof(double), _n_coeff, p_file);
-
-			if (n != _n_coeff)
-				goto error;
-
-			n = fread(&_a_right[i][j][0], sizeof(double), _n_coeff, p_file);
-
-			if (n != _n_coeff)
-				goto error;
+			// Right ear
+			file.read(reinterpret_cast<char *>(&_b_right[i][0]), sizeof(double) * _n_coeff);
+			file.read(reinterpret_cast<char *>(&_a_right[i][0]), sizeof(double) * _n_coeff);
 		}
+
+		file.close();
+		ok = true;
+	}
+	catch (std::ifstream::failure ex)
+	{
+		std::cout << ex.what() << std::endl;
+		ok = false;
+	}
+	catch (std::string ex)
+	{
+		std::cout << ex << std:: endl;
+		ok = false;
 	}
 
-	fclose(p_file);
+	return ok;
+}
 
-	return true;
-
-error:   // read error management
-	DPRINT("Error loading HRTF coefficients database");
-	fclose(p_file);
-	_deallocate_memory();
-	return false;
+void HrtfCoeffSet::_build_kd_tree()
+{
+	_kd_tree = new ANNkd_tree(	// build search structure
+				_points,		// the data points
+				_n_hrtf,		// number of points
+				3);				// dimensions of space
 }
 
 void HrtfCoeffSet::_allocate_memory()
 {
-	uint i, j, k;
+	uint i, j;
 
 	// Allocate memory
-	_b_left = (double ***) malloc(sizeof(double) * _n_az);
-	_a_left = (double ***) malloc(sizeof(double) * _n_az);
-	_b_right = (double ***) malloc(sizeof(double) * _n_az);
-	_a_right = (double ***) malloc(sizeof(double) * _n_az);
-//	itd_ = (int **) malloc(sizeof(int) * _n_az);
+	_b_left = (double **) malloc(sizeof(double) * _n_hrtf);
+	_a_left = (double **) malloc(sizeof(double) * _n_hrtf);
+	_b_right = (double **) malloc(sizeof(double) * _n_hrtf);
+	_a_right = (double **) malloc(sizeof(double) * _n_hrtf);
 
-	for (i = 0; i < _n_az; i++) {
-		_b_left[i] = (double **) malloc(sizeof(double) * _n_el);
-		_a_left[i] = (double **) malloc(sizeof(double) * _n_el);
-		_b_right[i] = (double **) malloc(sizeof(double) * _n_el);
-		_a_right[i] = (double **) malloc(sizeof(double) * _n_el);
-//		itd_[i] = (int *) malloc(sizeof(int) * _n_el);
-
-		for (j = 0; j < _n_el; j++) {
-			_b_left[i][j] = (double *) malloc(sizeof(double) * _n_coeff);
-			_a_left[i][j] = (double *) malloc(sizeof(double) * _n_coeff);
-			_b_right[i][j] = (double *) malloc(sizeof(double) * _n_coeff);
-			_a_right[i][j] = (double *) malloc(sizeof(double) * _n_coeff);
-		}
+	for (i = 0; i < _n_hrtf; i++)
+	{
+		_b_left[i] = (double *) malloc(sizeof(double) * _n_coeff);
+		_a_left[i] = (double *) malloc(sizeof(double) * _n_coeff);
+		_b_right[i] = (double *) malloc(sizeof(double) * _n_coeff);
+		_a_right[i] = (double *) malloc(sizeof(double) * _n_coeff);
 	}
 
-	_itd = (int *) malloc(sizeof(int) * _n_az * _n_el);
+	_points = (double **) malloc(sizeof(double) * _n_hrtf);
 
-//	for (i = 0; i < _n_az; i++)
-//		itd_[i] = (int *) malloc(sizeof(int) * _n_el);
+	for (i = 0; i < _n_hrtf; i++)
+		_points[i] = (double *) malloc(sizeof(double) * 3);  // 3D point
+
+	_az = (float *) malloc(sizeof(float) * _n_hrtf);
+	_el = (float *) malloc(sizeof(float) * _n_hrtf);
+	_itd = (int *) malloc(sizeof(int) * _n_hrtf);
 
 	// Clear arrays
-	for (i = 0; i < _n_az; i++) {
-		for (j = 0; j < _n_el; j++) {
-			for (k = 0; k < _n_coeff; k++) {
+	for (i = 0; i < _n_hrtf; i++)
+	{
+		for (j = 0; j < _n_coeff; j++)
+		{
 				// left
-				_b_left[i][j][k] = 0.0;
-				_a_left[i][j][k] = 0.0;
+				_b_left[i][j] = 0.0;
+				_a_left[i][j] = 0.0;
 				// right
-				_b_right[i][j][k] = 0.0;
-				_a_right[i][j][k] = 0.0;
-			}
-
-//			itd_[i] = 0;
+				_b_right[i][j] = 0.0;
+				_a_right[i][j] = 0.0;
 		}
 	}
 
-	_az_values = (float *) malloc(sizeof(float) * _n_az);
-	_el_values = (float *) malloc(sizeof(float) * _n_el);
+	for (i = 0; i < _n_hrtf; i++)
+	{
+		_points[i][0] = 0.0;
+		_points[i][1] = 0.0;
+		_points[i][2] = 0.0;
+
+		_az[i] = 0.0f;
+		_el[i] = 0.0f;
+		_itd[i] = 0;
+	}
 }
 
 void HrtfCoeffSet::_deallocate_memory()
 {
-	// De-allocate memory
-	for (uint i = 0; i < _n_az; i++) {
-		for (uint j = 0; j < _n_el; j++) {
-			free(_b_left[i][j]);
-			free(_a_left[i][j]);
-			free(_b_right[i][j]);
-			free(_a_right[i][j]);
-		}
+	uint i;
 
+	// De-allocate memory
+	for (i = 0; i < _n_hrtf; i++)
+	{
 		free(_b_left[i]);
 		free(_a_left[i]);
 		free(_b_right[i]);
 		free(_a_right[i]);
-//		free(itd_[i]);
 	}
 
 	free(_b_left);
@@ -430,11 +257,12 @@ void HrtfCoeffSet::_deallocate_memory()
 	free(_b_right);
 	free(_a_right);
 
-//	for (uint i = 0; i < _n_az; i++)
-//		free(itd_[i]);
+	for (i = 0; i < _n_hrtf; i++)
+		free(_points[i]);
 
+	free(_points);
+
+	free(_az);
+	free(_el);
 	free(_itd);
-
-	free(_az_values);
-	free(_el_values);
 }
