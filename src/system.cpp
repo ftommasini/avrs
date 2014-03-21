@@ -70,11 +70,13 @@ bool System::_init()
 	uint read_interval_ms = 10;  // ms (100 Hz)
 
 #ifdef WIIMOTE_TRACKER
+	std::cout << "Starting Wiimote tracker\n";
 	_tracker = TrackerWiimote::create(
 			"tracker_points",
 			_config_sim->tracker_params,
 			read_interval_ms);
 #else
+	std::cout << "Starting simulated tracker\n";
 	_tracker = TrackerSim::create(
 			TrackerSim::from_file,
 			read_interval_ms,
@@ -85,6 +87,11 @@ bool System::_init()
 
 	_ve = VirtualEnvironment::create(_config_sim, _tracker);
 	assert(_ve.get() != NULL);
+
+	//_ve->print_vis();  // for debug only
+	// Print information of ISM
+	std::cout << "Total VSs calculated: " << _ve->n_vs()  << std::endl;
+	std::cout << "Visilbe VSs: " << _ve->n_visible_vs() << std::endl;
 
 	return true;
 }

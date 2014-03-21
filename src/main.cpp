@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2013 Fabián C. Tommasini <fabian@tommasini.com.ar>
+ * Copyright (C) 2009-2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,20 +19,24 @@
 #include <cstdio>
 #include <cstdlib>
 #include <exception>
+#include <string>
+#include <boost/lexical_cast.hpp>
+#include <boost/program_options.hpp>
 
 #include "common.hpp"
 #include "system.hpp"
 #include "configuration.hpp"
 #include "timer.hpp"
 #include "avrsexception.hpp"
-
-using namespace std;
+#include "version.hpp"
 
 // On Linux, must be  compile with the -D_REENTRANT option.  This tells
 // the C/C++ libraries that the functions must be thread-safe
 #ifndef _REENTRANT
 #error You need to compile with _REENTRANT defined since this uses threads
 #endif
+
+using namespace avrs;
 
 /**
  * @mainpage
@@ -47,9 +51,9 @@ using namespace std;
  * @author Sebastián P. Ferreyra (contributor)
  * @author G. Agustín Cravero (contributor)
  *
- * @version 0.2.0
+ * @version 0.2
  *
- * @date 2009-2013
+ * @date 2009-2014
  *
  * @section License
  *
@@ -65,9 +69,16 @@ using namespace std;
  * http://www.gnu.org/copyleft/gpl.html
  */
 
+typedef struct
+{
+	std::string filename;
+	bool show_config;
+} parameters_t;
+
 // Prototypes
-static void usage();
-static void print_about();
+void parse_program_options(int argc, char** argv, parameters_t *params);
+void usage();
+void print_version();
 
 /**
  * Main function of the AVRS
@@ -78,33 +89,34 @@ static void print_about();
  */
 int main(int argc, char *argv[])
 {
-	// Check given arguments
-	if (argc != 2)
-	{
-		usage();
-		exit(EXIT_FAILURE);
-	}
+	parameters_t params;
 
-	//print_about(); // TODO if quiet option is activated, not shown
+	// parse options, results in params
+	parse_program_options(argc, argv, &params);
+
 	ConfigurationManager cm;
 	configuration_t *config;
 
-	try
+	if (!params.filename.empty())
 	{
-		cm.load_configuration(argv[1]);
-		config = cm.get_configuration();
-	}
-	catch (const AvrsException &e)
-	{
-		cerr << e.what() << endl;
-		exit(EXIT_FAILURE);
-	}
+		try
+		{
+			cm.load_configuration(argv[1]);
+			config = cm.get_configuration();
 
-//	cm.show_configuration();
+			if (params.show_config)
+				cm.show_configuration();
+		}
+		catch (const AvrsException &e)
+		{
+			cerr << e.what() << endl;
+			exit(EXIT_FAILURE);
+		}
+	}
 
 	System::ptr_t sys;
 	Timer t;
-	string end_message;
+	std::string end_message;
 
 	// create auto_ptr pointer to the system
 	sys = System::create(config);
@@ -129,36 +141,82 @@ int main(int argc, char *argv[])
 	return EXIT_SUCCESS;
 }
 
-void print_about()
+void parse_program_options(int argc, char** argv, parameters_t *params)
 {
-	const string about = "AVRS (Acoustic Virtual Reality System)\n" //	" "PACKAGE_STRING" aka "NICKNAME"\n\n"
-				"Version 0.2 (2009-2012)\n"
-				"\n"
-				"Main developer: Fabián C. Tommasini\n"
-				"Scientific supervision: Oscar A. Ramos\n"
-				"Contributors: Mariano Araneda, Sebastián P. Ferreyra, G. Agustín Cravero\n"
-				"\n"
-				"Developed at:\n"
-				"\n"
-				"[english]\n"
-				"Research and Transfer Center on Acoustics\n"
-				"National Technological University, Cordoba Regional Faculty\n"
-				"Cordoba, Argentina\n"
-				"\n"
-				"[español]\n"
-				"Centro de Investigación y Transferencia en Acústica\n"
-				"Universidad Tecnológica Nacional, Facultad Regional Córdoba\n"
-				"Córdoba, Argentina\n"
-				"\n"
-				"With the support of CONICET, Argentina\n"
-				"\n"
-				"Website: http://avrsystem.sourceforge.net\n"
-				"E-mail contact: fabian@tommasini.com.ar\n";
-	printf("%s\n", about.c_str());
+	namespace po = boost::program_options;
+
+	std::string filename;
+	po::options_description desc("Options");
+	desc.add_options()
+			("help,h", "Print help messages.")
+			("file,f", po::value<std::string>(&filename)->required(), "Configuration file.")
+			("show,s", "Show configuration.")
+			("version", "Version information.");
+	po::positional_options_description positional_options;
+	positional_options.add("file", -1);
+	po::variables_map vm;
+
+	try
+	{
+		po::store(
+				po::command_line_parser(argc, argv).options(desc).positional(positional_options).run(),
+				vm);
+
+		if (vm.count("help") || argc == 1)  // --help or -h option
+		{
+			usage();
+			std::cout << std::endl << desc << std::endl;
+		    exit(EXIT_SUCCESS);
+		}
+
+		if (vm.count("version"))  // --version option
+		{
+			print_version();
+			exit(EXIT_SUCCESS);
+		}
+
+		po::notify(vm);  // verify required options
+
+		if (vm.count("file"))
+		{
+			params->filename = filename;
+
+			if (vm.count("show"))  // --show or -s option
+				params->show_config = true;
+			else
+				params->show_config = false;
+		}
+		else
+		{
+			params->filename = "";
+		}
+	}
+	catch(po::required_option& e)
+	{
+		std::cerr << "ERROR: " << e.what() << std::endl << std::endl;
+		std::cerr << desc << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	catch(po::error& e)
+	{
+		std::cerr << "ERROR: " << e.what() << std::endl << std::endl;
+		std::cerr << desc << std::endl;
+		exit(EXIT_FAILURE);
+	}
 }
 
 void usage()
 {
-	printf("Usage:\n");
-	printf("\tavrs <simulation configuration file>\n");
+	std::cout << "Usage:\n";
+	std::cout << "\tavrs [options] [-f] <configuration file>\n";
 }
+
+void print_version()
+{
+	std::cout << "avrs " << get_version() << std::endl;
+	std::cout << "Copyright (C) 2009-2014 AVRS team" << std::endl;
+	std::cout << "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>" << std::endl;
+	std::cout << "This is free software: you are free to change and redistribute it." << std::endl;
+	std::cout << "There is NO WARRANTY, to the extent permitted by law." << std::endl;
+}
+

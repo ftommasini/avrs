@@ -17,6 +17,7 @@
  */
 
 #include <dxflib/dl_dxf.h>
+#include <boost/format.hpp>
 
 #include "virtualenvironment.hpp"
 #include "dxfreader.hpp"
@@ -137,18 +138,12 @@ bool VirtualEnvironment::_init()
 	delete dxf;
 	delete reader;
 
-	DPRINT("%s loaded", filename);
-
 	// updates and calculations
 	update_surfaces_data();
 	calc_ISM();  // calculate VSs by ISM
 
 	_update_vis();
 	_update_vs_orientations();
-
-	// for debug only
-	_sort_vis();
-	print_vis();
 
 	return true;
 }
@@ -409,7 +404,7 @@ void VirtualEnvironment::_update_vis()
 
 	_outputs.resize(_vis.size());  // output per visible VS
 
-	DPRINT("Total VSs: %d - Visibles VSs: %d", (int) _tree.size(_root_it), (int) _vis.size());
+	//DPRINT("Total VSs: %d - Visibles VSs: %d", (int) _tree.size(_root_it), (int) _vis.size());
 }
 
 // todo maybe in a thread
@@ -470,27 +465,38 @@ void VirtualEnvironment::_sort_vis()
 
 void VirtualEnvironment::print_vis()
 {
-	float ref_time = (_vis[0]->dist_listener / _config_sim->speed_of_sound) * 1000.0f;
+	_sort_vis();
 
-	printf("\n  Abs\t  Rel\t  Az\t  El\tOrder\t  ID\t  Vis1\t  Vis2\n");
+	std::cout << "List of visible VSs\n" << std::endl;
+	boost::format fmter_title("%-15s\t%-15s\t%-15s\t%-7s\t%-7s\t%+10s\t%+10s\t%+10s\n");
+	boost::format fmter_content("%-15.3f\t%-15.3f\t%-15.3f\t%-7i\t%-7i\t%+10.3f\t%+10.3f\t%+10.3f\n");
+	std::cout << boost::format(fmter_title) % "Relative [ms]"
+					% "Absolute [ms]" % "Distance [m]" % "Order" % "Id"
+					% "X" % "Y" % "Z";
+	float time_ref_ms;
 
 	for (vis_it_t it = _vis.begin(); it != _vis.end(); it++)
 	{
 		virtualsource_t *vs = *it;
+		float time_abs_ms = (vs->dist_listener / _config_sim->speed_of_sound) * 1000.0f;
 
-		float abs_time = (vs->dist_listener / _config_sim->speed_of_sound) * 1000.0f;
-		printf("%7.2f\t", abs_time);
-		printf("%7.2f\t", abs_time - ref_time);
-		printf("%+7.2f\t", vs->ref_listener_orientation.az);
-		printf("%+7.2f\t", vs->ref_listener_orientation.el);
-		printf("%d\t", vs->order);
-		printf("%d\t", vs->id);
-		printf("%d\t", (int) vs->vis_test_1);
-		printf("%d\t", (int) vs->vis_test_2);
-		printf("\n");
+		if (it == _vis.begin())
+			time_ref_ms = time_abs_ms;
+
+		float time_rel_ms = time_abs_ms - time_ref_ms;
+
+		std::cout << boost::format(fmter_content)
+			% time_rel_ms
+			% time_abs_ms
+			% vs->dist_listener
+			% vs->order
+			% vs->id
+			% vs->pos(X)
+			% vs->pos(Y)
+			% vs->pos(Z);
 	}
 
-	printf("\n");
+	std::cout << std::endl;
 }
 
 #ifndef VSFILTER_THREADS
@@ -513,7 +519,6 @@ void VirtualEnvironment::renderize()
 	memcpy(&_render_buffer.right[0], &_zeros[0], _config_sim->bir_length_samples * sizeof(sample_t));
 
 	// TODO SE PODRÍA MEJORAR SI SE GUARDAR EL ITERATOR EN CADA VS, ASI SE RECORRE SOLAMENTE LAS VISIBLES
-
 	// only for visible VSs
 	for (tree_it_t it = _tree.begin(); it != _tree.end(); it++)
 	{
@@ -538,7 +543,7 @@ void VirtualEnvironment::renderize()
 
 		// HRTF filtering
 #ifndef HRTF_IIR
-		//output = _hrtf_filter(input, vs->ref_listener_orientation);  // HRTF spectrums
+		output = _hrtf_filter(input, vs->ref_listener_orientation);  // HRTF spectrums
 
 #else
 		output = _hrtf_iir_filter(input, vs->ref_listener_orientation);

@@ -128,26 +128,6 @@ typedef struct OrientationAngles
 		res.ro = ro + val.ro;
 		correct_angles(res);
 
-//		// azimuth (-180, +180]
-//		float az2 = az + val.az;
-//
-//		if (az2 > 180)
-//			res.az = az2 - 360;
-//		else if (az < -180)
-//			res.az = az2 + 360;
-//		else
-//			res.az = az2;
-//
-//		// elevation [-90, +90]
-//		float el2 = el + val.el;
-//
-//		if (el2 > 90)
-//			res.el = 180 - el2;
-//		else if (el < -90)
-//			res.el = -180 - el2;
-//		else
-//			res.el = el2;
-
 	    return res;
 	}
 
@@ -159,26 +139,6 @@ typedef struct OrientationAngles
 		res.el = el - val.el;
 		res.ro = ro - val.ro;
 		correct_angles(res);
-
-//		// azimuth (-180, +180]
-//		float az2 = az - val.az;
-//
-//		if (az2 > 180)
-//			res.az = az2 - 360;
-//		else if (az2 < -180)
-//			res.az = az2 + 360;
-//		else
-//			res.az = az2;
-//
-//		// elevation [-90, +90]
-//		float el2 = el - val.el;
-//
-//		if (el2 > 90)
-//			res.el = 180 - el2;
-//		else if (el2 < -90)
-//			res.el = -180 - el2;
-//		else
-//			res.el = el2;
 
 	    return res;
 	}

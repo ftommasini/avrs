@@ -7,3 +7,5 @@ avrs
 .nfs*
 demo/*
 tools/avrsconfig/conf/*
+*.tar.gz
+doc/doxygen/*
