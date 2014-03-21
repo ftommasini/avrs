@@ -137,8 +137,6 @@ bool VirtualEnvironment::_init()
 	delete dxf;
 	delete reader;
 
-	DPRINT("%s loaded", filename);
-
 	// updates and calculations
 	update_surfaces_data();
 	calc_ISM();  // calculate VSs by ISM
@@ -409,7 +407,7 @@ void VirtualEnvironment::_update_vis()
 
 	_outputs.resize(_vis.size());  // output per visible VS
 
-	DPRINT("Total VSs: %d - Visibles VSs: %d", (int) _tree.size(_root_it), (int) _vis.size());
+	//DPRINT("Total VSs: %d - Visibles VSs: %d", (int) _tree.size(_root_it), (int) _vis.size());
 }
 
 // todo maybe in a thread
