@@ -71,8 +71,6 @@ void TrackerSim::start()
 
 	_running = true;
 	pthread_create(&_thread_id, NULL, TrackerSim::_threadWrapper, this); // create thread
-
-	DPRINT("Starting tracker");
 }
 
 void TrackerSim::stop()

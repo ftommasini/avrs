@@ -145,10 +145,6 @@ bool VirtualEnvironment::_init()
 	_update_vis();
 	_update_vs_orientations();
 
-	// for debug only
-	_sort_vis();
-	print_vis();
-
 	return true;
 }
 
@@ -469,6 +465,8 @@ void VirtualEnvironment::_sort_vis()
 
 void VirtualEnvironment::print_vis()
 {
+	_sort_vis();
+
 	std::cout << "List of visible VSs\n" << std::endl;
 	boost::format fmter_title("%-15s\t%-15s\t%-15s\t%-7s\t%-7s\t%+10s\t%+10s\t%+10s\n");
 	boost::format fmter_content("%-15.3f\t%-15.3f\t%-15.3f\t%-7i\t%-7i\t%+10.3f\t%+10.3f\t%+10.3f\n");
