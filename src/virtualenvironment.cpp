@@ -499,29 +499,6 @@ void VirtualEnvironment::print_vis()
 	}
 
 	std::cout << std::endl;
-
-
-//	float ref_time = (_vis[0]->dist_listener / _config_sim->speed_of_sound) * 1000.0f;
-//
-//	printf("\n  Abs\t  Rel\t  Az\t  El\tOrder\t  ID\t  Vis1\t  Vis2\n");
-//
-//	for (vis_it_t it = _vis.begin(); it != _vis.end(); it++)
-//	{
-//		virtualsource_t *vs = *it;
-//
-//		float abs_time = (vs->dist_listener / _config_sim->speed_of_sound) * 1000.0f;
-//		printf("%7.2f\t", abs_time);
-//		printf("%7.2f\t", abs_time - ref_time);
-//		printf("%+7.2f\t", vs->ref_listener_orientation.az);
-//		printf("%+7.2f\t", vs->ref_listener_orientation.el);
-//		printf("%d\t", vs->order);
-//		printf("%d\t", vs->id);
-//		printf("%d\t", (int) vs->vis_test_1);
-//		printf("%d\t", (int) vs->vis_test_2);
-//		printf("\n");
-//	}
-//
-//	printf("\n");
 }
 
 #ifndef VSFILTER_THREADS
@@ -544,7 +521,6 @@ void VirtualEnvironment::renderize()
 	memcpy(&_render_buffer.right[0], &_zeros[0], _config_sim->bir_length_samples * sizeof(sample_t));
 
 	// TODO SE PODRÍA MEJORAR SI SE GUARDAR EL ITERATOR EN CADA VS, ASI SE RECORRE SOLAMENTE LAS VISIBLES
-
 	// only for visible VSs
 	for (tree_it_t it = _tree.begin(); it != _tree.end(); it++)
 	{
@@ -569,7 +545,7 @@ void VirtualEnvironment::renderize()
 
 		// HRTF filtering
 #ifndef HRTF_IIR
-		//output = _hrtf_filter(input, vs->ref_listener_orientation);  // HRTF spectrums
+		output = _hrtf_filter(input, vs->ref_listener_orientation);  // HRTF spectrums
 
 #else
 		output = _hrtf_iir_filter(input, vs->ref_listener_orientation);
