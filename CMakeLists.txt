@@ -8,7 +8,13 @@ set(VERSION_MAJOR 0)
 set(VERSION_MINOR 2)
 set(VERSION_PATCH 1)
 
-message(STATUS "Configuring ${PROJECT_NAME} ${VERSION_MAJOR}.${VERSION_MINOR}")
+if (VERSION_PATCH MATCHES "0")
+	set(VERSION_NUMBER "${VERSION_MAJOR}.${VERSION_MINOR}")
+else()
+	set(VERSION_NUMBER "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
+endif()
+
+message(STATUS "Configuring ${PROJECT_NAME} ${VERSION_NUMBER}")
 
 # configure a header file to pass some of the CMake settings
 # to the source code
@@ -31,7 +37,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 #find_package(FFTW3 REQUIRED)
 
 find_library(FFTW3_LIBRARY 
-	NAMES fftw3
+	NAMES fftw3f
 )
 
 if (${FFTW3_LIBRARY} STREQUAL "FFTW3_LIBRARY-NOTFOUND")
@@ -80,5 +86,4 @@ if (OPENMP_FOUND)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
 
-include_directories(include)
 add_subdirectory(src)
