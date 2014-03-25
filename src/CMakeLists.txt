@@ -17,18 +17,10 @@ set(CXX_SOURCE_FILES
         input.cpp
         configuration.cpp
         fdn.cpp
-        system.cpp
-        wiimote.cpp
-        trackerwiimote.cpp
-        posit.cpp
+        system.cpp     
         timer.cpp
         hrtfconvolver.cpp
 	main.cpp
-)
-
-# C source files
-set(C_SOURCE_FILES
-	svd.c
 )
 
 # C++ compiler
@@ -47,8 +39,25 @@ link_directories(
 	/usr/realtime/lib
 )
 
+# Wiimote-based tracker library
+
+# C++ source files
+set(WIIMOTE_CXX_SOURCE_FILES 
+	posit.cpp
+	trackerwiimote.cpp
+	wiimote.cpp
+)
+
+# C source files
+set(WIIMOTE_C_SOURCE_FILES
+	svd.c
+)
+
+# Library file
+add_library(trackerwiimote SHARED ${WIIMOTE_CXX_SOURCE_FILES} ${WIIMOTE_C_SOURCE_FILES})
+
 # Executable file
-add_executable(${PROJECT_NAME} ${CXX_SOURCE_FILES} ${C_SOURCE_FILES})
+add_executable(${PROJECT_NAME} ${CXX_SOURCE_FILES})
 
 # Link executable file to libraries
 target_link_libraries(${PROJECT_NAME} 
@@ -59,10 +68,11 @@ target_link_libraries(${PROJECT_NAME}
 	${CMAKE_THREAD_LIBS_INIT}
 	${DXFLIB_LIBRARY}	
 	${ARMADILLO_LIBRARY} 
-	${BLUETOOTH_LIBRARY}
-	${CWIID_LIBRARY}
 	${ANN_LIBRARY}
 	${Boost_LIBRARIES} 
+	trackerwiimote
+	${BLUETOOTH_LIBRARY}
+	${CWIID_LIBRARY}
 )
 
 # Move to bin directory

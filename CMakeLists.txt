@@ -18,10 +18,10 @@ message(STATUS "Configuring ${PROJECT_NAME} ${VERSION_NUMBER}")
 
 # configure a header file to pass some of the CMake settings
 # to the source code
-#configure_file(
-#  "${PROJECT_SOURCE_DIR}/include/version.hpp.in"
-#  "${PROJECT_SOURCE_DIR}/include/version.hpp"
-#)
+configure_file(
+  "${PROJECT_SOURCE_DIR}/src/version.hpp.in"
+  "${PROJECT_SOURCE_DIR}/src/version.hpp"
+)
 
 # Required libraries
 find_package(Armadillo REQUIRED)
