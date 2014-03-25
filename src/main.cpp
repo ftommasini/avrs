@@ -198,7 +198,7 @@ void usage()
 
 void print_version()
 {
-	std::cout << "avrs " << get_version() << std::endl;
+	std::cout << "avrs " << VERSION_NUMBER << std::endl;
 	std::cout << "Copyright (C) 2009-2014 Fabián Tommasini" << std::endl;
 	std::cout << "                        and others" << std::endl;
 	std::cout << "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>" << std::endl;

@@ -20,20 +20,11 @@
 #define VERSION_HPP_
 
 #include <string>
-#include <boost/lexical_cast.hpp>
 
 // the configured options and settings
 #define VERSION_MAJOR 	@VERSION_MAJOR@
 #define VERSION_MINOR 	@VERSION_MINOR@
 #define VERSION_PATCH 	@VERSION_PATCH@
 #define VERSION_NUMBER 	"@VERSION_NUMBER@"
-
-inline std::string get_version()
-{
-	std::string major = boost::lexical_cast<std::string>(VERSION_MAJOR);
-	std::string minor = "." + boost::lexical_cast<std::string>(VERSION_MINOR);
-	std::string patch = (VERSION_PATCH != 0 ? ("." + boost::lexical_cast<std::string>(VERSION_PATCH)) : "");
-	return (major + minor + patch);
-}
 
 #endif /* VERSION_HPP_ */
