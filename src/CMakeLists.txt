@@ -32,11 +32,11 @@ set(C_SOURCE_FILES
 )
 
 # C++ compiler
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -pipe")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -pipe -Werror")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__LINUX_ALSA__ -D__LITTLE_ENDIAN__ -D_REENTRANT")
 
 # C compiler
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -pipe")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -pipe -Werror")
 
 include_directories(
 	/usr/realtime/include
@@ -54,14 +54,13 @@ add_executable(${PROJECT_NAME} ${CXX_SOURCE_FILES} ${C_SOURCE_FILES})
 target_link_libraries(${PROJECT_NAME} 
 	${FFTW3_LIBRARY}
 	${STK_LIBRARY}
-	asound
-	c
-	m
-	pthread
+	${ALSA_LIBRARIES}
+	${M_LIBRARY}
+	${CMAKE_THREAD_LIBS_INIT}
 	${DXFLIB_LIBRARY}	
 	${ARMADILLO_LIBRARY} 
-	bluetooth
-	cwiid
+	${BLUETOOTH_LIBRARY}
+	${CWIID_LIBRARY}
 	${ANN_LIBRARY}
 	${Boost_LIBRARIES} 
 )

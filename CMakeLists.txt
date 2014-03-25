@@ -28,11 +28,18 @@ find_package(Armadillo REQUIRED)
 find_package(Boost COMPONENTS program_options system filesystem REQUIRED)
 
 if (Boost_FOUND)
-    include_directories(${Boost_INCLUDE_DIRS})
-    add_definitions(${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
+	include_directories(${Boost_INCLUDE_DIRS})
+	add_definitions(${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
 endif()
 
-include_directories(${Boost_INCLUDE_DIRS})
+find_package(ALSA REQUIRED)
+
+if (ALSA_FOUND)
+	include_directories(${ALSA_INCLUDE_DIRS})
+endif()
+
+find_package(Threads)
+
 
 #find_package(FFTW3 REQUIRED)
 
@@ -76,8 +83,11 @@ else()
 	message(STATUS "Found ANN library: " ${ANN_LIBRARY})
 endif()
 
-#LIBS = -lfftw3f -lc -lm -lasound -lpthread 
-# -lbluetooth -lcwiid
+find_library(M_LIBRARY m)
+
+find_library(BLUETOOTH_LIBRARY bluetooth)
+
+find_library(CWIID_LIBRARY cwiid)
 
 # Optional libraries
 find_package(OpenMP)
