@@ -11,7 +11,6 @@ set(CXX_SOURCE_FILES
        	convolver.cpp
         virtualenvironment.cpp
         headfilter.cpp
-        trackersim.cpp
         rttools.cpp
         player.cpp
         input.cpp
@@ -38,6 +37,14 @@ include_directories(
 link_directories(
 	/usr/realtime/lib
 )
+
+# Simulated tracker library
+set(SIM_CXX_SOURCE_FILES 
+	trackersim.cpp
+)
+
+# Library file
+add_library(trackersim SHARED ${SIM_CXX_SOURCE_FILES})
 
 # Wiimote-based tracker library
 
@@ -70,6 +77,7 @@ target_link_libraries(${PROJECT_NAME}
 	${ARMADILLO_LIBRARY} 
 	${ANN_LIBRARY}
 	${Boost_LIBRARIES} 
+	trackersim
 	trackerwiimote
 	${BLUETOOTH_LIBRARY}
 	${CWIID_LIBRARY}
