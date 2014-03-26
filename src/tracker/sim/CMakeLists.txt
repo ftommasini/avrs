@@ -11,4 +11,4 @@ set(SIM_CXX_SOURCE_FILES
 add_library(avrs_trackersim SHARED ${SIM_CXX_SOURCE_FILES})
 
 # Move to bin directory
-#set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
+set_target_properties(avrs_trackersim PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
