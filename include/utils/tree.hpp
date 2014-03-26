@@ -48,7 +48,8 @@
 // HP-style construct/destroy have gone from the standard,
 // so here is a copy.
 
-namespace cdtools {
+namespace avrs
+{
 
 template <class T1, class T2>
 void constructor(T1* p, T2& val) 
@@ -67,8 +68,6 @@ void destructor(T1* p)
 	{
 	p->~T1();
 	}
-
-}
 
 /// A node in the tree, combining links to other nodes as well as the actual data.
 template<class T>
@@ -441,45 +440,6 @@ class tree {
 		};
 };
 
-//template <class T, class tree_node_allocator>
-//class iterator_base_less {
-//	public:
-//		bool operator()(const typename tree<T, tree_node_allocator>::iterator_base& one,
-//						  const typename tree<T, tree_node_allocator>::iterator_base& two) const
-//			{
-//			txtout << "operatorclass<" << one.node < two.node << std::endl;
-//			return one.node < two.node;
-//			}
-//};
-
-// template <class T, class tree_node_allocator>
-// bool operator<(const typename tree<T, tree_node_allocator>::iterator& one,
-// 					const typename tree<T, tree_node_allocator>::iterator& two)
-// 	{
-// 	txtout << "operator< " << one.node < two.node << std::endl;
-// 	if(one.node < two.node) return true;
-// 	return false;
-// 	}
-// 
-// template <class T, class tree_node_allocator>
-// bool operator==(const typename tree<T, tree_node_allocator>::iterator& one,
-// 					const typename tree<T, tree_node_allocator>::iterator& two)
-// 	{
-// 	txtout << "operator== " << one.node == two.node << std::endl;
-// 	if(one.node == two.node) return true;
-// 	return false;
-// 	}
-// 
-// template <class T, class tree_node_allocator>
-// bool operator>(const typename tree<T, tree_node_allocator>::iterator_base& one,
-// 					const typename tree<T, tree_node_allocator>::iterator_base& two)
-// 	{
-// 	txtout << "operator> " << one.node < two.node << std::endl;
-// 	if(one.node > two.node) return true;
-// 	return false;
-// 	}
-
-
 
 // Tree
 
@@ -576,7 +536,6 @@ void tree<T, tree_node_allocator>::clear()
 template<class T, class tree_node_allocator> 
 void tree<T, tree_node_allocator>::erase_children(const iterator_base& it)
 	{
-//	std::cout << "erase_children " << it.node << std::endl;
 	if(it.node==0) return;
 
 	tree_node *cur=it.node->first_child;
@@ -591,7 +550,6 @@ void tree<T, tree_node_allocator>::erase_children(const iterator_base& it)
 		}
 	it.node->first_child=0;
 	it.node->last_child=0;
-//	std::cout << "exit" << std::endl;
 	}
 
 template<class T, class tree_node_allocator> 
@@ -800,39 +758,6 @@ iter tree<T, tree_node_allocator>::next_at_same_depth(iter position) const
 
 	++tmp;
 	return iter(tmp);
-
-//	assert(position.node!=0);
-//	iter ret(position);
-//
-//	if(position.node->next_sibling) {
-//		ret.node=position.node->next_sibling;
-//		}
-//	else { 
-//		int relative_depth=0;
-//	   upper:
-//		do {
-//			ret.node=ret.node->parent;
-//			if(ret.node==0) return ret;
-//			--relative_depth;
-//			} while(ret.node->next_sibling==0);
-//	   lower:
-//		ret.node=ret.node->next_sibling;
-//		while(ret.node->first_child==0) {
-//			if(ret.node->next_sibling==0)
-//				goto upper;
-//			ret.node=ret.node->next_sibling;
-//			if(ret.node==0) return ret;
-//			}
-//		while(relative_depth<0 && ret.node->first_child!=0) {
-//			ret.node=ret.node->first_child;
-//			++relative_depth;
-//			}
-//		if(relative_depth<0) {
-//			if(ret.node->next_sibling==0) goto upper;
-//			else                          goto lower;
-//			}
-//		}
-//	return ret;
 	}
 
 template <class T, class tree_node_allocator>
@@ -1099,16 +1024,6 @@ iter tree<T, tree_node_allocator>::insert_subtree_after(iter position, const ite
 	// replace dummy with subtree
 	return replace(it, subtree);
 	}
-
-// template <class T, class tree_node_allocator>
-// template <class iter>
-// iter tree<T, tree_node_allocator>::insert_subtree(sibling_iterator position, iter subtree)
-// 	{
-// 	// insert dummy
-// 	iter it(insert(position, value_type()));
-// 	// replace dummy with subtree
-// 	return replace(it, subtree);
-// 	}
 
 template <class T, class tree_node_allocator>
 template <class iter>
@@ -1713,10 +1628,7 @@ unsigned int tree<T, tree_node_allocator>::number_of_children(const iterator_bas
 	if(pos==0) return 0;
 	
 	unsigned int ret=1;
-//	  while(pos!=it.node->last_child) {
-//		  ++ret;
-//		  pos=pos->next_sibling;
-//		  }
+
 	while((pos=pos->next_sibling))
 		++ret;
 	return ret;
@@ -1799,20 +1711,6 @@ void tree<T, tree_node_allocator>::swap(iterator one, iterator two)
 		else     par1->first_child=two.node;
 		}
 	}
-
-// template <class BinaryPredicate>
-// tree<T, tree_node_allocator>::iterator tree<T, tree_node_allocator>::find_subtree(
-// 	sibling_iterator subfrom, sibling_iterator subto, iterator from, iterator to, 
-// 	BinaryPredicate fun) const
-// 	{
-// 	assert(1==0); // this routine is not finished yet.
-// 	while(from!=to) {
-// 		if(fun(*subfrom, *from)) {
-// 			
-// 			}
-// 		}
-// 	return to;
-// 	}
 
 template <class T, class tree_node_allocator>
 bool tree<T, tree_node_allocator>::is_in_subtree(const iterator_base& it, const iterator_base& begin, 
@@ -2443,28 +2341,6 @@ typename tree<T, tree_node_allocator>::fixed_depth_iterator& tree<T, tree_node_a
 			}
 		}
 	return *this;
-
-//
-//
-//	assert(this->node!=0);
-//	if(this->node->prev_sibling!=0) {
-//		this->node=this->node->prev_sibling;
-//		assert(this->node!=0);
-//		if(this->node->parent==0 && this->node->prev_sibling==0) // head element
-//			this->node=0;
-//		}
-//	else {
-//		tree_node *par=this->node->parent;
-//		do {
-//			par=par->prev_sibling;
-//			if(par==0) { // FIXME: need to keep track of this!
-//				this->node=0;
-//				return *this;
-//				}
-//			} while(par->last_child==0);
-//		this->node=par->last_child;
-//		}
-//	return *this;
 	}
 
 template <class T, class tree_node_allocator>
@@ -2715,6 +2591,8 @@ typename tree<T, tree_node_allocator>::leaf_iterator& tree<T, tree_node_allocato
       }
    return (*this);
    }
+
+}  // namespace avrs
 
 #endif  // TREE_HPP_
 

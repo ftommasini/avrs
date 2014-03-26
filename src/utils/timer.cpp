@@ -143,4 +143,4 @@ double Timer::_get_CPU_time( )
 	return -1.0;		/* Failed. */
 }
 
-}  // namespace
+}  // namespace avrs

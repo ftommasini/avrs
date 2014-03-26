@@ -5,8 +5,8 @@ project(avrs)
 
 # The version number
 set(VERSION_MAJOR 0)
-set(VERSION_MINOR 2)
-set(VERSION_PATCH 1)
+set(VERSION_MINOR 3)
+set(VERSION_PATCH 0)
 
 if (VERSION_PATCH MATCHES "0")
 	set(VERSION_NUMBER "${VERSION_MAJOR}.${VERSION_MINOR}")

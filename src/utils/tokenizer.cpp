@@ -18,6 +18,9 @@
 
 #include "tokenizer.hpp"
 
+namespace avrs
+{
+
 const std::string Tokenizer::DELIMITERS(" \t\n\r");
 
 Tokenizer::Tokenizer(const std::string &s) :
@@ -75,3 +78,5 @@ void Tokenizer::reset()
 {
 	_offset = 0;
 }
+
+}  // namespace avrs
