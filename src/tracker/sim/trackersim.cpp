@@ -22,8 +22,8 @@
 
 #include <rtai_lxrt.h>
 
-#include "trackersim.hpp"
-#include "rttools.hpp"
+#include "tracker/sim/trackersim.hpp"
+#include "utils/rttools.hpp"
 
 namespace avrs
 {

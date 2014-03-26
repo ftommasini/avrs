@@ -18,8 +18,8 @@
 
 #include <rtai_lxrt.h>
 
-#include "rttools.hpp"
-#include "trackerwiimote.hpp"
+#include "utils/rttools.hpp"
+#include "tracker/wiimote/trackerwiimote.hpp"
 
 namespace avrs
 {

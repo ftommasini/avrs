@@ -21,7 +21,7 @@
 
 #include "headfilter.hpp"
 #include "avrsexception.hpp"
-#include "math.hpp"
+#include "utils/math.hpp"
 
 HrtfCoeffSet::HrtfCoeffSet(std::string filename)
 	: _filename(filename)

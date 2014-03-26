@@ -1,67 +1,25 @@
 # src/CMakeLists.txt
 
+add_subdirectory(utils)
+add_subdirectory(tracker)
+
 # C++ source files
 set(CXX_SOURCE_FILES 
-	surface.cpp
-        listener.cpp
-        soundsource.cpp
-        dxfreader.cpp
-        configfilereader.cpp
-       	tokenizer.cpp
-       	convolver.cpp
-        virtualenvironment.cpp
-        headfilter.cpp
-        rttools.cpp
-        player.cpp
-        input.cpp
-        configuration.cpp
-        fdn.cpp
-        system.cpp     
-        timer.cpp
-        hrtfconvolver.cpp
+    surface.cpp
+    listener.cpp
+    soundsource.cpp
+    dxfreader.cpp
+    convolver.cpp
+    virtualenvironment.cpp
+    headfilter.cpp
+    player.cpp
+    input.cpp
+    configuration.cpp
+    fdn.cpp
+    system.cpp
+    hrtfconvolver.cpp
 	main.cpp
 )
-
-# C++ compiler
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -pipe -Werror")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__LINUX_ALSA__ -D__LITTLE_ENDIAN__ -D_REENTRANT")
-
-# C compiler
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -pipe -Werror")
-
-include_directories(
-	/usr/realtime/include
-	/usr/src/linux/include
-)
-
-link_directories(
-	/usr/realtime/lib
-)
-
-# Simulated tracker library
-set(SIM_CXX_SOURCE_FILES 
-	trackersim.cpp
-)
-
-# Library file
-add_library(trackersim SHARED ${SIM_CXX_SOURCE_FILES})
-
-# Wiimote-based tracker library
-
-# C++ source files
-set(WIIMOTE_CXX_SOURCE_FILES 
-	posit.cpp
-	trackerwiimote.cpp
-	wiimote.cpp
-)
-
-# C source files
-set(WIIMOTE_C_SOURCE_FILES
-	svd.c
-)
-
-# Library file
-add_library(trackerwiimote SHARED ${WIIMOTE_CXX_SOURCE_FILES} ${WIIMOTE_C_SOURCE_FILES})
 
 # Executable file
 add_executable(${PROJECT_NAME} ${CXX_SOURCE_FILES})
@@ -76,9 +34,10 @@ target_link_libraries(${PROJECT_NAME}
 	${DXFLIB_LIBRARY}	
 	${ARMADILLO_LIBRARY} 
 	${ANN_LIBRARY}
-	${Boost_LIBRARIES} 
-	trackersim
-	trackerwiimote
+	${Boost_LIBRARIES}
+	avrs_utils 
+	avrs_trackersim
+	avrs_trackerwiimote
 	${BLUETOOTH_LIBRARY}
 	${CWIID_LIBRARY}
 )

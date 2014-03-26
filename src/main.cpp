@@ -25,8 +25,9 @@
 #include "common.hpp"
 #include "system.hpp"
 #include "configuration.hpp"
-#include "timer.hpp"
 #include "avrsexception.hpp"
+#include "utils/timer.hpp"
+#include "utils/timer.hpp"
 
 #include "version.hpp"
 

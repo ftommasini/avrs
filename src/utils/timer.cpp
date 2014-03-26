@@ -16,7 +16,7 @@
  *
  */
 
-#include "timer.hpp"
+#include "utils/timer.hpp"
 
 #include <iostream>
 #include <boost/format.hpp>

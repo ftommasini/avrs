@@ -22,13 +22,12 @@
 #include <pthread.h>
 #include <memory>
 #include <string>
-
 #include <cwiid.h>
 
-#include "posit.hpp"
-#include "wiimote.hpp"
+#include "tracker/wiimote/posit.hpp"
+#include "tracker/wiimote/wiimote.hpp"
+#include "tracker/trackerbase.hpp"
 #include "common.hpp"
-#include "trackerbase.hpp"
 
 namespace avrs
 {

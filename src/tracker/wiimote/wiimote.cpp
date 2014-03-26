@@ -20,7 +20,7 @@
  * @file wiimote.cpp
  */
 
-#include "wiimote.hpp"
+#include "tracker/wiimote/wiimote.hpp"
 
 Wiimote::Wiimote(std::string address)
 	: 	_wii_remote(NULL)

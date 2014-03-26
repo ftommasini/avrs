@@ -2,7 +2,10 @@
  * @file configfilereader.cpp
  */
 
-#include "configfilereader.hpp"
+#include "utils/configfilereader.hpp"
+
+namespace avrs
+{
 
 using namespace std;
 
@@ -138,3 +141,5 @@ istream& operator>>(istream& is, ConfigFileReader& cf)
 
 	return is;
 }
+
+}  // namespace avrs

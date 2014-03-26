@@ -19,12 +19,16 @@ message(STATUS "Configuring ${PROJECT_NAME} ${VERSION_NUMBER}")
 # configure a header file to pass some of the CMake settings
 # to the source code
 configure_file(
-  "${PROJECT_SOURCE_DIR}/src/version.hpp.in"
-  "${PROJECT_SOURCE_DIR}/src/version.hpp"
+  "${PROJECT_SOURCE_DIR}/include/version.hpp.in"
+  "${PROJECT_SOURCE_DIR}/include/version.hpp"
 )
 
 # Required libraries
+
+# Armadillo
 find_package(Armadillo REQUIRED)
+
+# Boost
 find_package(Boost COMPONENTS program_options system filesystem REQUIRED)
 
 if (Boost_FOUND)
@@ -32,17 +36,17 @@ if (Boost_FOUND)
 	add_definitions(${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
 endif()
 
+# ALSA
 find_package(ALSA REQUIRED)
 
 if (ALSA_FOUND)
 	include_directories(${ALSA_INCLUDE_DIRS})
 endif()
 
+# pthreads
 find_package(Threads)
 
-
-#find_package(FFTW3 REQUIRED)
-
+# FFTW3 (float)
 find_library(FFTW3_LIBRARY 
 	NAMES fftw3f
 )
@@ -53,19 +57,20 @@ else()
 	message(STATUS "Found fftw3 library: " ${FFTW3_LIBRARY})
 endif()
 
-find_library(DXFLIB_LIBRARY 
-	NAMES dxflib
-)
-
+# STK
 find_library(STK_LIBRARY 
 	NAMES stk
 )
-
 if (${STK_LIBRARY} STREQUAL "STK_LIBRARY-NOTFOUND")
 	message(FATAL_ERROR "Not found STK library")
 else()	
 	message(STATUS "Found STK library: " ${STK_LIBRARY})
 endif()
+
+# dxflib
+find_library(DXFLIB_LIBRARY 
+	NAMES dxflib
+)
 
 if (${DXFLIB_LIBRARY} STREQUAL "DXFLIB_LIBRARY-NOTFOUND")
 	message(FATAL_ERROR "Not found dxflib library")
@@ -73,6 +78,7 @@ else()
 	message(STATUS "Found dxflib library: " ${DXFLIB_LIBRARY})
 endif()
 
+# ANN
 find_library(ANN_LIBRARY 
 	NAMES ANN
 )
@@ -83,17 +89,39 @@ else()
 	message(STATUS "Found ANN library: " ${ANN_LIBRARY})
 endif()
 
+# Math
 find_library(M_LIBRARY m)
 
+# Bluetooth
 find_library(BLUETOOTH_LIBRARY bluetooth)
 
+# Cwiid
 find_library(CWIID_LIBRARY cwiid)
 
 # Optional libraries
+
+# OpenMP
 find_package(OpenMP)
 
 if (OPENMP_FOUND)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
+
+# Set flags on C++ compiler
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -pipe -Werror")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__LINUX_ALSA__ -D__LITTLE_ENDIAN__ -D_REENTRANT")
+
+# Set flags on C compiler
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -pipe -Werror")
+
+include_directories(
+	include
+	/usr/realtime/include
+	/usr/src/linux/include
+)
+
+link_directories(
+	/usr/realtime/lib
+)
 
 add_subdirectory(src)

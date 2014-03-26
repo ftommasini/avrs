@@ -16,7 +16,7 @@
  *
  */
 
-#include "tokenizer.hpp"
+#include "utils/tokenizer.hpp"
 
 namespace avrs
 {

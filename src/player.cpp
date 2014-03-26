@@ -24,8 +24,8 @@
 #include <rtai_mbx.h>
 #include <rtai_fifos.h>
 
+#include "utils/rttools.hpp"
 #include "common.hpp"
-#include "rttools.hpp"
 #include "player.hpp"
 
 // Player
