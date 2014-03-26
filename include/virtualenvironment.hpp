@@ -31,11 +31,11 @@
 #include <stk/Fir.h>
 #include <stk/Delay.h>
 
-#include "tree.hpp"
-#include "rttools.hpp"
-#include "math.hpp"
-#include "trackersim.hpp"
-#include "trackerwiimote.hpp"
+#include "utils/tree.hpp"
+#include "utils/rttools.hpp"
+#include "utils/math.hpp"
+#include "tracker/sim/trackersim.hpp"
+#include "tracker/wiimote/trackerwiimote.hpp"
 #include "convolver.hpp"
 #include "surface.hpp"
 #include "soundsource.hpp"

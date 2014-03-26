@@ -25,8 +25,8 @@
 #include <rtai_mbx.h>
 #include <rtai_fifos.h>
 #include "common.hpp"
-#include "rttools.hpp"
-#include "math.hpp"
+#include "utils/rttools.hpp"
+#include "utils/math.hpp"
 #include "system.hpp"
 
 namespace avrs

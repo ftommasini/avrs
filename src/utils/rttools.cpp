@@ -20,7 +20,10 @@
  * \file rttools.cpp
  */
 
-#include "rttools.hpp"
+#include "utils//rttools.hpp"
+
+namespace avrs
+{
 
 MBX *rttools::get_mbx(std::string name, int size)
 {
@@ -57,3 +60,5 @@ unsigned int rttools::cpu_id(unsigned int cpu)
 	else
 		return (1 << (cpu - 1));
 }
+
+}  // namespace avrs

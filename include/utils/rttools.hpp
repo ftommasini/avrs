@@ -33,6 +33,9 @@
 // AVRS headers
 #include "common.hpp"
 
+namespace avrs
+{
+
 namespace rttools
 {
 	// RT Mailboxes functions
@@ -50,10 +53,6 @@ namespace rttools
 // real-time tick time
 #define TICK_TIME       	((long) ((BUFFER_SAMPLES * 1E9) / SAMPLE_RATE))  // in ns
 
-// mailboxes names
-//#define MBX_OUT_NAME		"MBXOUT"
-//#define MBX_OUT_BLOCK		(BUFFER_SAMPLES * N_CHANNELS)
-
 #define MBX_TRACKER_NAME	"MBXTRA"
 #define MBX_TRACKER_BLOCK	2  // 2 blocks of tracker data
 
@@ -64,5 +63,7 @@ namespace rttools
 
 // CPU definitions
 #define CPU_MAX				(sysconf(_SC_NPROCESSORS_ONLN))  // maximum number of available CPUs (Linux platform)
+
+}  // namespace avrs
 
 #endif  // RTTOOLS_HPP_

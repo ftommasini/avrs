@@ -23,11 +23,11 @@
 #include <cstdio>
 #include <boost/filesystem.hpp>
 
+#include "utils/configfilereader.hpp"
+#include "utils/tokenizer.hpp"
+#include "utils/math.hpp"
 #include "configuration.hpp"
-#include "configfilereader.hpp"
 #include "common.hpp"
-#include "tokenizer.hpp"
-#include "math.hpp"
 #include "avrsexception.hpp"
 
 namespace avrs

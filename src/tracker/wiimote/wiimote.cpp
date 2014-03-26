@@ -20,7 +20,7 @@
  * @file wiimote.cpp
  */
 
-#include "wiimote.hpp"
+#include "tracker/wiimote/wiimote.hpp"
 
 Wiimote::Wiimote(std::string address)
 	: 	_wii_remote(NULL)
@@ -49,8 +49,6 @@ Wiimote::ptr_t Wiimote::create(std::string address)
 
 bool Wiimote::_connect()
 {
-	// TODO se necesita que este linkeado por bluetooth
-
 	/* Establish a continous and non-blocking connection */
 	// CWIID_FLAG_CONTINUOUS | CWIID_FLAG_NONBLOCK
 	_wii_remote = cwiid_connect(&_bluetooth_address, CWIID_FLAG_MESG_IFC);
@@ -150,54 +148,3 @@ void Wiimote::wm_callback(cwiid_wiimote_t *g_wiimote, int mesg_count,
 		}
 	}
 }
-
-// ------------------------------------------------------------
-
-//void Wiimote::_callback(cwiid_wiimote_t *g_wiimote, int mesg_count,
-//		union cwiid_mesg mesg[], struct timespec *timestamp)
-//{
-//	// Expect it to be around 2-8 in wiimote state struct
-//	static int ir_sizes[2] =
-//	{ 3, 3 };
-//	static bool missed_point = false;
-//
-//	for (int j = 0; j < mesg_count; j++)
-//	{
-//		if ((mesg[j].type == CWIID_MESG_IR) && (g_wiimote))  // the only message that is important
-//		{
-//			missed_point = false;
-//
-//			// Get IR values
-//			for (int i = 0; i < 4; i++)
-//			{
-//				if (mesg[j].ir_mesg.src[i].valid)
-//				{
-//					// Get the point positions
-//					g_ir_points.data[i][0] = mesg[j].ir_mesg.src[i].pos[CWIID_X]
-//							- g_image_center_X;
-//					g_ir_points.data[i][1] = mesg[j].ir_mesg.src[i].pos[CWIID_Y]
-//							- g_image_center_Y;
-//
-//					if (mesg[j].ir_mesg.src[i].size != -1)
-//					{
-//						ir_sizes[i] = mesg[j].ir_mesg.src[i].size + 1;
-//					}
-//					//if (_wii_state.ir_src[i].size != -1)
-//					//{
-//					//	ir_sizes[i] = _wii_state.ir_src[i].size + 1;
-//					//}
-//
-//					//printf("x: %d, y: %d\n",  g_ir_points.data[i][0], g_ir_points.data[i][1]);
-//				}
-//				else
-//					missed_point = true;
-//
-//				//Wiimote::setCurrentTime(timestamp->tv_nsec);
-//				g_current_time = timestamp->tv_nsec;  // TODO mutex??
-//			}
-//
-//			if (missed_point)
-//				;  // do nothing (for now...)
-//		}
-//	}
-//}

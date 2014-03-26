@@ -21,9 +21,11 @@
 
 #include <string>
 
+namespace avrs
+{
+
 // Adapted from:
 // http://stackoverflow.com/questions/53849/how-do-i-tokenize-a-string-in-c
-
 class Tokenizer
 {
 public:
@@ -43,5 +45,7 @@ protected:
 	std::string _token;
 	std::string _delimiters;
 };
+
+}  // namespace avrs
 
 #endif  // TOKENIZER_H_

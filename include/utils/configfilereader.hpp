@@ -13,6 +13,9 @@
 
 using namespace std;
 
+namespace avrs
+{
+
 /**
  * @brief Class for reading named values from configuration files
  * @author Richard J. Wagner <wagnerr@umich.edu>
@@ -257,5 +260,7 @@ void ConfigFileReader::add(string key, const T& value)
 	myContents[key] = v;
 	return;
 }
+
+}  // namespace avrs
 
 #endif  // CONFIGFILEREADER_HPP_

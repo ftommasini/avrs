@@ -27,8 +27,8 @@
 #include <cmath>
 #include <armadillo>
 
+#include "utils/math.hpp"
 #include "common.hpp"
-#include "math.hpp"
 
 using namespace arma;
 
