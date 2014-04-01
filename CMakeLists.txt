@@ -9,7 +9,7 @@ set(VERSION_MINOR 2)
 set(VERSION_PATCH 5)
 
 # Configuration options
-set(WIIMOTE_SUPPORT "Build avrs with wiimote-based tracker library" OFF)
+set(WIIMOTE_SUPPORT OFF CACHE BOOL "Build avrs with wiimote-based tracker library")
 
 if (VERSION_PATCH MATCHES "0")
 	set(VERSION_NUMBER "${VERSION_MAJOR}.${VERSION_MINOR}")
@@ -57,7 +57,7 @@ find_package(Armadillo REQUIRED)
 # Boost
 find_package(Boost COMPONENTS program_options system filesystem REQUIRED)
 
-if (Boost_FOUND)
+if(Boost_FOUND)
 	include_directories(${Boost_INCLUDE_DIRS})
 	add_definitions(${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
 endif()
@@ -93,7 +93,7 @@ endif()
 # dxflib
 find_library(DXFLIB_LIBRARY dxflib)
 
-if (${DXFLIB_LIBRARY} STREQUAL "DXFLIB_LIBRARY-NOTFOUND")
+if(${DXFLIB_LIBRARY} STREQUAL "DXFLIB_LIBRARY-NOTFOUND")
 	message(FATAL_ERROR "Not found dxflib library")
 else()	
 	message(STATUS "Found dxflib library: " ${DXFLIB_LIBRARY})
