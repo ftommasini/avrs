@@ -13,7 +13,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#include "posit.hpp"
+#include "tracker/wiimote/posit.hpp"
 
 /**
  * Read object feature points from a file

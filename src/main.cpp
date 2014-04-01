@@ -20,20 +20,21 @@
 #include <cstdlib>
 #include <exception>
 #include <string>
-#include <boost/lexical_cast.hpp>
 #include <boost/program_options.hpp>
 
 #include "common.hpp"
 #include "system.hpp"
 #include "configuration.hpp"
-#include "timer.hpp"
 #include "avrsexception.hpp"
+#include "utils/timer.hpp"
+#include "utils/timer.hpp"
+
 #include "version.hpp"
 
 // On Linux, must be  compile with the -D_REENTRANT option.  This tells
 // the C/C++ libraries that the functions must be thread-safe
 #ifndef _REENTRANT
-#error You need to compile with _REENTRANT defined since this uses threads
+#error You need to compile with _REENTRANT defined
 #endif
 
 using namespace avrs;
@@ -51,22 +52,7 @@ using namespace avrs;
  * @author Sebastián P. Ferreyra (contributor)
  * @author G. Agustín Cravero (contributor)
  *
- * @version 0.2
- *
  * @date 2009-2014
- *
- * @section License
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of
- * the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details at
- * http://www.gnu.org/copyleft/gpl.html
  */
 
 typedef struct
@@ -213,8 +199,9 @@ void usage()
 
 void print_version()
 {
-	std::cout << "avrs " << get_version() << std::endl;
-	std::cout << "Copyright (C) 2009-2014 AVRS team" << std::endl;
+	std::cout << "avrs " << VERSION_NUMBER << std::endl;
+	std::cout << "Copyright (C) 2009-2014 Fabián Tommasini" << std::endl;
+	std::cout << "                        and others" << std::endl;
 	std::cout << "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>" << std::endl;
 	std::cout << "This is free software: you are free to change and redistribute it." << std::endl;
 	std::cout << "There is NO WARRANTY, to the extent permitted by law." << std::endl;

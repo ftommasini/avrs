@@ -73,8 +73,6 @@ public:
 	int getBattery();
 	void setIrPoints(ir_points_t ir);
 	ir_points_t getIrPoints();
-//	void setCurrentTime(long int time);
-//	long int getCurrentTime();
 
 	static void wm_callback(cwiid_wiimote_t *g_wiimote, int mesg_count,
 			union cwiid_mesg mesg[], struct timespec *timestamp);
@@ -110,15 +108,5 @@ inline ir_points_t Wiimote::getIrPoints()
 {
 	return _ir_points;
 }
-
-//inline void Wiimote::setCurrentTime(long int time)
-//{
-//	_current_time = time;
-//}
-//
-//inline long int Wiimote::getCurrentTime()
-//{
-//	return _current_time;
-//}
 
 #endif  // WIIMOTE_HPP_

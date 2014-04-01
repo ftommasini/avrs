@@ -16,7 +16,7 @@
  *
  */
 
-#include "timer.hpp"
+#include "utils/timer.hpp"
 
 #include <iostream>
 #include <boost/format.hpp>
@@ -143,4 +143,4 @@ double Timer::_get_CPU_time( )
 	return -1.0;		/* Failed. */
 }
 
-}  // namespace
+}  // namespace avrs

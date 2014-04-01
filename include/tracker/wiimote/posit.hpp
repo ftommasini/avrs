@@ -7,7 +7,7 @@
 
 extern "C"
 {
-#include "svd.h"
+#include "tracker/wiimote/svd.h"
 }
 
 // Constants

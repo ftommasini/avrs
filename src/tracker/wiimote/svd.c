@@ -6,7 +6,7 @@
 
 /// TODO build a class for this...
 
-#include "svd.h"
+#include "tracker/wiimote/svd.h"
 
 /**
  * Shows an error and exit

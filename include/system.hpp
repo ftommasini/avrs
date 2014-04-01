@@ -28,9 +28,10 @@
 #include "configuration.hpp"
 #include "input.hpp"
 #include "player.hpp"
-#include "trackersim.hpp"
 #include "headfilter.hpp"
 #include "virtualenvironment.hpp"
+#include "tracker/sim/trackersim.hpp"
+#include "tracker/wiimote/trackerwiimote.hpp"
 
 namespace avrs
 {

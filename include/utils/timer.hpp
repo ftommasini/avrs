@@ -61,6 +61,6 @@ private:
 	double _get_CPU_time();
 };
 
-}  // namespace ismx
+}  // namespace avrs
 
 #endif /* TIMER_HPP_ */

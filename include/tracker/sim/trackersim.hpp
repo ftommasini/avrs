@@ -25,7 +25,7 @@
 
 #include <memory>
 
-#include "trackerbase.hpp"
+#include "tracker/trackerbase.hpp"
 
 namespace avrs
 {
