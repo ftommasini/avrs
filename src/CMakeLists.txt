@@ -21,11 +21,7 @@ set(CXX_SOURCE_FILES
 	main.cpp
 )
 
-# Executable file
-add_executable(${PROJECT_NAME} ${CXX_SOURCE_FILES})
-
-# Link executable file to libraries
-target_link_libraries(${PROJECT_NAME} 
+set(LIBRARIES
 	${FFTW3_LIBRARY}
 	${STK_LIBRARY}
 	${ALSA_LIBRARIES}
@@ -37,10 +33,22 @@ target_link_libraries(${PROJECT_NAME}
 	${Boost_LIBRARIES}
 	avrs_utils 
 	avrs_trackersim
-	avrs_trackerwiimote
-	${BLUETOOTH_LIBRARY}
-	${CWIID_LIBRARY}
+	${RTAI_LIBRARY}
 )
+
+if(WIIMOTE_SUPPORT)
+    set(LIBRARIES ${LIBRARIES}
+        avrs_trackerwiimote
+	    ${BLUETOOTH_LIBRARY}
+	    ${CWIID_LIBRARY}
+	)
+endif()
+
+# Executable file
+add_executable(${PROJECT_NAME} ${CXX_SOURCE_FILES})
+
+# Link executable file to libraries
+target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
 
 # Move to bin directory
 set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)

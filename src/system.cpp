@@ -91,7 +91,7 @@ bool System::_init()
 	//_ve->print_vis();  // for debug only
 	// Print information of ISM
 	std::cout << "Total VSs calculated: " << _ve->n_vs()  << std::endl;
-	std::cout << "Visilbe VSs: " << _ve->n_visible_vs() << std::endl;
+	std::cout << "Audible VSs: " << _ve->n_visible_vs() << std::endl;
 
 	return true;
 }

@@ -663,15 +663,6 @@ binauraldata_t VirtualEnvironment::_hrtf_filter(data_t &input, const orientation
 
 	_hrtfdb->get_HRTF(&_hrtf, ori.az, ori.el);  // get the best-fit HRTF for both ears
 
-
-//	DPRINT("************\nSTART\n");
-//	for (uint i = 0; i < input.size(); i++)
-//	{
-//		DPRINT("%f", input[i]);
-//	}
-//
-//	DPRINT("************\nEND\n");
-
 	// convolution with 1 image-source
 	_hrtf_conv_l->setSKernel(_hrtf.left, N_FFT);
 	_hrtf_conv_r->setSKernel(_hrtf.right, N_FFT);
