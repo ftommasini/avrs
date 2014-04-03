@@ -62,7 +62,9 @@ System::ptr_t System::create(configuration_t *config_sim)
 bool System::_init()
 {
 	_in = InputWaveLoop::create(_config_sim->anechoic_file);
+	assert(_in.get() != NULL);
 	_out = Player::create(avrs::math::dB2linear(_config_sim->master_gain_db));
+	assert(_out.get() != NULL);
 
 	_conv_l = Convolver::create(BUFFER_SAMPLES);
 	_conv_r = Convolver::create(BUFFER_SAMPLES);

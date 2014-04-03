@@ -112,8 +112,8 @@ bool InputWaveLoop::_init()
 			retval = false;
 		}
 	}
-	catch (stk::StkError &ex) {
-		DPRINT("%s", ex.getMessageCString());
+	catch (stk::StkError &ex)
+	{
 		retval = false;
 	}
 
