@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2013 Fabián C. Tommasini <fabian@tommasini.com.ar>
+ * Copyright (C) 2009-2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,8 @@
 // AVRS headers
 #include "common.hpp"
 
-using namespace avrs;
+namespace avrs
+{
 
 /**
  * Plays the output data trough the sound card
@@ -103,6 +104,8 @@ inline bool Player::is_running()
 {
 	return _running;
 }
+
+}  // namespace avrs
 
 #endif  // OUTPUT_HPP_
 

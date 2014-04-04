@@ -25,6 +25,9 @@
 
 #include "common.hpp"
 
+namespace avrs
+{
+
 class Surface
 {
 public:
@@ -122,5 +125,7 @@ inline std::vector<double> &Surface::get_a_filter_coeff()
 {
 	return _a_filter_coeff;
 }
+
+}  // namespace avrs
 
 #endif  // SURFACE_HPP_

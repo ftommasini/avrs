@@ -24,7 +24,10 @@
 #include <rtai_lxrt.h>
 #include <rtai_mbx.h>
 #include <rtai_fifos.h>
+
 #include "common.hpp"
+#include "avrsexception.hpp"
+#include "configuration.hpp"
 #include "utils/rttools.hpp"
 #include "utils/math.hpp"
 #include "system.hpp"
@@ -32,31 +35,28 @@
 namespace avrs
 {
 
-System::System(configuration_t *config_sim)
-	: _config_sim(config_sim)
+System::System(std::string config_filename, bool show_config)
 {
-	;  // nothing to do
+	_config_manager.load_configuration(config_filename);
+	_config_sim = _config_manager.get_configuration();
+
+	if (show_config)
+		_config_manager.show_configuration();
+
+	if (!_init())
+		throw AvrsException("Error creating System");
 }
 
 System::~System()
 {
-	;  // nothing to do
+	;
 }
 
 // Singleton (static ptr_t)
-System::ptr_t System::create(configuration_t *config_sim)
+System::ptr_t System::get_instance(std::string config_filename, bool show_config)
 {
-	static ptr_t p_tmp(new System(config_sim));
-	static bool is_init = false;
-
-	if (!is_init) {
-		if (!p_tmp->_init())
-			p_tmp.reset();
-
-		is_init = true;
-	}
-
-	return p_tmp;
+	static System::ptr_t p_instance(new System(config_filename, show_config));  // instance
+	return p_instance;
 }
 
 bool System::_init()
@@ -132,7 +132,7 @@ bool System::run()
 		return false;
 	}
 
-	_running = true;
+	_is_running = true;
 	pthread_create(&_thread_id, NULL, System::_rt_wrapper, this); // run simulation (in another thread)
 
 	printf(">> ");

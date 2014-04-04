@@ -57,6 +57,9 @@
 
 #include "common.hpp"
 
+namespace avrs
+{
+
 using namespace stk;
 using namespace arma;
 
@@ -111,4 +114,7 @@ private:
 	OneZero *_tc; // pointer to tone correction filter
 };
 
+}  // namespace avrs
+
 #endif  // _FDN_HPP_
+

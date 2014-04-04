@@ -3,7 +3,7 @@
  *                         Deutsche Telekom Laboratories, TU Berlin
  *                         Ernst-Reuter-Platz 7, 10587 Berlin, Germany
  *                         <SoundScapeRenderer@telekom.de>
- * Copyright (C) 2012-2013 Fabián C. Tommasini <fabian@tommasini.com.ar>
+ * Copyright (C) 2012-2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -123,21 +123,6 @@ Convolver::Convolver(const nframes_t nframes, const crossfade_t crossfade_type)
 
   } // if
 
-  /*
-  // open file
-  std::ifstream fft_wisdom("fftw3_plans/fft_plan.txt");
-  
-  if (!fft_wisdom.is_open())
-  {
-    WARNING("Cannot open file.");
-  }
-  else if (!fftw_import_wisdom_from_file(fft_wisdom))
-  {
-    WARNING("Cannot import fft wisdom.");
-  }
-
-  fft_wisdom.close();  
-  */
 
   // create fft plans for halfcomplex data format
   _fft_plan  = fftwf_plan_r2r_1d(_partition_size, &_fft_buffer[0],
@@ -318,15 +303,8 @@ Convolver::_update_filter_partitions()
     }
   }
 
-  ///////////////////////////////////////////
-  ///////////////////////////////////////////
-  ///////////////////////////////////////////
   //  TODO: Handle filters with different  //
   //  numbers of partitions                //
-  ///////////////////////////////////////////
-  ///////////////////////////////////////////
-  ///////////////////////////////////////////
-
 }
 
 /** Fast convolution of audio signal frame.

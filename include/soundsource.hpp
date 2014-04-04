@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2013 Fabián C. Tommasini <fabian@tommasini.com.ar>
+ * Copyright (C) 2009-2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,9 @@
 
 #include "common.hpp"
 
+namespace avrs
+{
+
 class SoundSource
 {
 public:
@@ -28,9 +31,8 @@ public:
 
 	virtual ~SoundSource();
     static ptr_t create(std::string filename);
-    // todo Can return reference???
-	avrs::data_t get_IR(avrs::orientation_angles_t &ori);
 
+	avrs::data_t get_IR(avrs::orientation_angles_t &ori);
 	avrs::point3d_t pos;
 
 private:
@@ -45,5 +47,7 @@ inline avrs::data_t SoundSource::get_IR(avrs::orientation_angles_t &ori)
 {
 	return _ir;
 }
+
+}  // namespace avrs
 
 #endif // SOUNDSOURCE_HPP_

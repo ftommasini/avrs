@@ -30,6 +30,9 @@
 #include "utils/math.hpp"
 #include "common.hpp"
 
+namespace avrs
+{
+
 using namespace arma;
 
 class Listener
@@ -57,7 +60,6 @@ public:
 private:
 	Listener();
 
-	bool _init();
 //	mat::fixed<4,4> _calculate_rotation_matrix(const avrs::orientation_angles_t &o);
 
 	avrs::point3d_t _pos;  // in room reference system
@@ -134,5 +136,7 @@ inline mat::fixed<4,4> &Listener::get_rotation_matrix()
 //
 //	return R;
 //}
+
+}  // namespace avrs
 
 #endif // LISTENER_HPP_

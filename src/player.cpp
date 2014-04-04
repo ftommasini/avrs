@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2013 Fabián C. Tommasini <fabian@tommasini.com.ar>
+ * Copyright (C) 2009-2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *
  */
 
-#include <string.h>
+#include <cstring>
 #include <sys/mman.h>
 
 // RTAI headers
@@ -26,7 +26,11 @@
 
 #include "utils/rttools.hpp"
 #include "common.hpp"
+#include "avrsexception.hpp"
 #include "player.hpp"
+
+namespace avrs
+{
 
 // Player
 Player::Player(float gain_factor)
@@ -48,7 +52,10 @@ Player::ptr_t Player::create(float gain_factor)
 	ptr_t p_tmp(new Player(gain_factor));
 
 	if (!p_tmp->_init())
+	{
 		p_tmp.reset(); // NULL-like pointer
+		throw AvrsException("Error creating Player");
+	}
 
 	return p_tmp;
 }
@@ -159,3 +166,5 @@ int Player::callback(void *output_buffer, void *input_buffer,
 
 	return 0; // 1 for stop
 }
+
+}  // namespace avrs

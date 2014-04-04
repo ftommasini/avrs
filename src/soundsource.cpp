@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2013 Fabián C. Tommasini <fabian@tommasini.com.ar>
+ * Copyright (C) 2009-2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,17 +16,19 @@
  *
  */
 
-#include "soundsource.hpp"
-
-// STK headers
 #include <stk/FileWvIn.h>
-
 #include <cmath>
+
+#include "soundsource.hpp"
+#include "avrsexception.hpp"
+
+namespace avrs
+{
 
 SoundSource::SoundSource(std::string filename)
 	: _filename(filename)
 {
-	;
+	;  // nothing to do
 }
 
 SoundSource::~SoundSource()
@@ -39,7 +41,10 @@ SoundSource::ptr_t SoundSource::create(std::string filename)
 	ptr_t p_tmp(new SoundSource(filename));
 
 	if (!p_tmp->_init())
+	{
 		p_tmp.reset();
+		throw AvrsException("Error creating SoundSource");
+	}
 
 	return p_tmp;
 }
@@ -84,3 +89,5 @@ bool SoundSource::_init()
 
 	return retval;
 }
+
+}  // namespace avrs
