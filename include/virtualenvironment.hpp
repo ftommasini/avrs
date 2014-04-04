@@ -30,6 +30,7 @@
 #include <stk/Iir.h>
 #include <stk/Fir.h>
 #include <stk/Delay.h>
+#include <boost/shared_ptr.hpp>
 
 #include "utils/tree.hpp"
 #include "utils/rttools.hpp"

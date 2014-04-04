@@ -28,7 +28,8 @@ namespace avrs
 SoundSource::SoundSource(std::string filename)
 	: _filename(filename)
 {
-	;  // nothing to do
+	if (!_init())
+		throw AvrsException("Error creating SoundSource");
 }
 
 SoundSource::~SoundSource()
@@ -39,13 +40,6 @@ SoundSource::~SoundSource()
 SoundSource::ptr_t SoundSource::create(std::string filename)
 {
 	ptr_t p_tmp(new SoundSource(filename));
-
-	if (!p_tmp->_init())
-	{
-		p_tmp.reset();
-		throw AvrsException("Error creating SoundSource");
-	}
-
 	return p_tmp;
 }
 
@@ -82,8 +76,8 @@ bool SoundSource::_init()
 			_ir[i] /= max_value;  // normalize
 		}
 	}
-	catch (stk::StkError &ex) {
-		DPRINT("%s", ex.getMessageCString());
+	catch (stk::StkError &ex)
+	{
 		retval = false;
 	}
 

@@ -30,8 +30,10 @@
 #include <fftw3.h>
 #include <utility>    // for std::pair
 #include <inttypes.h> // for uint32_t
+#include <boost/shared_ptr.hpp>
 
-/** Convolution engine.
+/**
+ * Convolution engine.
  * Uses (uniformly) partitioned convolution.
  **/
 class Convolver
@@ -46,16 +48,10 @@ class Convolver
     } crossfade_t;
 
     typedef uint32_t nframes_t; // same as jack_nframes_t!
-
     typedef std::vector<float> data_t;
+    typedef boost::shared_ptr<Convolver> ptr_t; ///< shared_ptr to Convolver
 
-    typedef std::auto_ptr<Convolver> ptr_t; ///< auto_ptr to Convolver
-
-    static ptr_t create(const nframes_t nframes
-        , const crossfade_t crossfade_type = raised_cosine);
-
-    Convolver(const nframes_t nframes, const crossfade_t crossfade_type)
-      throw (std::bad_alloc, std::runtime_error);
+    static ptr_t create(const nframes_t nframes, const crossfade_t crossfade_type = raised_cosine);
 
     virtual ~Convolver();
 
@@ -73,6 +69,9 @@ class Convolver
 
   private:
     typedef std::list< std::pair<data_t, unsigned int> > waiting_queue_t;
+
+    Convolver(const nframes_t nframes, const crossfade_t crossfade_type)
+      throw (std::bad_alloc, std::runtime_error);
 
     const nframes_t _frame_size;
     const unsigned int _partition_size;

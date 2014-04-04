@@ -19,6 +19,8 @@
 #ifndef SOUNDSOURCE_HPP_
 #define SOUNDSOURCE_HPP_
 
+#include <boost/shared_ptr.hpp>
+
 #include "common.hpp"
 
 namespace avrs
@@ -27,7 +29,7 @@ namespace avrs
 class SoundSource
 {
 public:
-	typedef std::auto_ptr<SoundSource> ptr_t;
+	typedef boost::shared_ptr<SoundSource> ptr_t;
 
 	virtual ~SoundSource();
     static ptr_t create(std::string filename);
