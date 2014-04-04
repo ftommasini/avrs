@@ -159,23 +159,21 @@ typedef struct OrientationAngles
 	}
 } orientation_angles_t;
 
+
 // Definitions for all the system
 
-// for linear algebra
-#define X	0
-#define Y	1
-#define Z	2
-
+/// Coordinates for linear algebra
+static const short int X = 0;
+static const short int Y = 1;
+static const short int Z = 2;
 /// Sample rate
-#define SAMPLE_RATE			44100
-
+static const int SAMPLE_RATE = 44100;
 /// Number of output channels
-#define N_CHANNELS			2
-
+static const short int N_CHANNELS = 2;
 /// Samples of system processing buffer
-#define BUFFER_SAMPLES		512
-
-#define VS_SAMPLES			256  // 256 samples per VS
+static const short int BUFFER_SAMPLES = 512;
+/// Samples per VS
+static const short int VS_SAMPLES = 256;
 
 // Preprocessor macros
 
