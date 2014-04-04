@@ -39,6 +39,7 @@
 #include "tracker/wiimote/trackerwiimote.hpp"
 #include "convolver.hpp"
 #include "surface.hpp"
+#include "room.hpp"
 #include "soundsource.hpp"
 #include "listener.hpp"
 #include "headfilter.hpp"
@@ -92,7 +93,8 @@ public:
 	/// Static factory function for VirtualEnvironment objects
 	static ptr_t create(configuration_t *cs, TrackerBase::ptr_t tracker);
 
-	// Room methods
+	// Room
+
 
 	float get_room_area();
 	float get_room_volume() const;

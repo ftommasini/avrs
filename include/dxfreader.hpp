@@ -25,8 +25,9 @@
 
 #include <dxflib/dl_creationadapter.h>
 #include <boost/shared_ptr.hpp>
+#include <vector>
 
-#include "virtualenvironment.hpp"
+#include "surface.hpp"
 
 namespace avrs
 {
@@ -41,7 +42,7 @@ class DxfReader : public DL_CreationAdapter
 public:
 	typedef boost::shared_ptr<DxfReader> ptr_t;
 
-	DxfReader(VirtualEnvironment::ptr_t ve);
+	DxfReader();
 
     virtual void addLayer(const DL_LayerData& data);
     virtual void addPoint(const DL_PointData& data);
@@ -52,10 +53,11 @@ public:
     virtual void addVertex(const DL_VertexData& data);
     virtual void add3dFace(const DL_3dFaceData& data);
 
+    std::vector<Surface::ptr_t> get_surfaces();
     void print_attributes();
 
 private:
-    VirtualEnvironment::ptr_t _ve;
+    std::vector<Surface::ptr_t> _surfaces;
 };
 
 }  // namespace avrs
