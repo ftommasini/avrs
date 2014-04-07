@@ -16,47 +16,54 @@
  *
  */
 
-#include "utils/timer.hpp"
-
 #include <iostream>
 #include <boost/format.hpp>
+
+#include "utils/timercpu.hpp"
 
 namespace avrs
 {
 
-void Timer::start()
+void TimerCpu::start()
 {
 	_t0 = _get_CPU_time();
 }
 
-void Timer::stop()
+void TimerCpu::stop()
 {
 	_t1 = _get_CPU_time();
 	_diff = _t1 - _t0;
 }
 
-double Timer::get_elapsed_us()
+double TimerCpu::elapsed_time(timer_unit_t u)
 {
-	return (_diff / 1E-6);
+	switch (u)
+	{
+	case second:
+		return _diff;
+
+	case millisecond:
+		return (_diff / 1E-3);
+
+	case microsecond:
+		return (_diff / 1E-6);
+
+	case nanosecond:
+		return (_diff / 1E-9);
+
+	default:
+		return -1.0;
+	}
 }
 
-double Timer::get_elapsed_ms()
+void TimerCpu::print_elapsed_time()
 {
-	return (_diff / 1E-3);
-}
-
-double Timer::get_elapsed_s()
-{
-	return _diff;
-}
-
-void Timer::print_elapsed_time()
-{
-	 boost::format fmter("Time [s]:\t%.3f\nTime [ms]:\t%.3f\nTime [us]:\t%.0f\n");
+	 boost::format fmter("Time [s]:\t%.9f\nTime [ms]:\t%.6f\nTime [us]:\t%.3f\nTime [ns]:\t%.0f\n");
 	 std::cout << boost::format(fmter)
-	    		% get_elapsed_s()
-	    		% get_elapsed_ms()
-	    		% get_elapsed_us();
+	    		% _diff
+	    		% (_diff / 1E-3)
+	    		% (_diff / 1E-6)
+	    		% (_diff / 1E-9);
 }
 
 // Private functions
@@ -65,7 +72,7 @@ void Timer::print_elapsed_time()
  * Returns the amount of CPU time used by the current process,
  * in seconds, or -1.0 if an error occurred.
  */
-double Timer::_get_CPU_time( )
+double TimerCpu::_get_CPU_time( )
 {
 #if defined(_WIN32)
 	/* Windows -------------------------------------------------- */

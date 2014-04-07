@@ -32,29 +32,26 @@
 #error "Unable to define get_CPU_time() for an unknown OS."
 #endif
 
+#include "timerbase.hpp"
+
 namespace avrs
 {
 
-class Timer
+class TimerCpu : TimerBase
 {
 public:
-	void start();
-	void stop();
-
-	double get_elapsed_us();
-	double get_elapsed_ms();
-	double get_elapsed_s();
-
-	void print_elapsed_time();
+	virtual void start();
+	virtual void stop();
+	virtual double elapsed_time(timer_unit_t u);
+	virtual void print_elapsed_time();
 
 private:
 	double _t0;
 	double _t1;
-	double _diff;
 
 	/*
 	 * Author:  David Robert Nadeau
-	 * Site:    http://NadeauSoftware.com/
+	 * Site:    http://nadeausoftware.com/articles/2012/03/c_c_tip_how_measure_cpu_time_benchmarking
 	 * License: Creative Commons Attribution 3.0 Unported License
 	 *          http://creativecommons.org/licenses/by/3.0/deed.en_US
 	 */

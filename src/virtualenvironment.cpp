@@ -19,10 +19,10 @@
 #include <dxflib/dl_dxf.h>
 #include <boost/format.hpp>
 
+#include "utils/timerrtai.hpp"
 #include "dxfreader.hpp"
 #include "avrsexception.hpp"
 #include "virtualenvironment.hpp"
-
 
 namespace avrs
 {
@@ -152,10 +152,8 @@ void VirtualEnvironment::add_surface(Surface *s)
 
 void VirtualEnvironment::calc_ISM()
 {
-//	RTIME startt, endt;
-//	float elapsedt;
-
-	//startt = rt_get_time_ns();
+	TimerRtai t;
+	t.start();
 
 	_max_dist = _config_sim->max_distance;
 	_max_order = _config_sim->max_order;
@@ -182,10 +180,8 @@ void VirtualEnvironment::calc_ISM()
 	// propagate first order... and then run recursively
 	_propagate_ISM(vs, _root_it, 1);
 
-	//endt = rt_get_time_ns();
-
-	//elapsedt = (float) (endt - startt) / 1E6; // in ms
-	//DPRINT("ISM calculation time: %2.4f ms", elapsedt);
+	t.stop();
+	DPRINT("ISM calculation time: %2.4f ms", t.elapsed_time(millisecond));
 	//DPRINT("Max distance: %3.2f - Max order: %d", _max_dist, _max_order);
 }
 
@@ -756,9 +752,7 @@ binauraldata_t VirtualEnvironment::_hrtf_iir_filter(data_t &input, const orienta
 
 data_t VirtualEnvironment::_surfaces_filter(data_t &input, const tree_it_t node)
 {
-//	RTIME start, end;
-//	float elapsed;
-
+	TimerRtai t;
  	data_t values = input;
 
 	// get parent VS
@@ -769,7 +763,7 @@ data_t VirtualEnvironment::_surfaces_filter(data_t &input, const tree_it_t node)
 		virtualsource_t *vs = *current_node;
 		assert(vs != NULL);
 
-//		start = rt_get_time_ns();
+		t.start();
 
 		Surface *s = _surfaces[vs->surface_index];
 		//_set coefficients and clear previous filter state
@@ -781,9 +775,8 @@ data_t VirtualEnvironment::_surfaces_filter(data_t &input, const tree_it_t node)
 
 		current_node = _tree.parent(current_node);  // get the parent
 
-//		end = rt_get_time_ns();
-//		elapsed = (float) (end - start) / 1E3; // in us
-//		DPRINT("Time: %6.3f us",  elapsed);
+		t.stop();
+		DPRINT("Surface filter time: %6.3f us",  t.elapsed_time(microsecond));
 	}
 
 	return values;
