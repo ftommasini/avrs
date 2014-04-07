@@ -8,6 +8,7 @@ set(UTILS_CXX_SOURCE_FILES
 	tokenizer.cpp
 	rttools.cpp
 	timer.cpp
+	timerrtai.cpp
 )
 
 # Library file
