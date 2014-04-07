@@ -21,7 +21,6 @@
 #include <exception>
 #include <string>
 #include <boost/program_options.hpp>
-#include <stk/Stk.h>
 
 #include "common.hpp"
 #include "system.hpp"
@@ -30,7 +29,7 @@
 
 #include "version.hpp"
 
-// On Linux, must be  compile with the -D_REENTRANT option.  This tells
+// On Linux, must be compile with the -D_REENTRANT option.  This tells
 // the C/C++ libraries that the functions must be thread-safe
 #ifndef _REENTRANT
 #error You need to compile with _REENTRANT defined
