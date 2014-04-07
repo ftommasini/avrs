@@ -181,7 +181,7 @@ void VirtualEnvironment::calc_ISM()
 	_propagate_ISM(vs, _root_it, 1);
 
 	t.stop();
-	DPRINT("ISM calculation time: %2.4f ms", t.get_elapsed_ms());
+	DPRINT("ISM calculation time: %2.4f ms", t.elapsed_time(millisecond));
 	//DPRINT("Max distance: %3.2f - Max order: %d", _max_dist, _max_order);
 }
 
@@ -776,7 +776,7 @@ data_t VirtualEnvironment::_surfaces_filter(data_t &input, const tree_it_t node)
 		current_node = _tree.parent(current_node);  // get the parent
 
 		t.stop();
-		DPRINT("Surface filter time: %6.3f us",  t.get_elapsed_us());
+		DPRINT("Surface filter time: %6.3f us",  t.elapsed_time(microsecond));
 	}
 
 	return values;

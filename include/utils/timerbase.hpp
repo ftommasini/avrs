@@ -16,54 +16,32 @@
  *
  */
 
-#include <iostream>
-#include <boost/format.hpp>
-
-#include "utils/timerrtai.hpp"
+#ifndef TIMERBASE_HPP_
+#define TIMERBASE_HPP_
 
 namespace avrs
 {
 
-void TimerRtai::start()
+typedef enum
 {
-	_t0 = rt_get_time_ns();
-}
+	second,
+	millisecond,
+	microsecond,
+	nanosecond
+} timer_unit_t;
 
-void TimerRtai::stop()
+class TimerBase
 {
-	_t1 = rt_get_time_ns();
-	_diff = _t1 - _t0;
-}
+public:
+	virtual void start() = 0;
+	virtual void stop() = 0;
+	virtual double elapsed_time(timer_unit_t u) = 0;
+	virtual void print_elapsed_time() = 0;
 
-double TimerRtai::elapsed_time(timer_unit_t u)
-{
-	switch (u)
-	{
-	case second:
-		return (_diff / 1E9);
-
-	case millisecond:
-		return (_diff / 1E6);
-
-	case microsecond:
-		return (_diff / 1E3);
-
-	case nanosecond:
-		return _diff;
-
-	default:
-		return -1.0;
-	}
-}
-
-void TimerRtai::print_elapsed_time()
-{
-	 boost::format fmter("Time [s]:\t%.9f\nTime [ms]:\t%.6f\nTime [us]:\t%.3f\nTime [ns]:\t%.0f\n");
-	 std::cout << boost::format(fmter)
-	    		% (_diff / 1E9)
-	    		% (_diff / 1E6)
-	    		% (_diff / 1E3)
-	    		% _diff;
-}
+protected:
+	double _diff;
+};
 
 }  // namespace avrs
+
+#endif /* TIMERBASE_HPP_ */

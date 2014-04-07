@@ -25,7 +25,7 @@
 #include "common.hpp"
 #include "system.hpp"
 #include "avrsexception.hpp"
-#include "utils/timer.hpp"
+#include "utils/timercpu.hpp"
 
 #include "version.hpp"
 
@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
 	parse_program_options(argc, argv, &params);
 
 	System::ptr_t sys;
-	Timer t;
+	TimerCpu t;
 	std::string end_message;
 
 	// create auto_ptr pointer to the system
@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
 
 		// show final messages
 		printf("%s ", end_message.c_str());
-		printf("Running time: %.2f s\n", t.get_elapsed_s());
+		printf("Running time: %.2f s\n", t.elapsed_time(second));
 	}
 	catch (const AvrsException &e)
 	{

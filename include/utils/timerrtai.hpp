@@ -21,26 +21,22 @@
 
 #include <rtai_mbx.h>
 
+#include "timerbase.hpp"
+
 namespace avrs
 {
 
-class TimerRtai
+class TimerRtai : TimerBase
 {
 public:
-	void start();
-	void stop();
-
-	double get_elapsed_ns();
-	double get_elapsed_us();
-	double get_elapsed_ms();
-	double get_elapsed_s();
-
-	void print_elapsed_time();
+	virtual void start();
+	virtual void stop();
+	virtual double elapsed_time(timer_unit_t u);
+	virtual void print_elapsed_time();
 
 private:
 	RTIME _t0;
 	RTIME _t1;
-	double _diff;
 };
 
 }  // namespace avrs

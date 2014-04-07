@@ -7,7 +7,7 @@ set(UTILS_CXX_SOURCE_FILES
 	configfilereader.cpp
 	tokenizer.cpp
 	rttools.cpp
-	timer.cpp
+	timercpu.cpp
 	timerrtai.cpp
 )
 
