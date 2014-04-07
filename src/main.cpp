@@ -21,6 +21,7 @@
 #include <exception>
 #include <string>
 #include <boost/program_options.hpp>
+#include <stk/Stk.h>
 
 #include "common.hpp"
 #include "system.hpp"
@@ -85,6 +86,7 @@ int main(int argc, char *argv[])
 	// create auto_ptr pointer to the system
 	try
 	{
+		//stk::Stk::printErrors(false);
 		sys = System::get_instance(params.filename, params.show_config);
 		assert(sys.get() != NULL);
 		printf("Running... (end with \'q\' + Enter)\n");
