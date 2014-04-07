@@ -28,9 +28,9 @@
 namespace avrs
 {
 
-DxfReader::DxfReader(VirtualEnvironment::ptr_t ve)
+DxfReader::DxfReader(VirtualEnvironment *ve)
 {
-	assert(ve.get() != NULL);
+	assert(ve != NULL);
 	_ve = ve;
 }
 
