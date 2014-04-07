@@ -22,6 +22,10 @@
  */
 
 #include "input.hpp"
+#include "avrsexception.hpp"
+
+namespace avrs
+{
 
 /*
  * InputWave
@@ -45,7 +49,8 @@ InputWave::ptr_t InputWave::create(std::string filename)
 
 	if (!p_tmp->_init())
 	{
-		p_tmp.release();  // NULL-like pointer
+		p_tmp.reset();
+		throw AvrsException("Error creating InputWave");
 	}
 
 	return p_tmp;
@@ -58,13 +63,14 @@ bool InputWave::_init()
 	try {
 		_in_wv->openFile(_filename, false, true);
 
-		if (_in_wv->channelsOut() > 1) {  // must be mono
+		if (_in_wv->channelsOut() > 1)  // must be mono
+		{
 			ERROR("Number of channels greater than 1 for mono input");
 			retval = false;
 		}
 	}
-	catch (stk::StkError &ex) {
-		DPRINT("%s", ex.getMessageCString());
+	catch (stk::StkError &ex)
+	{
 		retval = false;
 	}
 
@@ -88,13 +94,15 @@ InputWaveLoop::~InputWaveLoop()
 	delete _in_loop;
 }
 
+
 InputWaveLoop::ptr_t InputWaveLoop::create(std::string filename)
 {
 	ptr_t p_tmp(new InputWaveLoop(filename));
 
 	if (!p_tmp->_init())
 	{
-		p_tmp.release();  // NULL-like pointer
+		p_tmp.reset();
+		throw AvrsException("Error creating InputWaveLoop");
 	}
 
 	return p_tmp;
@@ -107,7 +115,8 @@ bool InputWaveLoop::_init()
 	try {
 		_in_loop->openFile(_filename, false, true);
 
-		if (_in_loop->channelsOut() > 1) {  // must be mono
+		if (_in_loop->channelsOut() > 1)  // must be mono
+		{
 			ERROR("Number of channels greater than 1 for mono input");
 			retval = false;
 		}
@@ -141,3 +150,4 @@ InputNoise::ptr_t InputNoise::create()
 	return p_tmp;
 }
 
+}  // namespace avrs

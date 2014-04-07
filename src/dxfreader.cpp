@@ -30,7 +30,7 @@ namespace avrs
 
 DxfReader::DxfReader(VirtualEnvironment *ve)
 {
-	assert(ve != 0);
+	assert(ve != NULL);
 	_ve = ve;
 }
 

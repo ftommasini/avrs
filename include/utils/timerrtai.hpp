@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
+ * Copyright (C) 2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,40 +16,29 @@
  *
  */
 
-#ifndef SOUNDSOURCE_HPP_
-#define SOUNDSOURCE_HPP_
+#ifndef TIMERRTAI_HPP_
+#define TIMERRTAI_HPP_
 
-#include <boost/shared_ptr.hpp>
+#include <rtai_mbx.h>
 
-#include "common.hpp"
+#include "timerbase.hpp"
 
 namespace avrs
 {
 
-class SoundSource
+class TimerRtai : TimerBase
 {
 public:
-	typedef boost::shared_ptr<SoundSource> ptr_t;
-
-	virtual ~SoundSource();
-    static ptr_t create(std::string filename);
-
-	avrs::data_t get_IR(avrs::orientation_angles_t &ori);
-	avrs::point3d_t pos;
+	virtual void start();
+	virtual void stop();
+	virtual double elapsed_time(timer_unit_t u);
+	virtual void print_elapsed_time();
 
 private:
-	SoundSource(std::string filename);
-	bool _init();
-
-	std::string _filename;
-	avrs::data_t _ir;
+	RTIME _t0;
+	RTIME _t1;
 };
-
-inline avrs::data_t SoundSource::get_IR(avrs::orientation_angles_t &ori)
-{
-	return _ir;
-}
 
 }  // namespace avrs
 
-#endif // SOUNDSOURCE_HPP_
+#endif /* TIMERRTAI_HPP_ */

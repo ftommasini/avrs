@@ -24,6 +24,8 @@
 #define DXFREADER_HPP_
 
 #include <dxflib/dl_creationadapter.h>
+#include <boost/shared_ptr.hpp>
+
 #include "virtualenvironment.hpp"
 
 namespace avrs
@@ -37,6 +39,8 @@ namespace avrs
 class DxfReader : public DL_CreationAdapter
 {
 public:
+	typedef boost::shared_ptr<DxfReader> ptr_t;
+
 	DxfReader(VirtualEnvironment *ve);
 
     virtual void addLayer(const DL_LayerData& data);

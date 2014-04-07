@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011-2013 Fabián C. Tommasini <fabian@tommasini.com.ar>
+ * Copyright (C) 2011-2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@
 #define CONFIGURATION_HPP_
 
 #include <string>
+//#include <boost/shared_ptr.hpp>
 
 #include "soundsource.hpp"
 #include "listener.hpp"
@@ -32,8 +33,11 @@ namespace avrs
 {
 
 // Simulation configuration
-typedef struct
+typedef struct Configuration
 {
+	//typedef boost::shared_ptr<configuration_t> ptr_t;
+	typedef Configuration* ptr_t;
+
 	// General
 	std::string name;
 	float temperature;
@@ -74,8 +78,6 @@ typedef struct
 	std::string tracker_sim_file;
 } configuration_t;
 
-//typedef boost::shared_ptr<configuration_t> configuration_ptr;
-typedef configuration_t* configuration_ptr;
 
 class ConfigurationManager
 {
@@ -84,12 +86,12 @@ public:
 	virtual ~ConfigurationManager();
 
 	void load_configuration(const std::string filename);
-	configuration_ptr get_configuration();
+	configuration_t::ptr_t get_configuration();
 	void show_configuration();
 
 private:
 	//configuration_ptr _conf;
-	configuration_ptr _conf;
+	configuration_t::ptr_t _conf;
 	std::string _filename;
 	std::string _path;
 

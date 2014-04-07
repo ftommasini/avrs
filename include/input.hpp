@@ -33,7 +33,8 @@
 #include "common.hpp"
 #include "convolver.hpp"
 
-using namespace avrs;
+namespace avrs
+{
 
 /**
  * Input base class (abstract)
@@ -153,5 +154,7 @@ inline void InputNoise::tick(sample_t *val, uint n)
 	for (uint i = 0; i < n; i++)
 		val[i] = (sample_t) (2.0 * rand() / (RAND_MAX + 1.0) - 1.0);
 }
+
+}  // namespace avrs
 
 #endif  // INPUT_HPP_

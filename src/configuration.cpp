@@ -43,7 +43,7 @@ ConfigurationManager::~ConfigurationManager()
 	delete _conf;
 }
 
-configuration_ptr ConfigurationManager::get_configuration()
+configuration_t::ptr_t ConfigurationManager::get_configuration()
 {
 	return _conf;
 }

@@ -22,6 +22,9 @@
 
 #include "listener.hpp"
 
+namespace avrs
+{
+
 Listener::Listener()
 {
 	;  // nothing to do
@@ -35,16 +38,7 @@ Listener::~Listener()
 Listener::ptr_t Listener::create()
 {
 	ptr_t p_tmp(new Listener());
-
-	if (!p_tmp->_init())
-		p_tmp.reset();
-
 	return p_tmp;
-}
-
-bool Listener::_init()
-{
-	return true;
 }
 
 void Listener::set_initial_point_of_view(const avrs::orientation_angles_t &o, const avrs::point3d_t &p)
@@ -73,3 +67,5 @@ void Listener::set_position_reference(const avrs::point3d_t &p)
 	_pos_ref = p;
 	_pos = _pos_ref;
 }
+
+}  // namespace avrs

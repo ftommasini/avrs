@@ -16,10 +16,14 @@
  *
  */
 
+#include <cmath> // for basic math functions
+#include <stk/Stk.h>
+
+#include "avrsexception.hpp"
 #include "fdn.hpp"
 
-#include <stk/Stk.h>
-#include <math.h> // for basic math functions
+namespace avrs
+{
 
 Fdn::Fdn(unsigned int N, double gain_A, const double *b, const double *c,
 		double d, const long *m, double RTatDC, double RTatPI) :
@@ -66,7 +70,10 @@ Fdn::ptr_t Fdn::create(unsigned int N, double gain_A, const double *b,
 	ptr_t p_tmp(new Fdn(N, gain_A, b, c, d, m, RTatDC, RTatPI));
 
 	if (!p_tmp->_init())
+	{
 		p_tmp.reset();
+		throw AvrsException("Error creating FDN");
+	}
 
 	return p_tmp;
 }
@@ -196,3 +203,5 @@ void Fdn::_stabilize(long n_ticks)
 		_s = (1.0 * _b) + (_A * _s_filtered);
 	}
 }
+
+}  // namespace avrs

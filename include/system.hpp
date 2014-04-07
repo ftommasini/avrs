@@ -53,8 +53,7 @@ public:
 	typedef std::auto_ptr<System> ptr_t; ///< auto_ptr to System
 
 	virtual ~System();
-	/// Static factory function for System objects
-	static ptr_t create(configuration_t *config_sim);
+	static System::ptr_t get_instance(std::string config_filename, bool show_config);
 
 	/**
 	 * Run the system. Sets up RT process and runs through loop
@@ -63,20 +62,24 @@ public:
 	bool run();
 
 private:
-	System(configuration_t *config_sim);  ///< Private constructor
+	System(std::string config_filename, bool show_config);  ///< Private constructor
+
+
 	System(const System &); ///< Prevent copy-construction
 	System &operator=(const System &);  ///< Prevent assignment
 
 	bool _init();
 
-	volatile bool _running;
+	volatile bool _is_running;
 
 	RTIME _sampling_interval;
 
 	// one for now, maybe more in the future
 	VirtualEnvironment::ptr_t _ve;
 
-	configuration_t *_config_sim;
+	ConfigurationManager _config_manager;
+	configuration_t::ptr_t _config_sim;
+
 	InputWaveLoop::ptr_t _in;
 	Player::ptr_t _out;
 

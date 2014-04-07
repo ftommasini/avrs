@@ -1,13 +1,13 @@
 syntax: glob
 data/*
 bin/*
+demo/*
+build/*
+tools/avrsconfig/conf/*
+doc/doxygen/*
 avrs
+version.hpp
 .project
 .cproject
 .nfs*
-demo/*
-tools/avrsconfig/conf/*
 *.tar.gz
-doc/doxygen/*
-build/*
-version.hpp

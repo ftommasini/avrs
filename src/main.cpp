@@ -24,14 +24,12 @@
 
 #include "common.hpp"
 #include "system.hpp"
-#include "configuration.hpp"
 #include "avrsexception.hpp"
-#include "utils/timer.hpp"
-#include "utils/timer.hpp"
+#include "utils/timercpu.hpp"
 
 #include "version.hpp"
 
-// On Linux, must be  compile with the -D_REENTRANT option.  This tells
+// On Linux, must be compile with the -D_REENTRANT option.  This tells
 // the C/C++ libraries that the functions must be thread-safe
 #ifndef _REENTRANT
 #error You need to compile with _REENTRANT defined
@@ -80,49 +78,38 @@ int main(int argc, char *argv[])
 	// parse options, results in params
 	parse_program_options(argc, argv, &params);
 
-	ConfigurationManager cm;
-	configuration_t *config;
-
-	if (!params.filename.empty())
-	{
-		try
-		{
-			cm.load_configuration(argv[1]);
-			config = cm.get_configuration();
-
-			if (params.show_config)
-				cm.show_configuration();
-		}
-		catch (const AvrsException &e)
-		{
-			cerr << e.what() << endl;
-			exit(EXIT_FAILURE);
-		}
-	}
-
 	System::ptr_t sys;
-	Timer t;
+	TimerCpu t;
 	std::string end_message;
 
 	// create auto_ptr pointer to the system
-	sys = System::create(config);
-	assert(sys.get() != NULL);
-	printf("Running... (end with \'q\' + Enter)\n");
-	// get start time (precision is not necessary, only for informative purposes)
-	t.start();
-	// run the auralization system
-	bool ok = sys->run();
-	// get end time
-	t.stop();
+	try
+	{
+		//stk::Stk::printErrors(false);
+		sys = System::get_instance(params.filename, params.show_config);
+		assert(sys.get() != NULL);
+		printf("Running... (end with \'q\' + Enter)\n");
+		// get start time (precision is not necessary, only for informative purposes)
+		t.start();
+		// run the auralization system
+		bool ok = sys->run();
+		// get end time
+		t.stop();
 
-	if (ok)
-		end_message = "Ending...";
-	else
-		end_message = "Ending with errors...";
+		if (ok)
+			end_message = "Ending...";
+		else
+			end_message = "Ending with errors...";
 
-	// show final messages
-	printf("%s ", end_message.c_str());
-	printf("Running time: %.2f s\n", t.get_elapsed_s());
+		// show final messages
+		printf("%s ", end_message.c_str());
+		printf("Running time: %.2f s\n", t.elapsed_time(second));
+	}
+	catch (const AvrsException &e)
+	{
+		cerr << e.what() << endl;
+		exit(EXIT_FAILURE);
+	}
 
 	return EXIT_SUCCESS;
 }

@@ -19,8 +19,10 @@
 #include <dxflib/dl_dxf.h>
 #include <boost/format.hpp>
 
-#include "virtualenvironment.hpp"
+#include "utils/timerrtai.hpp"
 #include "dxfreader.hpp"
+#include "avrsexception.hpp"
+#include "virtualenvironment.hpp"
 
 namespace avrs
 {
@@ -79,6 +81,9 @@ VirtualEnvironment::VirtualEnvironment(configuration_t *cs, TrackerBase::ptr_t t
 	_hcdb = HrtfCoeffSet::create(_config_sim->hrtf_file);
 	_delay.setMaximumDelay(BUFFER_SAMPLES);
 //#endif
+
+	if (!_init())
+		throw AvrsException("Error creating VirtualEnvironment");
 }
 
 VirtualEnvironment::~VirtualEnvironment()
@@ -104,10 +109,6 @@ VirtualEnvironment::~VirtualEnvironment()
 VirtualEnvironment::ptr_t VirtualEnvironment::create(configuration_t *cs, TrackerBase::ptr_t tracker)
 {
 	ptr_t p_tmp(new VirtualEnvironment(cs, tracker));
-
-	if (!p_tmp->_init())
-		p_tmp.reset(); // set to NULL
-
 	return p_tmp;
 }
 
@@ -123,20 +124,15 @@ bool VirtualEnvironment::_init()
 	}
 
 	// Initialize room model
-	DxfReader *reader = new DxfReader(this);
-	DL_Dxf *dxf = new DL_Dxf();
+	DxfReader::ptr_t reader(new DxfReader(this));
+	boost::shared_ptr<DL_Dxf> dxf(new DL_Dxf());
 	const char *filename = _config_sim->dxf_file.c_str();
 
-	if (!dxf->in(filename, reader))  // if file open failed
+	if (!dxf->in(filename, reader.get()))  // if file open failed
 	{
-		DPRINT("%s could not be opened.\n", filename);  // todo error
-	    delete dxf;
-	    delete reader;
+		ERROR("%s could not be opened.\n", filename);  // todo error
 	    return false;
 	}
-
-	delete dxf;
-	delete reader;
 
 	// updates and calculations
 	update_surfaces_data();
@@ -156,10 +152,8 @@ void VirtualEnvironment::add_surface(Surface *s)
 
 void VirtualEnvironment::calc_ISM()
 {
-//	RTIME startt, endt;
-//	float elapsedt;
-
-	//startt = rt_get_time_ns();
+	TimerRtai t;
+	t.start();
 
 	_max_dist = _config_sim->max_distance;
 	_max_order = _config_sim->max_order;
@@ -186,10 +180,8 @@ void VirtualEnvironment::calc_ISM()
 	// propagate first order... and then run recursively
 	_propagate_ISM(vs, _root_it, 1);
 
-	//endt = rt_get_time_ns();
-
-	//elapsedt = (float) (endt - startt) / 1E6; // in ms
-	//DPRINT("ISM calculation time: %2.4f ms", elapsedt);
+	t.stop();
+	DPRINT("ISM calculation time: %2.4f ms", t.elapsed_time(millisecond));
 	//DPRINT("Max distance: %3.2f - Max order: %d", _max_dist, _max_order);
 }
 
@@ -760,9 +752,7 @@ binauraldata_t VirtualEnvironment::_hrtf_iir_filter(data_t &input, const orienta
 
 data_t VirtualEnvironment::_surfaces_filter(data_t &input, const tree_it_t node)
 {
-//	RTIME start, end;
-//	float elapsed;
-
+	TimerRtai t;
  	data_t values = input;
 
 	// get parent VS
@@ -773,7 +763,7 @@ data_t VirtualEnvironment::_surfaces_filter(data_t &input, const tree_it_t node)
 		virtualsource_t *vs = *current_node;
 		assert(vs != NULL);
 
-//		start = rt_get_time_ns();
+		t.start();
 
 		Surface *s = _surfaces[vs->surface_index];
 		//_set coefficients and clear previous filter state
@@ -785,9 +775,8 @@ data_t VirtualEnvironment::_surfaces_filter(data_t &input, const tree_it_t node)
 
 		current_node = _tree.parent(current_node);  // get the parent
 
-//		end = rt_get_time_ns();
-//		elapsed = (float) (end - start) / 1E3; // in us
-//		DPRINT("Time: %6.3f us",  elapsed);
+		t.stop();
+		DPRINT("Surface filter time: %6.3f us",  t.elapsed_time(microsecond));
 	}
 
 	return values;
