@@ -23,12 +23,6 @@
 namespace avrs
 {
 
-static const float PRECISION = 1e-3f;
-
-/*
- * Surface
- */
-
 Surface::Surface(unsigned int id, const float *x_vert, const float *y_vert,
 		const float *z_vert, int n_vert)
 {

@@ -42,44 +42,18 @@
 #include "room.hpp"
 #include "soundsource.hpp"
 #include "listener.hpp"
+#include "ism.hpp"
 #include "headfilter.hpp"
 #include "fdn.hpp"
 #include "common.hpp"
 #include "configuration.hpp"
+#include "virtualsource.hpp"
 
 #include "hrtfconvolver.hpp"
 
 namespace avrs
 {
 
-typedef struct VirtualSource
-{
-	unsigned int id;
-	point3d_t pos;
-	unsigned int order;
-	float dist_listener;
-	float time_abs_ms;
-	float time_rel_ms;
-	int surface_index;
-	point3d_t inter_point;
-	bool vis_test_1;
-	bool vis_test_2;
-	bool visible;
-	point3d_t ref_listener_pos; // to listener
-	orientation_angles_t ref_listener_orientation; // referenced to listener
-	orientation_angles_t initial_orientation; // initial orientation
-
-	VirtualSource()
-	{
-		id = 0;
-		order = 0;
-		dist_listener = 0.0f;
-		surface_index = -1;
-		vis_test_1 = false;
-		vis_test_2 = false;
-		visible = false;
-	}
-} virtualsource_t;
 
 /**
  * Class for generation of virtual environment Binaural Impulse Response (BIR)
@@ -164,34 +138,37 @@ private:
 	SoundSource::ptr_t _sound_source;
 	Listener::ptr_t _listener;
 
+	Ism::ptr_t _ism;
+
 	// VS propagation
 	unsigned int _max_order;
 	float _max_dist;
-	tree<virtualsource_t *> _tree; // VSs tree
-	typedef tree<virtualsource_t *>::iterator tree_it_t;
-	tree_it_t _root_it;
-	volatile unsigned int _count_vs;
+//	tree<virtualsource_t *> _tree; // VSs tree
+//	typedef tree<virtualsource_t *>::iterator tree_it_t;
+//	tree_it_t _root_it;
+//	volatile unsigned int _count_vs;
 	float _time_ref_ms;
 
 	// visible VS vector
-	std::vector<virtualsource_t *> _vis;
-	typedef std::vector<virtualsource_t *>::iterator vis_it_t;
+//	std::vector<virtualsource_t *> _vis;
+//	typedef std::vector<virtualsource_t *>::iterator vis_it_t;
+//
+//	typedef struct CompareVSDistance
+//	{
+//		bool operator()(virtualsource_t *i, virtualsource_t *j)
+//		{
+//			return (i->dist_listener < j->dist_listener);
+//		}
+//	} cmpvsdistance_t;
 
-	typedef struct CompareVSDistance
-	{
-		bool operator()(virtualsource_t *i, virtualsource_t *j)
-		{
-			return (i->dist_listener < j->dist_listener);
-		}
-	} cmpvsdistance_t;
+//	void _propagate_ISM(virtualsource_t *vs, tree_it_t vs_node,
+//			const unsigned int order);
+//	bool _check_vis_1(Surface* s, virtualsource_t *vs);
+//	bool _check_vis_2(virtualsource_t *vs, const tree_it_t vs_node);
 
-	void _propagate_ISM(virtualsource_t *vs, tree_it_t vs_node,
-			const unsigned int order);
-	bool _check_vis_1(Surface* s, virtualsource_t *vs);
-	bool _check_vis_2(virtualsource_t *vs, const tree_it_t vs_node);
 	void _calc_vs_orientation(virtualsource_t *vs);
 	void _update_vs_orientations();  // todo private
-	void _sort_vis();
+//	void _sort_vis();
 	void _update_vis();
 
 	// Late reverberation

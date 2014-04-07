@@ -10,6 +10,7 @@ set(CXX_SOURCE_FILES
     room.cpp
     listener.cpp
     soundsource.cpp
+    ism.cpp
     convolver.cpp
     virtualenvironment.cpp
     headfilter.cpp

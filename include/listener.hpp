@@ -52,7 +52,9 @@ public:
 
     void set_initial_point_of_view(const avrs::orientation_angles_t &o, const avrs::point3d_t &p);
 
-    avrs::point3d_t &get_position();  // TODO position_t
+    //avrs::point3d_t &get_position();  // TODO position_t
+    avrs::point3d_t pos;  // in room reference system
+
     void translate(const avrs::point3d_t &p);  // from reference position
 
     mat::fixed<4,4> &get_rotation_matrix();
@@ -60,9 +62,6 @@ public:
 private:
 	Listener();
 
-//	mat::fixed<4,4> _calculate_rotation_matrix(const avrs::orientation_angles_t &o);
-
-	avrs::point3d_t _pos;  // in room reference system
 	avrs::point3d_t _pos_ref;
 	avrs::orientation_angles_t _ori;
 	avrs::orientation_angles_t _ori_ref;  // TODO deprecated?
@@ -107,35 +106,15 @@ inline avrs::orientation_angles_t &Listener::get_orientation()
 	return _ori;
 }
 
-inline avrs::point3d_t &Listener::get_position()  // TODO position_t
-{
-	return _pos;
-}
+//inline avrs::point3d_t &Listener::get_position()  // TODO position_t
+//{
+//	return _pos;
+//}
 
 inline mat::fixed<4,4> &Listener::get_rotation_matrix()
 {
 	return _Rc;
 }
-
-//inline mat::fixed<4,4> Listener::_calculate_rotation_matrix(const avrs::orientation_angles_t &o)
-//{
-//    // To radians
-//    double az = (o.az * M_PI) / 180.0;
-//    double el = (o.el * M_PI) / 180.0;
-//
-//	// Rotation matrix ZXZ convention
-//	mat::fixed<4,4> R;  // 4 x 4 matrix
-//	double sin_az = sin(az);
-//	double cos_az = cos(az);
-//	double sin_el = sin(el);
-//	double cos_el = cos(el);
-//	R << cos_az           << sin_az           << 0      << 0 << endr
-//	  << -sin_az * cos_el << cos_az * cos_el  << sin_el << 0 << endr
-//	  << sin_az * sin_el  << -cos_az * sin_el << cos_el << 0 << endr
-//	  << 0                << 0                << 0      << 1 << endr;
-//
-//	return R;
-//}
 
 }  // namespace avrs
 

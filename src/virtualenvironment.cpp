@@ -43,6 +43,10 @@ VirtualEnvironment::VirtualEnvironment(configuration_t *cs, TrackerBase::ptr_t t
 	_room = boost::make_shared<Room>(cs);
 	_count_vs = 0;
 
+	// ISM
+	_ism = boost::make_shared<Ism>(cs, _room);
+
+
 	// FDN
 	const unsigned int N = 8;
 	long m[N] = { 601, 691, 773, 839, 919, 997, 1061, 1129 };
@@ -110,11 +114,11 @@ VirtualEnvironment::~VirtualEnvironment()
 
 	// deallocate memory
 	// tree pre-order traversal
-	for (tree_it_t i = _tree.begin(); i != _tree.end(); i++)
-	{
-		virtualsource_t *vs = *i;
-		delete vs;
-	}
+//	for (tree_it_t i = _tree.begin(); i != _tree.end(); i++)
+//	{
+//		virtualsource_t *vs = *i;
+//		delete vs;
+//	}
 }
 
 VirtualEnvironment::ptr_t VirtualEnvironment::create(configuration_t *cs, TrackerBase::ptr_t tracker)
