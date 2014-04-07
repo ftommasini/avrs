@@ -75,6 +75,11 @@ void DxfReader::add3dFace(const DL_3dFaceData& data)
 	_surfaces.push_back(boost::make_shared<Surface>(++id, data.x, data.y, data.z, 4));
 }
 
+std::vector<Surface::ptr_t> DxfReader::get_surfaces()
+{
+	return _surfaces;
+}
+
 void DxfReader::print_attributes()
 {
 	printf("  Attributes: Layer: %s, ", attributes.getLayer().c_str());

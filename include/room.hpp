@@ -25,6 +25,7 @@
 
 #include "surface.hpp"
 #include "dxfreader.hpp"
+#include "configuration.hpp"
 
 namespace avrs
 {
@@ -34,7 +35,7 @@ class Room
 public:
 	typedef boost::shared_ptr<Room> ptr_t;
 
-	Room();
+	Room(configuration_t *config);
 	virtual ~Room();
 
 	float get_total_area() const;
@@ -46,9 +47,12 @@ public:
 private:
 	typedef std::vector<Surface::ptr_t>::iterator surfaces_it_t;
 
+	configuration_t *_config;
 	std::vector<Surface::ptr_t> _surfaces;
+	bool _new_surface;  // flag that indicates new surface data
 	float _area;
 
+	void _update_data();
 	void _update_area();
 };
 

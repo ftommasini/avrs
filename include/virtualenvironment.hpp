@@ -96,11 +96,10 @@ public:
 	// Room
 
 
-	float get_room_area();
-	float get_room_volume() const;
+	float get_room_area() const;
 	unsigned int n_surfaces() const;
-	void add_surface(Surface *s);
-	void update_surfaces_data();  // TODO private?
+//	void add_surface(Surface *s);
+//	void update_surfaces_data();  // TODO private?
 
 	// ISM methods
 
@@ -141,8 +140,6 @@ public:
 private:
 	VirtualEnvironment(configuration_t *cs, TrackerBase::ptr_t tracker);
 
-	bool _init();
-
 	configuration_t *_config_sim;
 	data_t _input_buffer;
 	binauraldata_t _render_buffer;  // keep the complete BIR
@@ -156,12 +153,13 @@ private:
 	trackerdata_t _tracker_data;
 	trackerdata_t _prev_tracker_data;
 
-	// Surfaces
-	std::vector<Surface *> _surfaces;
-	typedef std::vector<Surface *>::iterator surfaces_it_t;
-	float _area;
-	float _volume;
-	volatile bool _new_data; // flag that indicates new surfaces data
+	// Room
+	Room::ptr_t _room;
+
+//	// Surfaces
+//	std::vector<Surface *> _surfaces;
+//	typedef std::vector<Surface *>::iterator surfaces_it_t;
+//	volatile bool _new_data; // flag that indicates new surfaces data
 
 	SoundSource::ptr_t _sound_source;
 	Listener::ptr_t _listener;
@@ -189,7 +187,7 @@ private:
 
 	void _propagate_ISM(virtualsource_t *vs, tree_it_t vs_node,
 			const unsigned int order);
-	bool _check_vis_1(Surface *s, virtualsource_t *vs);
+	bool _check_vis_1(Surface* s, virtualsource_t *vs);
 	bool _check_vis_2(virtualsource_t *vs, const tree_it_t vs_node);
 	void _calc_vs_orientation(virtualsource_t *vs);
 	void _update_vs_orientations();  // todo private
@@ -271,19 +269,14 @@ inline bool VirtualEnvironment::new_BIR() const
 	return _new_bir;
 }
 
-inline float VirtualEnvironment::get_room_area()
+inline float VirtualEnvironment::get_room_area() const
 {
-	return _area;
-}
-
-inline float VirtualEnvironment::get_room_volume() const
-{
-	return _volume;
+	return _room->get_total_area();
 }
 
 inline unsigned int VirtualEnvironment::n_surfaces() const
 {
-	return (unsigned int) _surfaces.size();
+	return _room->n_surfaces();
 }
 
 inline unsigned int VirtualEnvironment::n_vs() const

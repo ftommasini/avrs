@@ -16,8 +16,8 @@
  *
  */
 
-#include <dxflib/dl_dxf.h>
 #include <boost/format.hpp>
+#include <boost/make_shared.hpp>
 
 #include "dxfreader.hpp"
 #include "avrsexception.hpp"
@@ -29,18 +29,18 @@ namespace avrs
 
 VirtualEnvironment::VirtualEnvironment(configuration_t *cs, TrackerBase::ptr_t tracker)
 {
-	assert(cs != NULL);
+	_new_bir = false;
 
+	assert(cs != NULL);
 	_config_sim = cs;
 	_tracker = tracker;
 	_sound_source = cs->sound_source;
 	assert(_sound_source.get() != NULL);
 	_listener = cs->listener;
 	assert(_listener.get() != NULL);
-	_new_data = false;
-	_new_bir = false;
-	_volume = 0.0f;
-	_area = 0.0f;
+
+	// Room
+	_room = boost::make_shared<Room>(cs);
 	_count_vs = 0;
 
 	// FDN
@@ -82,8 +82,19 @@ VirtualEnvironment::VirtualEnvironment(configuration_t *cs, TrackerBase::ptr_t t
 	_delay.setMaximumDelay(BUFFER_SAMPLES);
 //#endif
 
-	if (!_init())
+	// initialize tracker
+	_mbx_tracker = rttools::get_mbx(MBX_TRACKER_NAME, MBX_TRACKER_BLOCK * sizeof(trackerdata_t));
+
+	if (!_mbx_tracker)
+	{
+		ERROR("Cannot init TRACKER mailbox");
 		throw AvrsException("Error creating VirtualEnvironment");
+	}
+
+	calc_ISM();  // calculate VSs by ISM
+
+	_update_vis();
+	_update_vs_orientations();
 }
 
 VirtualEnvironment::~VirtualEnvironment()
@@ -91,11 +102,11 @@ VirtualEnvironment::~VirtualEnvironment()
 	rttools::del_mbx(MBX_TRACKER_NAME);
 
 	// deallocate memory
-	for (surfaces_it_t i = _surfaces.begin(); i != _surfaces.end(); i++)
-	{
-		Surface *s = *i;
-		delete s;
-	}
+//	for (surfaces_it_t i = _surfaces.begin(); i != _surfaces.end(); i++)
+//	{
+//		Surface *s = *i;
+//		delete s;
+//	}
 
 	// deallocate memory
 	// tree pre-order traversal
@@ -112,43 +123,11 @@ VirtualEnvironment::ptr_t VirtualEnvironment::create(configuration_t *cs, Tracke
 	return p_tmp;
 }
 
-bool VirtualEnvironment::_init()
-{
-	// initialize tracker
-	_mbx_tracker = rttools::get_mbx(MBX_TRACKER_NAME, MBX_TRACKER_BLOCK * sizeof(trackerdata_t));
-
-	if (!_mbx_tracker)
-	{
-		ERROR("Cannot init TRACKER mailbox");
-		return false;
-	}
-
-	// Initialize room model
-	DxfReader::ptr_t reader(new DxfReader(this));
-	boost::shared_ptr<DL_Dxf> dxf(new DL_Dxf());
-	const char *filename = _config_sim->dxf_file.c_str();
-
-	if (!dxf->in(filename, reader.get()))  // if file open failed
-	{
-		ERROR("%s could not be opened.\n", filename);  // todo error
-	    return false;
-	}
-
-	// updates and calculations
-	update_surfaces_data();
-	calc_ISM();  // calculate VSs by ISM
-
-	_update_vis();
-	_update_vs_orientations();
-
-	return true;
-}
-
-void VirtualEnvironment::add_surface(Surface *s)
-{
-	_surfaces.push_back(s);
-	_new_data = true;
-}
+//void VirtualEnvironment::add_surface(Surface *s)
+//{
+//	_surfaces.push_back(s);
+//	_new_data = true;
+//}
 
 void VirtualEnvironment::calc_ISM()
 {
@@ -196,9 +175,9 @@ void VirtualEnvironment::_propagate_ISM(virtualsource_t *vs, tree_it_t node, con
 		return;
 
 	// for each surface
-	for (unsigned int i = 0; i < _surfaces.size(); i++)
+	for (unsigned int i = 0; i < _room->n_surfaces(); i++)
 	{
-		Surface *s = _surfaces[i];
+		Surface::ptr_t s = _room->get_surface(i);  // overload []
 
 		// do the reflection
 		// (normal to the surface, already calculated)
@@ -231,7 +210,7 @@ void VirtualEnvironment::_propagate_ISM(virtualsource_t *vs, tree_it_t node, con
 			_calc_vs_orientation(vs_progeny);
 
 			// first visibility test
-			vs_progeny->vis_test_1 = _check_vis_1(s, vs_progeny);  // update the visibility 1
+			vs_progeny->vis_test_1 = _check_vis_1(s.get(), vs_progeny);  // update the visibility 1
 
 			// second visibility test
 			// order greater than 1, and must be passed first visibility test
@@ -305,7 +284,7 @@ bool VirtualEnvironment::_check_vis_2(virtualsource_t *vs, const tree_it_t node)
 		vs_parent = *node_parent;
 		assert(vs_parent != NULL);
 
-		Surface *s = _surfaces[vs_parent->surface_index];  // get the surface that generated the parent VS
+		Surface::ptr_t s = _room->get_surface(vs_parent->surface_index);  // get the surface that generated the parent VS
 
 		// check for visibility
 		frowvec3 xyz_vs = vs_parent->pos - pos_vl;
@@ -364,27 +343,27 @@ bool VirtualEnvironment::_check_vis_2(virtualsource_t *vs, const tree_it_t node)
 //}
 
 // Update room area and filter coefficients for each surface
-void VirtualEnvironment::update_surfaces_data()
-{
-	if (_new_data)
-	{
-		_area = 0.0f;
-
-		for (unsigned int i = 0; i < _surfaces.size(); i++)
-		{
-			Surface *s = _surfaces[i];
-			_area += s->get_area(); // sum areas of all surfaces
-
-			if (_config_sim->b_coeff.size() > 0)
-				s->set_b_filter_coeff(_config_sim->b_coeff[i]);
-
-			if (_config_sim->a_coeff.size() > 0)
-				s->set_a_filter_coeff(_config_sim->a_coeff[i]);
-		}
-
-		_new_data = false;
-	}
-}
+//void VirtualEnvironment::update_surfaces_data()
+//{
+//	if (_new_data)
+//	{
+//		_area = 0.0f;
+//
+//		for (unsigned int i = 0; i < _surfaces.size(); i++)
+//		{
+//			Surface *s = _surfaces[i];
+//			_area += s->get_area(); // sum areas of all surfaces
+//
+//			if (_config_sim->b_coeff.size() > 0)
+//				s->set_b_filter_coeff(_config_sim->b_coeff[i]);
+//
+//			if (_config_sim->a_coeff.size() > 0)
+//				s->set_a_filter_coeff(_config_sim->a_coeff[i]);
+//		}
+//
+//		_new_data = false;
+//	}
+//}
 
 void VirtualEnvironment::_update_vis()
 {
@@ -771,7 +750,7 @@ data_t VirtualEnvironment::_surfaces_filter(data_t &input, const tree_it_t node)
 
 //		start = rt_get_time_ns();
 
-		Surface *s = _surfaces[vs->surface_index];
+		Surface::ptr_t s = _room->get_surface(vs->surface_index);
 		//_set coefficients and clear previous filter state
 		_filter_surfaces.setCoefficients(s->get_b_filter_coeff(), s->get_a_filter_coeff(), true);
 

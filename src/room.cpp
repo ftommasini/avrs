@@ -22,18 +22,16 @@
 namespace avrs
 {
 
-Room::Room()
+Room::Room(configuration_t *config)
 {
+	_config = config;
 	_area = 0.0f;
+	_new_surface = false;
 }
 
 Room::~Room()
 {
-//	for (surfaces_it_t it = _surfaces.begin(); it != _surfaces.end(); it++)
-//	{
-//		Surface::ptr_t s = *it;
-//		delete s;
-//	}
+	;
 }
 
 void Room::load_dxf(std::string dxf_filename)
@@ -46,7 +44,7 @@ void Room::load_dxf(std::string dxf_filename)
 		throw AvrsException("Error loading DXF file");
 
 	_surfaces = reader->get_surfaces();
-	_update_area();
+	_update_data();
 }
 
 float Room::get_total_area() const
@@ -62,12 +60,37 @@ unsigned int Room::n_surfaces() const
 void Room::add_surface(Surface::ptr_t s)
 {
 	_surfaces.push_back(s);
-	_area += s->get_area();
+	_new_surface = true;
 }
 
 Surface::ptr_t Room::get_surface(int i)
 {
 	return _surfaces[i];
+}
+
+// Private functions
+
+// Update room area and filter coefficients for each surface
+void Room::_update_data()
+{
+	if (_new_surface)
+	{
+		_update_area();
+
+		#pragma omp parallel for
+		for (unsigned int i = 0; i < _surfaces.size(); i++)
+		{
+			Surface::ptr_t s = _surfaces[i];
+
+			if (_config->b_coeff.size() > 0)
+				s->set_b_filter_coeff(_config->b_coeff[i]);
+
+			if (_config->a_coeff.size() > 0)
+				s->set_a_filter_coeff(_config->a_coeff[i]);
+		}
+
+		_new_surface = false;
+	}
 }
 
 void Room::_update_area()
@@ -81,5 +104,5 @@ void Room::_update_area()
 	}
 }
 
-}  // namespace ismx
-//
+}  // namespace avrs
+
