@@ -42,8 +42,8 @@ typedef struct VirtualSource
 	bool audible;
 	point3d_t pos_ref_listener; // to listener
 	boost::shared_ptr<VirtualSource> parent_ptr;
-	//	orientation_angles_t ref_listener_orientation; // referenced to listener
-	//	orientation_angles_t initial_orientation; // initial orientation
+	orientation_angles_t orientation_ref_listener; // referenced to listener
+	orientation_angles_t orientation_initial; // initial orientation
 
 	VirtualSource()
 	{

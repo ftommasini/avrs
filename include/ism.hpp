@@ -41,6 +41,7 @@ public:
 	virtual ~Ism();
 
 	void calculate(bool discard_nodes);
+	void update_vs_orientation(const orientation_angles_t &listener_orientation);
 
 	unsigned long get_count_vs();
 	unsigned long get_count_visible_vs();
@@ -68,6 +69,7 @@ private:
 			const unsigned int order, const bool discard_nodes);
 	bool _check_audibility_1(const VirtualSource::ptr_t &vs);
 	bool _check_audibility_2(const VirtualSource::ptr_t &vs, const tree_it_t node);
+	void _calc_vs_orientation(const VirtualSource::ptr_t &vs);
 	void _sort_aud();
 
 	typedef struct CompareVSDistance

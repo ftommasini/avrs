@@ -25,6 +25,8 @@ namespace avrs
 
 Ism::Ism(configuration_t *config, const Room::ptr_t &r)
 {
+	assert(r.get() != 0);
+
 	_config = config;
 	_room = r;
 }
@@ -46,6 +48,7 @@ void Ism::calculate(bool discard_nodes)
 	vs->pos = _config->sound_source->pos;
 	vs->dist_listener = arma::norm(vs->pos - _config->listener->pos, 2);
 	vs->pos_ref_listener = vs->pos - _config->listener->pos;
+	_calc_vs_orientation(vs);
 
 	// append to top of tree
 	_tree.clear();
@@ -57,77 +60,13 @@ void Ism::calculate(bool discard_nodes)
 	_propagate(vs, _root_it, 1, discard_nodes);
 }
 
-// recursive function (depth-first traversal, pre-order)
-void Ism::_propagate(VirtualSource::ptr_t vs_parent, const tree_it_t node_parent,
-		const unsigned int order, const bool discard_nodes)
+void Ism::update_vs_orientation(const orientation_angles_t &listener_orientation)
 {
-	DPRINT("Order %d", order);
-
-	// for each surface
-	for (unsigned int i = 0; i < _room->n_surfaces(); i++)
+	// only for visible VSs
+	for (aud_it_t it = _aud.begin(); it != _aud.end(); it++)
 	{
-		DPRINT("Surface %d", i);
-
-		Surface::ptr_t s = _room->get_surface(i);
-
-		// do the reflection
-		// (normal to the surface, already calculated)
-
-		// distance from virtual source (VS) to surface
-		float dist_vs_s = s->get_dist_origin() - arma::dot(vs_parent->pos, s->get_normal());
-
-		// validity test (if VS fails, is discarded)
-		if (dist_vs_s > 0.0f)
-		{
-			// progeny VS position
-			arma::frowvec3 pos = vs_parent->pos + 2 * dist_vs_s * s->get_normal();
-			// distance from VS to listener
-			float dist_listener = arma::norm(pos - _config->listener->pos, 2);
-
-			// proximity test (if it fails, is discarded)
-			if (dist_listener <= _config->max_distance)
-			{
-				// create the new progeny VS
-				VirtualSource::ptr_t vs_progeny(new VirtualSource);
-
-				// update values for valid VS
-				vs_progeny->pos = pos;
-				vs_progeny->dist_listener = dist_listener;
-				vs_progeny->order = order;
-				vs_progeny->surface_ptr = s;
-				vs_progeny->id = ++_count_vs;
-
-				// calculate the position referenced to listener of progeny VS
-				vs_progeny->pos_ref_listener = vs_progeny->pos - _config->listener->pos;
-
-				// calculate the orientation of VS (when available)
-
-				// append the progeny VS to the tree (because is not discarded)
-				tree_it_t node_progeny = _tree.append_child(node_parent, vs_progeny);
-
-				// first audibility test
-				bool aud_test_1 = _check_audibility_1(vs_progeny); // audibility 1
-				bool aud_test_2 = true;
-
-				// second audibility test
-				// order greater than 1, first visibility test must be passed
-				if (order > 1 && aud_test_1)
-					aud_test_2 = _check_audibility_2(vs_progeny, node_progeny); // audibility 2
-
-				vs_progeny->audible = (aud_test_1 && aud_test_2); // reduction of truth table
-
-				if (vs_progeny->audible)
-					_aud.push_back(vs_progeny); // add progeny VS to the vector that contains visible VSs
-
-				// next order
-				if (static_cast<short>(order + 1) <= _config->max_order)
-					_propagate(vs_progeny, node_progeny, order + 1, discard_nodes); // propagate the next order
-			}
-		}
-
-		// TODO lock_guard
-		if (discard_nodes)
-			_tree.erase_children(node_parent); // release memory
+		VirtualSource::ptr_t vs = *it;
+		vs->orientation_ref_listener = vs->orientation_initial - listener_orientation;
 	}
 }
 
@@ -195,6 +134,83 @@ void Ism::print_summary()
 	std::cout << std::endl;
 }
 
+// Private functions
+
+// recursive function (depth-first traversal, pre-order)
+void Ism::_propagate(VirtualSource::ptr_t vs_parent, const tree_it_t node_parent,
+		const unsigned int order, const bool discard_nodes)
+{
+	DPRINT("Order %d", order);
+
+	// for each surface
+	for (unsigned int i = 0; i < _room->n_surfaces(); i++)
+	{
+		DPRINT("Surface %d", i);
+
+		Surface::ptr_t s = _room->get_surface(i);
+
+		// do the reflection
+		// (normal to the surface, already calculated)
+
+		// distance from virtual source (VS) to surface
+		float dist_vs_s = s->get_dist_origin() - arma::dot(vs_parent->pos, s->get_normal());
+
+		// validity test (if VS fails, is discarded)
+		if (dist_vs_s > 0.0f)
+		{
+			// progeny VS position
+			arma::frowvec3 pos = vs_parent->pos + 2 * dist_vs_s * s->get_normal();
+			// distance from VS to listener
+			float dist_listener = arma::norm(pos - _config->listener->pos, 2);
+
+			// proximity test (if it fails, is discarded)
+			if (dist_listener <= _config->max_distance)
+			{
+				// create the new progeny VS
+				VirtualSource::ptr_t vs_progeny(new VirtualSource);
+
+				// update values for valid VS
+				vs_progeny->pos = pos;
+				vs_progeny->dist_listener = dist_listener;
+				vs_progeny->order = order;
+				vs_progeny->surface_ptr = s;
+				vs_progeny->id = ++_count_vs;
+
+				// calculate the position referenced to listener of progeny VS
+				vs_progeny->pos_ref_listener = vs_progeny->pos - _config->listener->pos;
+
+				// calculate the orientation of VS
+				_calc_vs_orientation(vs_progeny);
+
+				// append the progeny VS to the tree (because is not discarded)
+				tree_it_t node_progeny = _tree.append_child(node_parent, vs_progeny);
+
+				// first audibility test
+				bool aud_test_1 = _check_audibility_1(vs_progeny); // audibility 1
+				bool aud_test_2 = true;
+
+				// second audibility test
+				// order greater than 1, first visibility test must be passed
+				if (order > 1 && aud_test_1)
+					aud_test_2 = _check_audibility_2(vs_progeny, node_progeny); // audibility 2
+
+				vs_progeny->audible = (aud_test_1 && aud_test_2); // reduction of truth table
+
+				if (vs_progeny->audible)
+					_aud.push_back(vs_progeny); // add progeny VS to the vector that contains visible VSs
+
+				// next order
+				if (static_cast<short>(order + 1) <= _config->max_order)
+					_propagate(vs_progeny, node_progeny, order + 1, discard_nodes); // propagate the next order
+			}
+		}
+
+		// TODO lock_guard
+		if (discard_nodes)
+			_tree.erase_children(node_parent); // release memory
+	}
+}
+
 bool Ism::_check_audibility_1(const VirtualSource::ptr_t &vs)
 {
 	// first find the intersection point between a line and a plane in 3D
@@ -259,6 +275,37 @@ bool Ism::_check_audibility_2(const VirtualSource::ptr_t &vs, const tree_it_t no
 	}
 
 	return true;
+}
+
+// Coordinates respect to listener (L coordinate system)
+void Ism::_calc_vs_orientation(const VirtualSource::ptr_t &vs)
+{
+	// azimuth calculus
+	vs->pos_ref_listener = vs->pos - _config->listener->pos;
+	vs->orientation_initial.az =
+			-((atan2(vs->pos_ref_listener(Y), vs->pos_ref_listener(X)) * avrs::math::PIdiv180_inverse) - 90.0f); // in degrees
+
+	// elevation calculus
+	float r = sqrt(vs->pos_ref_listener(X) * vs->pos_ref_listener(X)
+			+ vs->pos_ref_listener(Y) * vs->pos_ref_listener(Y));
+	vs->orientation_initial.el =
+			-((atan2(r, vs->pos_ref_listener(Z)) * avrs::math::PIdiv180_inverse) - 90.0f); // in degrees
+
+	vs->orientation_initial = vs->orientation_initial - _config->listener->get_orientation();
+
+//	arma::rowvec vs_pos_r(4);
+//	vs_pos_r << vs->pos(0) << vs->pos(1) << vs->pos(2) << 0 << endr;
+//	arma::rowvec vs_pos_l(4);
+//	vs_pos_l = vs_pos_r * _listener->get_rotation_matrix();
+//	vs->ref_listener_pos << vs_pos_l(0) << vs_pos_l(1) << vs_pos_l(2) << endr;
+//	// azimuth
+//	vs->initial_orientation.az =
+//			-((atan2(vs->ref_listener_pos(Y), vs->ref_listener_pos(X)) * mathtools::PIdiv180_inverse) - 90.0f); // in degrees
+//	// elevation
+//	float r = sqrt(vs->ref_listener_pos(X) * vs->ref_listener_pos(X)
+//			+ vs->ref_listener_pos(Y) * vs->ref_listener_pos(Y));
+//	vs->initial_orientation.el =
+//			-((atan2(r, vs->ref_listener_pos(Z)) * mathtools::PIdiv180_inverse) - 90.0f); // in degrees
 }
 
 void Ism::_sort_aud()
