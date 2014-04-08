@@ -26,7 +26,7 @@ namespace avrs
 Surface::Surface(unsigned int id, const float *x_vert, const float *y_vert,
 		const float *z_vert, int n_vert)
 {
-	assert(n_vert == 4);  // restricted to 4 vertices for now
+	assert(n_vert == 4);  // restricted to 4 vertices
 
 	_id = id;
 	_vert.set_size(4, 3);
@@ -38,7 +38,27 @@ Surface::Surface(unsigned int id, const float *x_vert, const float *y_vert,
 		_vert(i,Z) = z_vert[i];
 	}
 
-	_init();
+#ifndef BORISH
+	// calculate range of coordinates
+	arma::frowvec3 vert_max = max(_vert);
+	arma::frowvec3 vert_min = min(_vert);
+	arma::frowvec3 vert_range = vert_max - vert_min;  // range
+	vert_range.min(_coord_to_remove);  // smallest range
+
+	_vert_proj.set_size(4, 2);
+
+	for (arma::u32 i = 0; i < (arma::u32) _vert_proj.n_rows; i++)
+	{
+		arma::frowvec2 r = _project_to_2d(_vert.row(i));
+		_vert_proj.row(i) = r;
+	}
+#endif
+
+	_calc_center();
+	_calc_plane_coeff();
+	_calc_normal();
+	_calc_dist_origin();
+	_calc_area();
 }
 
 Surface::Surface(unsigned int id, const double *x_vert, const double *y_vert,
@@ -160,33 +180,6 @@ int Surface::_pnpoly(int nvert, float *vertx, float *verty, float testx, float t
 #endif
 
 // Private functions
-
-bool Surface::_init()
-{
-#ifndef BORISH
-	// calculate range of coordinates
-	arma::frowvec3 vert_max = max(_vert);
-	arma::frowvec3 vert_min = min(_vert);
-	arma::frowvec3 vert_range = vert_max - vert_min;  // range
-	vert_range.min(_coord_to_remove);  // smallest range
-
-	_vert_proj.set_size(4, 2);
-
-	for (arma::u32 i = 0; i < (arma::u32) _vert_proj.n_rows; i++)
-	{
-		arma::frowvec2 r = _project_to_2d(_vert.row(i));
-		_vert_proj.row(i) = r;
-	}
-#endif
-
-	_calc_center();
-	_calc_plane_coeff();
-	_calc_normal();
-	_calc_dist_origin();
-	_calc_area();
-
-	return true;
-}
 
 void Surface::_calc_center()
 {

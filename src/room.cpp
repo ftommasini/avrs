@@ -34,11 +34,11 @@ Room::~Room()
 	;
 }
 
-void Room::load_dxf(std::string dxf_filename)
+void Room::load_dxf()
 {
 	DxfReader::ptr_t reader(new DxfReader());
 	boost::shared_ptr<DL_Dxf> dxf(new DL_Dxf());
-	const char *filename = dxf_filename.c_str();
+	const char *filename = _config->dxf_file.c_str();
 
 	if (!dxf->in(filename, reader.get()))  // if file open failed
 		throw AvrsException("Error loading DXF file");

@@ -41,7 +41,7 @@ public:
 	float get_total_area() const;
 	unsigned int n_surfaces() const;
 	void add_surface(Surface::ptr_t s);
-	void load_dxf(std::string dxf_filename);
+	void load_dxf();
 	Surface::ptr_t get_surface(int i);
 
 private:

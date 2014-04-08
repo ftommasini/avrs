@@ -53,8 +53,6 @@ public:
 	std::vector<double> &get_a_filter_coeff();
 
 private:
-	bool _init();
-
 	unsigned int _id;
 	arma::fmat _vert;  // 4x3 matrix (four xyz points for now)
 	avrs::point3d_t _center;  ///< Geometric center of the plane
