@@ -27,17 +27,17 @@
 namespace avrs
 {
 
-VirtualEnvironment::VirtualEnvironment(configuration_t *cs, TrackerBase::ptr_t tracker)
+VirtualEnvironment::VirtualEnvironment(configuration_t::ptr_t cs, TrackerBase::ptr_t tracker)
 {
-	_new_bir = false;
-
-	assert(cs != NULL);
-	_config_sim = cs;
+	assert(cs.get() != NULL);
+	_config = cs;
 	_tracker = tracker;
 	_sound_source = cs->sound_source;
 	assert(_sound_source.get() != NULL);
 	_listener = cs->listener;
 	assert(_listener.get() != NULL);
+
+	_new_bir = false;
 
 	// Room
 	_room = boost::make_shared<Room>(cs);
@@ -61,7 +61,7 @@ VirtualEnvironment::VirtualEnvironment(configuration_t *cs, TrackerBase::ptr_t t
 	_prev_tracker_data.ori.az = -500.0f;
 	_prev_tracker_data.ori.el = -500.0f;
 
-	_length_bir = _config_sim->bir_length_samples;
+	_length_bir = _config->bir_length_samples;
 
 	// resize data vectors
 	_render_buffer.left.resize(_length_bir, 0.0f);
@@ -70,20 +70,20 @@ VirtualEnvironment::VirtualEnvironment(configuration_t *cs, TrackerBase::ptr_t t
 	_late_buffer.resize(_length_bir, 0.0f);
 
 	// create and load HRTF DB into program
-//#ifndef HRTF_IIR
-//	_hrtfdb = HrtfSet::create(_config_sim->hrtf_file);
-//	// for left ear
-//	_hrtf_conv_l = HrtfConvolver::create(N_FFT);
-//	_hrtf_conv_l->setKernelLength(KERNEL_LENGTH);
-//	_hrtf_conv_l->setSegmentLength(SEGMENT_LENGTH);
-//	// for right ear
-//	_hrtf_conv_r = HrtfConvolver::create(N_FFT);
-//	_hrtf_conv_r->setKernelLength(KERNEL_LENGTH);
-//	_hrtf_conv_r->setSegmentLength(SEGMENT_LENGTH);
-//#else
-	_hcdb = HrtfCoeffSet::create(_config_sim->hrtf_file);
+#ifndef HRTF_IIR
+	_hrtfdb = HrtfSet::create(_config->hrtf_file);
+	// for left ear
+	_hrtf_conv_l = HrtfConvolver::create(N_FFT);
+	_hrtf_conv_l->setKernelLength(KERNEL_LENGTH);
+	_hrtf_conv_l->setSegmentLength(SEGMENT_LENGTH);
+	// for right ear
+	_hrtf_conv_r = HrtfConvolver::create(N_FFT);
+	_hrtf_conv_r->setKernelLength(KERNEL_LENGTH);
+	_hrtf_conv_r->setSegmentLength(SEGMENT_LENGTH);
+#else
+	_hcdb = HrtfCoeffSet::create(_config->hrtf_file);
 	_delay.setMaximumDelay(BUFFER_SAMPLES);
-//#endif
+#endif
 
 	// initialize tracker
 	_mbx_tracker = rttools::get_mbx(MBX_TRACKER_NAME, MBX_TRACKER_BLOCK * sizeof(trackerdata_t));
@@ -103,7 +103,7 @@ VirtualEnvironment::~VirtualEnvironment()
 	rttools::del_mbx(MBX_TRACKER_NAME);
 }
 
-VirtualEnvironment::ptr_t VirtualEnvironment::create(configuration_t *cs, TrackerBase::ptr_t tracker)
+VirtualEnvironment::ptr_t VirtualEnvironment::create(configuration_t::ptr_t cs, TrackerBase::ptr_t tracker)
 {
 	ptr_t p_tmp(new VirtualEnvironment(cs, tracker));
 	return p_tmp;
@@ -160,8 +160,8 @@ void VirtualEnvironment::renderize()
 	unsigned long i, j;
 	binauraldata_t output;
 
-	memcpy(&_render_buffer.left[0], &_zeros[0], _config_sim->bir_length_samples * sizeof(sample_t));
-	memcpy(&_render_buffer.right[0], &_zeros[0], _config_sim->bir_length_samples * sizeof(sample_t));
+	memcpy(&_render_buffer.left[0], &_zeros[0], _config->bir_length_samples * sizeof(sample_t));
+	memcpy(&_render_buffer.right[0], &_zeros[0], _config->bir_length_samples * sizeof(sample_t));
 
 	// TODO SE PODRÍA MEJORAR SI SE GUARDAR EL ITERATOR EN CADA VS, ASI SE RECORRE SOLAMENTE LAS VISIBLES
 	for (Ism::tree_vs_t::iterator it = _ism->tree_vs.begin(); it != _ism->tree_vs.end(); it++)
@@ -230,8 +230,8 @@ void VirtualEnvironment::renderize()
 	unsigned int i, j;
 	binauraldata_t output;
 
-	memcpy(&_render_buffer.left[0], &_zeros[0], _config_sim->bir_length_samples * sizeof(sample_t));
-	memcpy(&_render_buffer.right[0], &_zeros[0], _config_sim->bir_length_samples * sizeof(sample_t));
+	memcpy(&_render_buffer.left[0], &_zeros[0], _config->bir_length_samples * sizeof(sample_t));
+	memcpy(&_render_buffer.right[0], &_zeros[0], _config->bir_length_samples * sizeof(sample_t));
 
 	// TODO SE PODRÍA MEJORAR SI SE GUARDAR EL ITERATOR EN CADA VS, ASI SE RECORRE SOLAMENTE LAS VISIBLES
 
@@ -430,13 +430,13 @@ void VirtualEnvironment::calc_late_reverberation()
 	// scale properly
 	for (i = 0; i < _length_bir; i++)
 	{
-		d = (i * _config_sim->speed_of_sound) / SAMPLE_RATE;  // calculation of distance travel by sound
+		d = (i * _config->speed_of_sound) / SAMPLE_RATE;  // calculation of distance travel by sound
 		scaling_factor = (d > 1.0f ? d : 1);
 		output[i] /= (max_value * scaling_factor);  // scaling (normalize and 1/r attenuation)
 	}
 
 	unsigned long sample_mix = (unsigned long)
-			((_config_sim->max_distance / _config_sim->speed_of_sound) * SAMPLE_RATE);
+			((_config->max_distance / _config->speed_of_sound) * SAMPLE_RATE);
 	double k = sample_mix / -log(0.01);
 
 	//DPRINT("k = %f", k);

@@ -54,6 +54,7 @@
 #include <stk/OneZero.h>
 #include <stk/OnePole.h>
 #include <armadillo>
+#include <boost/shared_ptr.hpp>
 
 #include "common.hpp"
 
@@ -66,7 +67,7 @@ using namespace arma;
 class Fdn
 {
 public:
-	typedef std::auto_ptr<Fdn> ptr_t;
+	typedef boost::shared_ptr<Fdn> ptr_t;
 
 	//! Class destructor.
 	~Fdn();

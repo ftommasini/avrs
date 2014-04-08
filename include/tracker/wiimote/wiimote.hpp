@@ -43,16 +43,9 @@ typedef struct IRPoints {
 	}
 } ir_points_t;
 
-// File scope (static)
-//static long int g_current_time;
-//static ir_points_t g_ir_points;
 // Here the origin of image coordinates is at image center
 static const int g_image_center_X = 512;
 static const int g_image_center_Y = 384;
-
-// Callback prototype
-//void wiimote_callback(cwiid_wiimote_t *g_wiimote, int mesg_count,
-//		union cwiid_mesg mesg[], struct timespec *timestamp);
 
 static void *g_ptrWiimote = 0;
 

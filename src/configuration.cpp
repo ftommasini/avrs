@@ -22,6 +22,7 @@
 
 #include <cstdio>
 #include <boost/filesystem.hpp>
+#include <boost/make_shared.hpp>
 
 #include "utils/configfilereader.hpp"
 #include "utils/tokenizer.hpp"
@@ -35,12 +36,12 @@ namespace avrs
 
 ConfigurationManager::ConfigurationManager()
 {
-	_conf = new configuration_t;
+	_conf = boost::make_shared<configuration_t>();
 }
 
 ConfigurationManager::~ConfigurationManager()
 {
-	delete _conf;
+	;
 }
 
 configuration_t::ptr_t ConfigurationManager::get_configuration()

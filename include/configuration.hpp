@@ -24,7 +24,7 @@
 #define CONFIGURATION_HPP_
 
 #include <string>
-//#include <boost/shared_ptr.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include "soundsource.hpp"
 #include "listener.hpp"
@@ -35,8 +35,8 @@ namespace avrs
 // Simulation configuration
 typedef struct Configuration
 {
-	//typedef boost::shared_ptr<configuration_t> ptr_t;
-	typedef Configuration* ptr_t;
+	typedef boost::shared_ptr<Configuration> ptr_t;
+	//typedef Configuration* ptr_t;
 
 	// General
 	std::string name;

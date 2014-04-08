@@ -22,7 +22,7 @@
 namespace avrs
 {
 
-Room::Room(configuration_t *config)
+Room::Room(configuration_t::ptr_t config)
 {
 	_config = config;
 	_area = 0.0f;

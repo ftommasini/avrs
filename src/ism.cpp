@@ -23,7 +23,7 @@
 namespace avrs
 {
 
-Ism::Ism(configuration_t *config, const Room::ptr_t &r)
+Ism::Ism(configuration_t::ptr_t config, const Room::ptr_t &r)
 {
 	assert(r.get() != 0);
 

@@ -19,7 +19,7 @@
 #ifndef SYSTEM_HPP_
 #define SYSTEM_HPP_
 
-#include <memory>  // auto_ptr
+#include <boost/shared_ptr.hpp>
 
 // RTAI headers
 extern "C" {
@@ -52,10 +52,10 @@ static inline void end_system(int sig)
 class System
 {
 public:
-	typedef std::auto_ptr<System> ptr_t; ///< auto_ptr to System
+	typedef boost::shared_ptr<System> ptr_t; ///< auto_ptr to System
 
 	virtual ~System();
-	static System::ptr_t get_instance(std::string config_filename, bool show_config);
+	static ptr_t get_instance(std::string config_filename, bool show_config);
 
 	/**
 	 * Run the system. Sets up RT process and runs through loop

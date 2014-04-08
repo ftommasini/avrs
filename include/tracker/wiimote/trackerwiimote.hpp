@@ -23,6 +23,7 @@
 #include <memory>
 #include <string>
 #include <cwiid.h>
+#include <boost/shared_ptr.hpp>
 
 #include "tracker/wiimote/posit.hpp"
 #include "tracker/wiimote/wiimote.hpp"
@@ -35,7 +36,7 @@ namespace avrs
 class TrackerWiimote : public TrackerBase
 {
 public:
-	typedef std::auto_ptr<TrackerWiimote> ptr_t;
+	typedef boost::shared_ptr<TrackerWiimote> ptr_t;
 
 	/// Destructor
 	virtual ~TrackerWiimote();

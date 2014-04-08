@@ -38,7 +38,7 @@ public:
 	typedef boost::shared_ptr<Ism> ptr_t;
 	typedef tree<VirtualSource::ptr_t> tree_vs_t;
 
-	Ism(configuration_t *config, const Room::ptr_t &r);
+	Ism(configuration_t::ptr_t config, const Room::ptr_t &r);
 	virtual ~Ism();
 
 	void calculate(bool discard_nodes);
@@ -59,7 +59,7 @@ public:
 	tree_vs_t::iterator root_tree_vs;  // root of the tree
 
 private:
-	configuration_t *_config;
+	configuration_t::ptr_t _config;
 	Room::ptr_t _room;
 	float _time_ref_ms;
 

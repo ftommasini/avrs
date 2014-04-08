@@ -66,7 +66,7 @@ public:
 
 	virtual ~VirtualEnvironment();
 	/// Static factory function for VirtualEnvironment objects
-	static ptr_t create(configuration_t *cs, TrackerBase::ptr_t tracker);
+	static ptr_t create(configuration_t::ptr_t cs, TrackerBase::ptr_t tracker);
 
 	float get_room_area() const;
 	unsigned int n_surfaces() const;
@@ -98,9 +98,9 @@ public:
 	bool new_BIR() const;
 
 private:
-	VirtualEnvironment(configuration_t *cs, TrackerBase::ptr_t tracker);
+	VirtualEnvironment(configuration_t::ptr_t cs, TrackerBase::ptr_t tracker);
 
-	configuration_t *_config_sim;
+	configuration_t::ptr_t _config;
 
 	// Buffers
 	data_t _input_buffer;
@@ -221,8 +221,8 @@ inline unsigned int VirtualEnvironment::n_visible_vs()
 
 inline bool VirtualEnvironment::_listener_is_moved()
 {
-	if (fabs(_prev_tracker_data.ori.az - _tracker_data.ori.az) >= _config_sim->angle_threshold ||
-		fabs(_prev_tracker_data.ori.el - _tracker_data.ori.el) >= _config_sim->angle_threshold)
+	if (fabs(_prev_tracker_data.ori.az - _tracker_data.ori.az) >= _config->angle_threshold ||
+		fabs(_prev_tracker_data.ori.el - _tracker_data.ori.el) >= _config->angle_threshold)
 	{
 		_prev_tracker_data = _tracker_data;  // the listener exceeded the threshold, so save the new data
 		return true;

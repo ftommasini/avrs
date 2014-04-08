@@ -22,6 +22,7 @@
 #include <cassert>
 #include <memory>
 #include <stk/RtAudio.h>
+#include <boost/shared_ptr.hpp>
 
 // AVRS headers
 #include "common.hpp"
@@ -35,7 +36,7 @@ namespace avrs
 class Player
 {
 public:
-	typedef std::auto_ptr<Player> ptr_t;
+	typedef boost::shared_ptr<Player> ptr_t;
 
 	virtual ~Player();
 	/// Static factory function for InputWave objects

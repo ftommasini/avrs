@@ -19,6 +19,8 @@
 #ifndef TRACKERBASE_HPP_
 #define TRACKERBASE_HPP_
 
+#include <boost/shared_ptr.hpp>
+
 #include "common.hpp"
 
 namespace avrs
@@ -60,7 +62,7 @@ typedef struct TrackerData
 class TrackerBase
 {
 public:
-	typedef std::auto_ptr<TrackerBase> ptr_t;
+	typedef boost::shared_ptr<TrackerBase> ptr_t;
 
 	// pure virtual functions
 	virtual void calibrate() = 0;
