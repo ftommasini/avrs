@@ -25,11 +25,12 @@
 #include <rtai_mbx.h>
 #include <rtai_fifos.h>
 
+#include "utils/rttools.hpp"
+#include "utils/math.hpp"
+#include "utils/timerrtai.hpp"
 #include "common.hpp"
 #include "avrsexception.hpp"
 #include "configuration.hpp"
-#include "utils/rttools.hpp"
-#include "utils/math.hpp"
 #include "system.hpp"
 
 namespace avrs
@@ -43,8 +44,7 @@ System::System(std::string config_filename, bool show_config)
 	if (show_config)
 		_config_manager.show_configuration();
 
-	if (!_init())
-		throw AvrsException("Error creating System");
+	_init();
 }
 
 System::~System()
@@ -59,7 +59,7 @@ System::ptr_t System::get_instance(std::string config_filename, bool show_config
 	return p_instance;
 }
 
-bool System::_init()
+void System::_init()
 {
 	_in = InputWaveLoop::create(_config_sim->anechoic_file);
 	assert(_in.get() != NULL);
@@ -94,8 +94,6 @@ bool System::_init()
 	// Print information of ISM
 	std::cout << "Total VSs calculated: " << _ve->n_vs()  << std::endl;
 	std::cout << "Audible VSs: " << _ve->n_visible_vs() << std::endl;
-
-	return true;
 }
 
 // SRT main task
@@ -128,7 +126,7 @@ bool System::run()
 
 	if (!wait_task)
 	{
-		DPRINT("Cannot init WAIT task");
+		ERROR("Cannot init WAIT task");
 		return false;
 	}
 
@@ -181,11 +179,8 @@ void *System::_rt_thread(void *arg)
 	RT_TASK *sys_task;
 	RTIME start_time;
 	int *retval = NULL;
-	// for time measurements
-	RTIME start_loop, end_loop;
-	RTIME start_render, end_render;
-	RTIME start_conv, end_conv;
-	float elapsed_loop, elapsed_render, elapsed_conv;
+	// time measurements
+//	TimerRtai t_loop, t_render, t_conv;
 	// other variables
 	int val;
 	bool ok;
@@ -239,7 +234,7 @@ void *System::_rt_thread(void *arg)
 
 	while (!g_end_system)
 	{
-		start_loop = rt_get_time_ns();
+//		t_loop.start();
 
 		// get input (anechoic signal)
 		for (i = 0; i < BUFFER_SAMPLES; i++)
@@ -252,15 +247,15 @@ void *System::_rt_thread(void *arg)
 			end_system(-1);
 
 		// renderize BIR
-		start_render = rt_get_time_ns();
+//		t_render.start();
 		_ve->renderize();
-		end_render = rt_get_time_ns();
+//		t_render.stop();
 
 		// get the new BIR
 		_bir = _ve->get_BIR();
 
 		// update the BIR in the real-time convolver
-		start_conv = rt_get_time_ns();
+//		t_conv.start();
 
 #ifndef RTCONV_THREADS
 		if (_ve->new_BIR())
@@ -279,7 +274,7 @@ void *System::_rt_thread(void *arg)
 		pthread_join(t_r, (void **) &output_r);
 #endif
 
-		end_conv = rt_get_time_ns();
+//		t_conv.stop();
 
 		// preparing output for RT-FIFO
 		memcpy(output_player, output_l, BUFFER_SAMPLES * sizeof(sample_t));
@@ -294,10 +289,7 @@ void *System::_rt_thread(void *arg)
 			//rtf_reset(RTF_OUT_NUM);
 		}
 
-		end_loop = rt_get_time_ns();
-		elapsed_loop = (float) (end_loop - start_loop) / 1E6; // in ms
-		elapsed_render = (float) (end_render - start_render) / 1E6; // in ms
-		elapsed_conv = (float) (end_conv - start_conv) / 1E6; // in ms
+//		t_loop.stop();
 //		DPRINT("Render: %6.3f - RT Convolution: %6.3f - Loop: %6.3f - Tick: %6.3f ms",
 //				elapsed_render, elapsed_conv, elapsed_loop, TICK_TIME / 1.0e+6f);
 

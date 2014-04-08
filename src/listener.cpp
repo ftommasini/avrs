@@ -65,7 +65,7 @@ void Listener::set_orientation_reference(const avrs::orientation_angles_t &o)
 void Listener::set_position_reference(const avrs::point3d_t &p)
 {
 	_pos_ref = p;
-	_pos = _pos_ref;
+	pos = _pos_ref;
 }
 
 }  // namespace avrs

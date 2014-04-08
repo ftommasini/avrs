@@ -27,8 +27,12 @@
 #include <unistd.h>
 
 // RTAI headers
+extern "C" {
 #include <rtai_lxrt.h>
+}
+extern "C" {
 #include <rtai_mbx.h>
+}
 
 // AVRS headers
 #include "common.hpp"

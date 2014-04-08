@@ -90,9 +90,9 @@ void ConfigurationManager::show_configuration()
 
 	printf("\nListener section\n\n");
 	printf("LISTENER_POSITION = %.2f, %.2f, %.2f\n",
-			(_conf->listener->get_position())[0],
-			(_conf->listener->get_position())[1],
-			(_conf->listener->get_position())[2]);
+			(_conf->listener->pos)[0],
+			(_conf->listener->pos)[1],
+			(_conf->listener->pos)[2]);
 	printf("LISTENER_ORIENTATION = %.2f, %.2f\n",
 			_conf->listener->get_orientation().az,
 			_conf->listener->get_orientation().el);

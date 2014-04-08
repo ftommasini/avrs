@@ -16,32 +16,35 @@
  *
  */
 
-#include <dxflib/dl_dxf.h>
 #include <boost/format.hpp>
+#include <boost/make_shared.hpp>
 
-#include "utils/timerrtai.hpp"
 #include "dxfreader.hpp"
 #include "avrsexception.hpp"
 #include "virtualenvironment.hpp"
+
 
 namespace avrs
 {
 
 VirtualEnvironment::VirtualEnvironment(configuration_t *cs, TrackerBase::ptr_t tracker)
 {
-	assert(cs != NULL);
+	_new_bir = false;
 
+	assert(cs != NULL);
 	_config_sim = cs;
 	_tracker = tracker;
 	_sound_source = cs->sound_source;
 	assert(_sound_source.get() != NULL);
 	_listener = cs->listener;
 	assert(_listener.get() != NULL);
-	_new_data = false;
-	_new_bir = false;
-	_volume = 0.0f;
-	_area = 0.0f;
-	_count_vs = 0;
+
+	// Room
+	_room = boost::make_shared<Room>(cs);
+	_room->load_dxf();
+
+	// ISM
+	_ism = boost::make_shared<Ism>(cs, _room);
 
 	// FDN
 	const unsigned int N = 8;
@@ -82,28 +85,22 @@ VirtualEnvironment::VirtualEnvironment(configuration_t *cs, TrackerBase::ptr_t t
 	_delay.setMaximumDelay(BUFFER_SAMPLES);
 //#endif
 
-	if (!_init())
+	// initialize tracker
+	_mbx_tracker = rttools::get_mbx(MBX_TRACKER_NAME, MBX_TRACKER_BLOCK * sizeof(trackerdata_t));
+
+	if (!_mbx_tracker)
+	{
+		ERROR("Cannot init TRACKER mailbox");
 		throw AvrsException("Error creating VirtualEnvironment");
+	}
+
+	_ism->calculate(false);
+	_outputs.resize(_ism->get_count_visible_vs());  // output per visible VS
 }
 
 VirtualEnvironment::~VirtualEnvironment()
 {
 	rttools::del_mbx(MBX_TRACKER_NAME);
-
-	// deallocate memory
-	for (surfaces_it_t i = _surfaces.begin(); i != _surfaces.end(); i++)
-	{
-		Surface *s = *i;
-		delete s;
-	}
-
-	// deallocate memory
-	// tree pre-order traversal
-	for (tree_it_t i = _tree.begin(); i != _tree.end(); i++)
-	{
-		virtualsource_t *vs = *i;
-		delete vs;
-	}
 }
 
 VirtualEnvironment::ptr_t VirtualEnvironment::create(configuration_t *cs, TrackerBase::ptr_t tracker)
@@ -112,294 +109,7 @@ VirtualEnvironment::ptr_t VirtualEnvironment::create(configuration_t *cs, Tracke
 	return p_tmp;
 }
 
-bool VirtualEnvironment::_init()
-{
-	// initialize tracker
-	_mbx_tracker = rttools::get_mbx(MBX_TRACKER_NAME, MBX_TRACKER_BLOCK * sizeof(trackerdata_t));
 
-	if (!_mbx_tracker)
-	{
-		ERROR("Cannot init TRACKER mailbox");
-		return false;
-	}
-
-	// Initialize room model
-	DxfReader::ptr_t reader(new DxfReader(this));
-	boost::shared_ptr<DL_Dxf> dxf(new DL_Dxf());
-	const char *filename = _config_sim->dxf_file.c_str();
-
-	if (!dxf->in(filename, reader.get()))  // if file open failed
-	{
-		ERROR("%s could not be opened.\n", filename);  // todo error
-	    return false;
-	}
-
-	// updates and calculations
-	update_surfaces_data();
-	calc_ISM();  // calculate VSs by ISM
-
-	_update_vis();
-	_update_vs_orientations();
-
-	return true;
-}
-
-void VirtualEnvironment::add_surface(Surface *s)
-{
-	_surfaces.push_back(s);
-	_new_data = true;
-}
-
-void VirtualEnvironment::calc_ISM()
-{
-	TimerRtai t;
-	t.start();
-
-	_max_dist = _config_sim->max_distance;
-	_max_order = _config_sim->max_order;
-
-	// create VS from "real" source
-	// order 0
-	virtualsource_t *vs = new virtualsource_t;
-	vs->id = ++_count_vs;  // must be 1 because is a "real" source
-	vs->visible = true;
-	vs->pos = _sound_source->pos;
-	vs->dist_listener = norm(vs->pos - _listener->get_position(), 2);
-	_time_ref_ms = (vs->dist_listener / _config_sim->speed_of_sound) * 1000.0f;
-	vs->time_abs_ms = _time_ref_ms;
-	vs->time_rel_ms = 0.0f;
-
-	_calc_vs_orientation(vs);
-
-	// append to top of the tree
-	_root_it = _tree.insert(_tree.begin(), vs);
-
-	_vis.clear();
-	_vis.push_back(vs);
-
-	// propagate first order... and then run recursively
-	_propagate_ISM(vs, _root_it, 1);
-
-	t.stop();
-	DPRINT("ISM calculation time: %2.4f ms", t.elapsed_time(millisecond));
-	//DPRINT("Max distance: %3.2f - Max order: %d", _max_dist, _max_order);
-}
-
-// recursive function
-void VirtualEnvironment::_propagate_ISM(virtualsource_t *vs, tree_it_t node, const unsigned int order)
-{
-	if (order > _max_order)  // break condition for recursive function (for safety)
-		return;
-
-	// for each surface
-	for (unsigned int i = 0; i < _surfaces.size(); i++)
-	{
-		Surface *s = _surfaces[i];
-
-		// do the reflection
-		// (normal to the surface, already calculated)
-
-		// distance from virtual source (VS) to surface
-		float dist_vs_s = s->get_dist_origin() - dot(vs->pos, s->get_normal());
-
-		// validity test (if VS fails, is discarded)
-		if (dist_vs_s  > 0.0f)
-		{
-			// create the new progeny VS
-			virtualsource_t *vs_progeny = new virtualsource_t;
-
-			vs_progeny->pos = vs->pos + 2 * dist_vs_s * s->get_normal();  // progeny vs position
-			vs_progeny->dist_listener =  norm(vs_progeny->pos - _listener->get_position(), 2);  // distance from VS to listener
-
-			// proximity test
-			if (vs_progeny->dist_listener > _max_dist)
-				break;  // if it fails, is discarded
-
-			vs_progeny->time_abs_ms = (vs_progeny->dist_listener / 343.0f) * 1000.0f;;
-			vs_progeny->time_rel_ms = vs_progeny->time_abs_ms - _time_ref_ms;
-			vs_progeny->order = order;
-			vs_progeny->surface_index = i;
-
-			// append the progeny VS to the tree (because is not discarded)
-			tree_it_t node_progeny = _tree.append_child(node, vs_progeny);
-			vs_progeny->id = ++_count_vs;  // update the id, because is a valid VS
-			// calculate the orientation of VS
-			_calc_vs_orientation(vs_progeny);
-
-			// first visibility test
-			vs_progeny->vis_test_1 = _check_vis_1(s, vs_progeny);  // update the visibility 1
-
-			// second visibility test
-			// order greater than 1, and must be passed first visibility test
-			if (order > 1 && vs_progeny->vis_test_1)
-			{
-				vs_progeny->vis_test_2 = _check_vis_2(vs_progeny, node_progeny);  // update the visibility 2
-				vs_progeny->visible = (vs_progeny->vis_test_1 && vs_progeny->vis_test_2);  // both test must be passed
-			}
-			else
-			{
-				vs_progeny->visible = vs_progeny->vis_test_1;
-			}
-
-			// TODO for now, avrs call update_vis instead of do this
-//			if (vs_progeny->visible)
-//				_vis.push_back(vs_progeny);  // add progeny VS to the vector that contains visible VSs
-
-			_propagate_ISM(vs_progeny, node_progeny, order + 1);  // propagate the next order
-		}
-	}
-}
-
-bool VirtualEnvironment::_check_vis_1(Surface *s, VirtualSource *vs)
-{
-	// first find the intersection point between a line and a plane in 3D
-	// see: http://softsurfer.com/Archive/algorithm_0104/algorithm_0104B.htm
-
-//	Surface *s = _surfaces[vs->surface_index];
-//	point3d_t xyz_vs = vs->ref_listener_pos;// vs->pos - _listener->pos;  // (P1 - P0) where P1, P2 are elements of line
-	frowvec4 plane_coeff = s->get_plane_coeff();
-	// n . (P1 - P0) where n is the normal of the plane
-	float denom = plane_coeff(0) * vs->ref_listener_pos(X) +
-			plane_coeff(1) * vs->ref_listener_pos(Y) +
-			plane_coeff(2) * vs->ref_listener_pos(Z);
-
-	// check if line and plane are parallel
-	if (denom == 0.0f)
-		return false;
-
-	// calculate the parameter for the parametric equation of the line
-	float t = -(plane_coeff(0) * (_listener->get_position())(X) +
-			plane_coeff(1) * (_listener->get_position())(Y) +
-			plane_coeff(2) * (_listener->get_position())(Z) +
-			plane_coeff(3)) / denom;
-	vs->inter_point = _listener->get_position() + vs->ref_listener_pos * t;;  // calculate the intersection point
-
-	// finally, check if the intersection point is inside of surface
-	return s->is_point_inside(vs->inter_point);   // TODO border checking!!!
-}
-
-/*
- * Calcula si la fuente es visible o no para el receptor
- * Realiza el segundo test
- * Argumentos de entrada:
- * vs: pointer to the current VS
- * node: iterator of current tree node
- * Argumentos de salida:
- * true: la fuente es visible, false: la fuente no es visible
- */
-bool VirtualEnvironment::_check_vis_2(virtualsource_t *vs, const tree_it_t node)
-{
-	bool ok = false;
-	frowvec3 pos_vl = vs->inter_point;  // already calculated in visibility test 1 (position of "virtual listener")
-	virtualsource_t *vs_parent;
-
-	// get parent VS
-	tree_it_t node_parent = _tree.parent(node);
-
-	while (node_parent != _root_it)  // while the current node is not the root node
-	{
-		vs_parent = *node_parent;
-		assert(vs_parent != NULL);
-
-		Surface *s = _surfaces[vs_parent->surface_index];  // get the surface that generated the parent VS
-
-		// check for visibility
-		frowvec3 xyz_vs = vs_parent->pos - pos_vl;
-		frowvec4 plane_coeff = s->get_plane_coeff();
-		// dot product
-		float denom = plane_coeff(0) * xyz_vs(0) +
-				plane_coeff(1) * xyz_vs(1) +
-				plane_coeff(2) * xyz_vs(2);
-
-		if (denom == 0.0f)
-			return false;
-
-		float t = -(plane_coeff(0) * pos_vl(0) +
-				plane_coeff(1) * pos_vl(1) +
-				plane_coeff(2) * pos_vl(2) +
-				plane_coeff(3)) / denom;
-		frowvec3 inter_point = pos_vl + xyz_vs * t;
-		ok =  s->is_point_inside(inter_point);
-
-		if (!ok)
-			return false;
-
-		pos_vl = inter_point;  // the "new" artificial listener
-		node_parent = _tree.parent(node_parent);  // get the parent
-	}
-
-	return true;
-}
-
-// TODO chequear solo visibilidad
-/**
- * Check the visibility of all VSs
- */
-//void VirtualEnvironment::check_vis()
-//{
-//	// tree pre-order traversal
-//	for (tree_it_t i = _tree.begin(); i != _tree.end(); i++)
-//	{
-//		virtualsource_t *vs = (virtualsource_t *) *i;
-//
-//		// first visibility test
-//		vs->vis_test_1 = _check_vis_1(vs);  // update the visibility 1
-//
-//		// second visibility test
-//		// order greater than 1, and must be passed first visibility test
-//		if (vs->order > 1 && vs->vis_test_1)
-//		{
-//			vs->vis_test_2 = _check_vis_2(vs, i, vs->order);  // update the visibility 2
-//			vs->visible = (vs->vis_test_1 && vs->vis_test_2);  // both test must be passed
-//		}
-//		else
-//		{
-//			vs->visible = vs->vis_test_1;
-//		}
-//	}
-//}
-
-// Update room area and filter coefficients for each surface
-void VirtualEnvironment::update_surfaces_data()
-{
-	if (_new_data)
-	{
-		_area = 0.0f;
-
-		for (unsigned int i = 0; i < _surfaces.size(); i++)
-		{
-			Surface *s = _surfaces[i];
-			_area += s->get_area(); // sum areas of all surfaces
-
-			if (_config_sim->b_coeff.size() > 0)
-				s->set_b_filter_coeff(_config_sim->b_coeff[i]);
-
-			if (_config_sim->a_coeff.size() > 0)
-				s->set_a_filter_coeff(_config_sim->a_coeff[i]);
-		}
-
-		_new_data = false;
-	}
-}
-
-void VirtualEnvironment::_update_vis()
-{
-	_vis.clear();  // clear vector
-
-	for (tree_it_t it = _tree.begin(); it != _tree.end(); it++)
-	{
-		virtualsource_t *vs = *it;
-
-		if (vs->visible)
-			_vis.push_back(vs);
-	}
-
-	_outputs.resize(_vis.size());  // output per visible VS
-
-	//DPRINT("Total VSs: %d - Visibles VSs: %d", (int) _tree.size(_root_it), (int) _vis.size());
-}
-
-// todo maybe in a thread
 bool VirtualEnvironment::update_listener_orientation()
 {
 	trackerdata_t tmp_data;
@@ -422,7 +132,7 @@ bool VirtualEnvironment::update_listener_orientation()
 			_tracker_data = tmp_data;  // save the current tracker data
 			_listener->rotate(tmp_data.ori);  // update listener orientation
 			//_listener->move(tmp_data.pos.to_point3d());  // update listener position
-			_update_vs_orientations();  // and update VS orientations
+			_ism->update_vs_orientations(_listener->get_orientation());  // update VS orientations
 
 //			DPRINT("%+1.3f %+1.3f \t %+1.3f %+1.3f",
 //					_tracker_data.ori.az,
@@ -436,67 +146,10 @@ bool VirtualEnvironment::update_listener_orientation()
 	return true;
 }
 
-void VirtualEnvironment::_update_vs_orientations()
-{
-	// only for visible VSs
-	for (vis_it_t it = _vis.begin(); it != _vis.end(); it++)
-	{
-		virtualsource_t *vs = *it;
-		vs->ref_listener_orientation = vs->initial_orientation - _listener->get_orientation();
-	}
-
-//	vis_it_t tmp = _vis.begin();
-//	virtualsource_t *v = *tmp;
-//	DPRINT("az: %3.1f, el: %3.1f", v->ref_listener_orientation.az, v->ref_listener_orientation.el);
-}
-
-void VirtualEnvironment::_sort_vis()
-{
-	sort(_vis.begin(), _vis.end(), cmpvsdistance_t());  // sort by distance to the listener
-}
-
-void VirtualEnvironment::print_vis()
-{
-	_sort_vis();
-
-	std::cout << "List of visible VSs\n" << std::endl;
-	boost::format fmter_title("%-15s\t%-15s\t%-15s\t%-7s\t%-7s\t%+10s\t%+10s\t%+10s\n");
-	boost::format fmter_content("%-15.3f\t%-15.3f\t%-15.3f\t%-7i\t%-7i\t%+10.3f\t%+10.3f\t%+10.3f\n");
-	std::cout << boost::format(fmter_title) % "Relative [ms]"
-					% "Absolute [ms]" % "Distance [m]" % "Order" % "Id"
-					% "X" % "Y" % "Z";
-	float time_ref_ms;
-
-	for (vis_it_t it = _vis.begin(); it != _vis.end(); it++)
-	{
-		virtualsource_t *vs = *it;
-		float time_abs_ms = (vs->dist_listener / _config_sim->speed_of_sound) * 1000.0f;
-
-		if (it == _vis.begin())
-			time_ref_ms = time_abs_ms;
-
-		float time_rel_ms = time_abs_ms - time_ref_ms;
-
-		std::cout << boost::format(fmter_content)
-			% time_rel_ms
-			% time_abs_ms
-			% vs->dist_listener
-			% vs->order
-			% vs->id
-			% vs->pos(X)
-			% vs->pos(Y)
-			% vs->pos(Z);
-	}
-
-	std::cout << std::endl;
-}
-
 #ifndef VSFILTER_THREADS
 
 void VirtualEnvironment::renderize()
 {
-	float elapsed;
-
 	// check if the listener is moved
 	if (!_listener_is_moved())
 	{
@@ -511,21 +164,23 @@ void VirtualEnvironment::renderize()
 	memcpy(&_render_buffer.right[0], &_zeros[0], _config_sim->bir_length_samples * sizeof(sample_t));
 
 	// TODO SE PODRÍA MEJORAR SI SE GUARDAR EL ITERATOR EN CADA VS, ASI SE RECORRE SOLAMENTE LAS VISIBLES
-	// only for visible VSs
-	for (tree_it_t it = _tree.begin(); it != _tree.end(); it++)
+	for (Ism::tree_vs_t::iterator it = _ism->tree_vs.begin(); it != _ism->tree_vs.end(); it++)
 	{
-		virtualsource_t *vs = *it;
+		VirtualSource::ptr_t vs = *it;
 
-		if (!vs->visible)
+		if (!vs->audible)  	// only for audible VSs
 			continue;
 
 		// directivity filtering
-		data_t input = _sound_source->get_IR(vs->ref_listener_orientation);
+		data_t input = _sound_source->get_IR(vs->orientation_ref_listener);
 		assert(input.size() <= VS_SAMPLES);  // TODO REVISAR LONGITUDE DE EARLY REFLECTIONS
 		input.resize(VS_SAMPLES, 0.0f);
 
-		// surface filtering
-		input = _surfaces_filter(input, it);
+//		if (vs->id != 1)
+//		{
+			// surface filtering
+			input = _surfaces_filter(input, it);
+//		}
 
 		// distance attenuation
 		float attenuation_factor = 1.0f / vs->dist_listener;
@@ -535,10 +190,10 @@ void VirtualEnvironment::renderize()
 
 		// HRTF filtering
 #ifndef HRTF_IIR
-		output = _hrtf_filter(input, vs->ref_listener_orientation);  // HRTF spectrums
+		output = _hrtf_filter(input, vs->orientation_ref_listener);  // HRTF spectrums
 
 #else
-		output = _hrtf_iir_filter(input, vs->ref_listener_orientation);
+		output = _hrtf_iir_filter(input, vs->orientation_ref_listener);
 #endif
 
 		// calculate the sample from reflectogram where starts this reflection
@@ -750,38 +405,6 @@ binauraldata_t VirtualEnvironment::_hrtf_iir_filter(data_t &input, const orienta
 
 #endif
 
-data_t VirtualEnvironment::_surfaces_filter(data_t &input, const tree_it_t node)
-{
-	TimerRtai t;
- 	data_t values = input;
-
-	// get parent VS
-	tree_it_t current_node = node;
-
-	while (current_node != _root_it)  // while the current node is not the root node
-	{
-		virtualsource_t *vs = *current_node;
-		assert(vs != NULL);
-
-		t.start();
-
-		Surface *s = _surfaces[vs->surface_index];
-		//_set coefficients and clear previous filter state
-		_filter_surfaces.setCoefficients(s->get_b_filter_coeff(), s->get_a_filter_coeff(), true);
-
-		// filter for the current surface
-		for (uint i = 0; i < input.size(); i++)
-			values[i] = (sample_t) _filter_surfaces.tick(values[i]);
-
-		current_node = _tree.parent(current_node);  // get the parent
-
-		t.stop();
-		DPRINT("Surface filter time: %6.3f us",  t.elapsed_time(microsecond));
-	}
-
-	return values;
-}
-
 void VirtualEnvironment::calc_late_reverberation()
 {
 	orientation_angles_t ori;  // dummy
@@ -827,6 +450,32 @@ void VirtualEnvironment::calc_late_reverberation()
 	{
 		_late_buffer[i] = (sample_t) output[i];
 	}
+}
+
+data_t VirtualEnvironment::_surfaces_filter(data_t &input, const Ism::tree_vs_t::iterator node)
+{
+ 	data_t values = input;
+ 	Ism::tree_vs_t::iterator root_it = _ism->root_tree_vs;
+ 	Ism::tree_vs_t::iterator current_node = node;
+
+	while (current_node != root_it)  // while the current node is not the root node
+	{
+		VirtualSource::ptr_t vs = *current_node;
+		assert(vs.get() != NULL);
+		Surface::ptr_t s = vs->surface_ptr;
+		assert(s.get() != NULL);
+
+		//_set coefficients and clear previous filter state
+		_filter_surfaces.setCoefficients(s->get_b_filter_coeff(), s->get_a_filter_coeff(), true);
+
+		// filter for the current surface
+		for (uint i = 0; i < input.size(); i++)
+			values[i] = (sample_t) _filter_surfaces.tick(values[i]);
+
+		current_node = _ism->tree_vs.parent(current_node);  // get the parent
+	}
+
+	return values;
 }
 
 }  // namespace avrs

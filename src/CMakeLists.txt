@@ -5,10 +5,12 @@ add_subdirectory(tracker)
 
 # C++ source files
 set(CXX_SOURCE_FILES 
+    dxfreader.cpp
     surface.cpp
+    room.cpp
     listener.cpp
     soundsource.cpp
-    dxfreader.cpp
+    ism.cpp
     convolver.cpp
     virtualenvironment.cpp
     headfilter.cpp
