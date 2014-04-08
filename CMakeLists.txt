@@ -5,8 +5,8 @@ project(avrs)
 
 # The version number
 set(VERSION_MAJOR 0)
-set(VERSION_MINOR 2)
-set(VERSION_PATCH 6)
+set(VERSION_MINOR 3)
+set(VERSION_PATCH 0)
 
 # Configuration options
 set(WIIMOTE_SUPPORT OFF CACHE BOOL "Build avrs with wiimote-based tracker library")
