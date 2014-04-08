@@ -40,6 +40,8 @@ void Room::load_dxf()
 	boost::shared_ptr<DL_Dxf> dxf(new DL_Dxf());
 	const char *filename = _config->dxf_file.c_str();
 
+	DPRINT("File DXF: %s", _config->dxf_file.c_str());
+
 	if (!dxf->in(filename, reader.get()))  // if file open failed
 		throw AvrsException("Error loading DXF file");
 

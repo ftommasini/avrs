@@ -154,13 +154,9 @@ void Ism::print_summary()
 void Ism::_propagate(VirtualSource::ptr_t vs_parent, const tree_it_t node_parent,
 		const unsigned int order, const bool discard_nodes)
 {
-	DPRINT("Order %d", order);
-
 	// for each surface
 	for (unsigned int i = 0; i < _room->n_surfaces(); i++)
 	{
-		DPRINT("Surface %d", i);
-
 		Surface::ptr_t s = _room->get_surface(i);
 
 		// do the reflection

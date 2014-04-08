@@ -38,7 +38,6 @@
 #include "tracker/sim/trackersim.hpp"
 #include "tracker/wiimote/trackerwiimote.hpp"
 #include "convolver.hpp"
-#include "surface.hpp"
 #include "room.hpp"
 #include "soundsource.hpp"
 #include "listener.hpp"
@@ -61,37 +60,19 @@ namespace avrs
 class VirtualEnvironment
 {
 public:
-	typedef std::auto_ptr<VirtualEnvironment> ptr_t;
+	typedef boost::shared_ptr<VirtualEnvironment> ptr_t;
 
 	virtual ~VirtualEnvironment();
 	/// Static factory function for VirtualEnvironment objects
 	static ptr_t create(configuration_t *cs, TrackerBase::ptr_t tracker);
 
-	// Room
-
-
 	float get_room_area() const;
 	unsigned int n_surfaces() const;
-//	void add_surface(Surface *s);
-//	void update_surfaces_data();  // TODO private?
-
-	// ISM methods
-
-//	void calc_ISM();
-	// TODO check
 	unsigned int n_vs() const;
 	unsigned int n_visible_vs();
-	// for debug!!!
-	void print_vis();
-	//void check_vis();
-
-	void calc_late_reverberation();
-
-	// Generic methods
 
 	void start_simulation();
 	void stop_simulation();
-
 	void calibrate_tracker();
 
 	/**
@@ -105,6 +86,8 @@ public:
 	 * Render the binaural impulse response (BIR) in real-time process by using current tracker data
 	 */
 	void renderize();
+
+	void calc_late_reverberation();
 	/**
 	 * Get the current BIR
 	 * @return the current BIR
@@ -116,6 +99,8 @@ private:
 	VirtualEnvironment(configuration_t *cs, TrackerBase::ptr_t tracker);
 
 	configuration_t *_config_sim;
+
+	// Buffers
 	data_t _input_buffer;
 	binauraldata_t _render_buffer;  // keep the complete BIR
 	unsigned long _length_bir;
@@ -130,47 +115,13 @@ private:
 
 	// Room
 	Room::ptr_t _room;
-
-//	// Surfaces
-//	std::vector<Surface *> _surfaces;
-//	typedef std::vector<Surface *>::iterator surfaces_it_t;
-//	volatile bool _new_data; // flag that indicates new surfaces data
-
+	// Sound source
 	SoundSource::ptr_t _sound_source;
+	// Listener
 	Listener::ptr_t _listener;
 
+	// ISM
 	Ism::ptr_t _ism;
-
-	// VS propagation
-	unsigned int _max_order;
-	float _max_dist;
-//	tree<virtualsource_t *> _tree; // VSs tree
-//	typedef tree<virtualsource_t *>::iterator tree_it_t;
-//	tree_it_t _root_it;
-//	volatile unsigned int _count_vs;
-	float _time_ref_ms;
-
-	// visible VS vector
-//	std::vector<virtualsource_t *> _vis;
-//	typedef std::vector<virtualsource_t *>::iterator vis_it_t;
-//
-//	typedef struct CompareVSDistance
-//	{
-//		bool operator()(virtualsource_t *i, virtualsource_t *j)
-//		{
-//			return (i->dist_listener < j->dist_listener);
-//		}
-//	} cmpvsdistance_t;
-
-//	void _propagate_ISM(virtualsource_t *vs, tree_it_t vs_node,
-//			const unsigned int order);
-//	bool _check_vis_1(Surface* s, virtualsource_t *vs);
-//	bool _check_vis_2(virtualsource_t *vs, const tree_it_t vs_node);
-
-	void _calc_vs_orientation(virtualsource_t *vs);
-//	void _update_vs_orientations();  // todo private
-//	void _sort_vis();
-	void _update_vis();
 
 	// Late reverberation
 	Fdn::ptr_t _fdn;
@@ -203,7 +154,6 @@ private:
 #endif
 
 	data_t _surfaces_filter(data_t &input, const Ism::tree_vs_t::iterator node);
-
 	bool _listener_is_moved();
 
     // thread for VS chain filter
@@ -266,37 +216,6 @@ inline unsigned int VirtualEnvironment::n_visible_vs()
 {
 	return _ism->get_count_visible_vs();
 }
-
-//// respecto al oyente (en el sistema de coordenadas L)
-//inline void VirtualEnvironment::_calc_vs_orientation(virtualsource_t *vs)
-//{
-//	// azimuth calculus
-//	vs->ref_listener_pos = vs->pos - _listener->pos;
-//	vs->initial_orientation.az =
-//			-((atan2(vs->ref_listener_pos(Y), vs->ref_listener_pos(X)) * avrs::math::PIdiv180_inverse) - 90.0f); // in degrees
-//
-//	// elevation calculus
-//	float r = sqrt(vs->ref_listener_pos(X) * vs->ref_listener_pos(X)
-//			+ vs->ref_listener_pos(Y) * vs->ref_listener_pos(Y));
-//	vs->initial_orientation.el =
-//			-((atan2(r, vs->ref_listener_pos(Z)) * avrs::math::PIdiv180_inverse) - 90.0f); // in degrees
-//
-//	vs->initial_orientation = vs->initial_orientation - _listener->get_orientation();
-//
-////	arma::rowvec vs_pos_r(4);
-////	vs_pos_r << vs->pos(0) << vs->pos(1) << vs->pos(2) << 0 << endr;
-////	arma::rowvec vs_pos_l(4);
-////	vs_pos_l = vs_pos_r * _listener->get_rotation_matrix();
-////	vs->ref_listener_pos << vs_pos_l(0) << vs_pos_l(1) << vs_pos_l(2) << endr;
-////	// azimuth
-////	vs->initial_orientation.az =
-////			-((atan2(vs->ref_listener_pos(Y), vs->ref_listener_pos(X)) * mathtools::PIdiv180_inverse) - 90.0f); // in degrees
-////	// elevation
-////	float r = sqrt(vs->ref_listener_pos(X) * vs->ref_listener_pos(X)
-////			+ vs->ref_listener_pos(Y) * vs->ref_listener_pos(Y));
-////	vs->initial_orientation.el =
-////			-((atan2(r, vs->ref_listener_pos(Z)) * mathtools::PIdiv180_inverse) - 90.0f); // in degrees
-//}
 
 inline bool VirtualEnvironment::_listener_is_moved()
 {

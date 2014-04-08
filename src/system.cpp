@@ -128,7 +128,7 @@ bool System::run()
 
 	if (!wait_task)
 	{
-		DPRINT("Cannot init WAIT task");
+		ERROR("Cannot init WAIT task");
 		return false;
 	}
 

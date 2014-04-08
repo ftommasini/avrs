@@ -102,6 +102,31 @@ private:
 //	//DPRINT("Total VSs: %d - Visibles VSs: %d", (int) _tree.size(_root_it), (int) _vis.size());
 //}
 
+// TODO chequear solo visibilidad
+//void VirtualEnvironment::check_vis()
+//{
+//	// tree pre-order traversal
+//	for (tree_it_t i = _tree.begin(); i != _tree.end(); i++)
+//	{
+//		virtualsource_t *vs = (virtualsource_t *) *i;
+//
+//		// first visibility test
+//		vs->vis_test_1 = _check_vis_1(vs);  // update the visibility 1
+//
+//		// second visibility test
+//		// order greater than 1, and must be passed first visibility test
+//		if (vs->order > 1 && vs->vis_test_1)
+//		{
+//			vs->vis_test_2 = _check_vis_2(vs, i, vs->order);  // update the visibility 2
+//			vs->visible = (vs->vis_test_1 && vs->vis_test_2);  // both test must be passed
+//		}
+//		else
+//		{
+//			vs->visible = vs->vis_test_1;
+//		}
+//	}
+//}
+
 }  // namespace avrs
 
 #endif /* ISM_HPP_ */
