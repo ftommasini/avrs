@@ -13,4 +13,4 @@ version.hpp
 *.tar.gz
 Debug/*
 Release/*
-times.txt
+time.txt
