@@ -25,11 +25,11 @@
 #include "common.hpp"
 #include "system.hpp"
 #include "avrsexception.hpp"
-#include "utils/timer.hpp"
+#include "utils/timercpu.hpp"
 
 #include "version.hpp"
 
-// On Linux, must be  compile with the -D_REENTRANT option.  This tells
+// On Linux, must be compile with the -D_REENTRANT option.  This tells
 // the C/C++ libraries that the functions must be thread-safe
 #ifndef _REENTRANT
 #error You need to compile with _REENTRANT defined
@@ -79,12 +79,13 @@ int main(int argc, char *argv[])
 	parse_program_options(argc, argv, &params);
 
 	System::ptr_t sys;
-	Timer t;
+	TimerCpu t;
 	std::string end_message;
 
 	// create auto_ptr pointer to the system
 	try
 	{
+		//stk::Stk::printErrors(false);
 		sys = System::get_instance(params.filename, params.show_config);
 		assert(sys.get() != NULL);
 		printf("Running... (end with \'q\' + Enter)\n");
@@ -102,7 +103,7 @@ int main(int argc, char *argv[])
 
 		// show final messages
 		printf("%s ", end_message.c_str());
-		printf("Running time: %.2f s\n", t.get_elapsed_s());
+		printf("Running time: %.2f s\n", t.elapsed_time(second));
 	}
 	catch (const AvrsException &e)
 	{
