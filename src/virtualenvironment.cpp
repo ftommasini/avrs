@@ -150,8 +150,6 @@ bool VirtualEnvironment::update_listener_orientation()
 
 void VirtualEnvironment::renderize()
 {
-	float elapsed;
-
 	// check if the listener is moved
 	if (!_listener_is_moved())
 	{
@@ -165,15 +163,12 @@ void VirtualEnvironment::renderize()
 	memcpy(&_render_buffer.left[0], &_zeros[0], _config_sim->bir_length_samples * sizeof(sample_t));
 	memcpy(&_render_buffer.right[0], &_zeros[0], _config_sim->bir_length_samples * sizeof(sample_t));
 
-	Ism::tree_vs_t tree = _ism->get_tree_vs();
-
 	// TODO SE PODRÍA MEJORAR SI SE GUARDAR EL ITERATOR EN CADA VS, ASI SE RECORRE SOLAMENTE LAS VISIBLES
-	// only for visible VSs
-	for (Ism::tree_vs_t::iterator it = tree.begin(); it != tree.end(); it++)
+	for (Ism::tree_vs_t::iterator it = _ism->tree_vs.begin(); it != _ism->tree_vs.end(); it++)
 	{
 		VirtualSource::ptr_t vs = *it;
 
-		if (!vs->audible)
+		if (!vs->audible)  	// only for audible VSs
 			continue;
 
 		// directivity filtering
@@ -181,8 +176,11 @@ void VirtualEnvironment::renderize()
 		assert(input.size() <= VS_SAMPLES);  // TODO REVISAR LONGITUDE DE EARLY REFLECTIONS
 		input.resize(VS_SAMPLES, 0.0f);
 
-		// surface filtering
-		input = _surfaces_filter(input, it);
+//		if (vs->id != 1)
+//		{
+			// surface filtering
+			input = _surfaces_filter(input, it);
+//		}
 
 		// distance attenuation
 		float attenuation_factor = 1.0f / vs->dist_listener;
@@ -457,18 +455,16 @@ void VirtualEnvironment::calc_late_reverberation()
 data_t VirtualEnvironment::_surfaces_filter(data_t &input, const Ism::tree_vs_t::iterator node)
 {
  	data_t values = input;
- 	Ism::tree_vs_t tree;
- 	Ism::tree_vs_t::iterator root_it = _ism->get_root_tree_vs();
-
-	// get parent VS
+ 	Ism::tree_vs_t::iterator root_it = _ism->root_tree_vs;
  	Ism::tree_vs_t::iterator current_node = node;
 
 	while (current_node != root_it)  // while the current node is not the root node
 	{
 		VirtualSource::ptr_t vs = *current_node;
-		//assert(vs != NULL);
-
+		assert(vs.get() != NULL);
 		Surface::ptr_t s = vs->surface_ptr;
+		assert(s.get() != NULL);
+
 		//_set coefficients and clear previous filter state
 		_filter_surfaces.setCoefficients(s->get_b_filter_coeff(), s->get_a_filter_coeff(), true);
 
@@ -476,7 +472,7 @@ data_t VirtualEnvironment::_surfaces_filter(data_t &input, const Ism::tree_vs_t:
 		for (uint i = 0; i < input.size(); i++)
 			values[i] = (sample_t) _filter_surfaces.tick(values[i]);
 
-		current_node = tree.parent(current_node);  // get the parent
+		current_node = _ism->tree_vs.parent(current_node);  // get the parent
 	}
 
 	return values;

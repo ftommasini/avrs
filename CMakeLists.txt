@@ -128,7 +128,7 @@ if(OPENMP_FOUND)
 endif()
 
 # Set flags on C++ compiler
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -pipe -Werror")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -pipe")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__LINUX_ALSA__ -D__LITTLE_ENDIAN__ -D_REENTRANT")
 
 # Set flags on C compiler

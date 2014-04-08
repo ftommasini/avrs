@@ -26,11 +26,14 @@
 #include <sys/time.h>
 #include <cstdio>
 #include <stddef.h>
-#include <rtai_mbx.h>
 #include <stk/Iir.h>
 #include <stk/Fir.h>
 #include <stk/Delay.h>
 #include <boost/shared_ptr.hpp>
+
+extern "C" {
+#include <rtai_mbx.h>
+}
 
 #include "utils/tree.hpp"
 #include "utils/rttools.hpp"
@@ -52,7 +55,6 @@
 
 namespace avrs
 {
-
 
 /**
  * Class for generation of virtual environment Binaural Impulse Response (BIR)

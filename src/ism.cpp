@@ -29,12 +29,13 @@ Ism::Ism(configuration_t *config, const Room::ptr_t &r)
 
 	_config = config;
 	_room = r;
+	_count_vs = 0;
 }
 
 Ism::~Ism()
 {
 	_aud.clear();
-	_tree.clear();
+	tree_vs.clear();
 }
 
 void Ism::calculate(bool discard_nodes)
@@ -43,7 +44,7 @@ void Ism::calculate(bool discard_nodes)
 
 	// create VS from "real" source (order 0)
 	VirtualSource::ptr_t vs(new VirtualSource);
-	vs->id = ++_count_vs; // must be 1 because is a "real" source
+	vs->id = ++_count_vs; // 1 = "real source"
 	vs->audible = true;
 	vs->pos = _config->sound_source->pos;
 	vs->dist_listener = arma::norm(vs->pos - _config->listener->pos, 2);
@@ -54,14 +55,14 @@ void Ism::calculate(bool discard_nodes)
 
 	_calc_vs_orientation(vs);
 
-	// append to top of tree
-	_tree.clear();
-	_root_it = _tree.insert(_tree.begin(), vs);
+	// append to top of tree_vs
+	tree_vs.clear();
+	root_tree_vs = tree_vs.insert(tree_vs.begin(), vs);
 	_aud.clear();
 	_aud.push_back(vs);
 
 	// propagate first order... and then run recursively
-	_propagate(vs, _root_it, 1, discard_nodes);
+	_propagate(vs, root_tree_vs, 1, discard_nodes);
 }
 
 void Ism::update_vs_orientations(const orientation_angles_t &listener_orientation)
@@ -74,19 +75,19 @@ void Ism::update_vs_orientations(const orientation_angles_t &listener_orientatio
 	}
 }
 
-Ism::tree_vs_t Ism::get_tree_vs()
-{
-	return _tree;
-}
+//Ism::tree_vs_t &Ism::get_tree_vs()
+//{
+//	return tree_vs;
+//}
 
-Ism::tree_vs_t::iterator Ism::get_root_tree_vs()
-{
-	return _root_it;
-}
+//Ism::tree_vs_t::iterator Ism::get_root_tree_vs()
+//{
+//	return _root_it;
+//}
 
 unsigned long Ism::get_count_vs()
 {
-	return (unsigned long) (_tree.size() - 1);
+	return (unsigned long) (tree_vs.size() - 1);
 }
 
 unsigned long Ism::get_count_visible_vs()
@@ -151,7 +152,7 @@ void Ism::print_summary()
 // Private functions
 
 // recursive function (depth-first traversal, pre-order)
-void Ism::_propagate(VirtualSource::ptr_t vs_parent, const tree_it_t node_parent,
+void Ism::_propagate(VirtualSource::ptr_t vs_parent, const tree_vs_t::iterator node_parent,
 		const unsigned int order, const bool discard_nodes)
 {
 	// for each surface
@@ -194,8 +195,8 @@ void Ism::_propagate(VirtualSource::ptr_t vs_parent, const tree_it_t node_parent
 				// calculate the orientation of VS
 				_calc_vs_orientation(vs_progeny);
 
-				// append the progeny VS to the tree (because is not discarded)
-				tree_it_t node_progeny = _tree.append_child(node_parent, vs_progeny);
+				// append the progeny VS to the tree_vs (because is not discarded)
+				tree_vs_t::iterator node_progeny = tree_vs.append_child(node_parent, vs_progeny);
 
 				// first audibility test
 				bool aud_test_1 = _check_audibility_1(vs_progeny); // audibility 1
@@ -219,7 +220,7 @@ void Ism::_propagate(VirtualSource::ptr_t vs_parent, const tree_it_t node_parent
 
 		// TODO lock_guard
 		if (discard_nodes)
-			_tree.erase_children(node_parent); // release memory
+			tree_vs.erase_children(node_parent); // release memory
 	}
 }
 
@@ -249,14 +250,14 @@ bool Ism::_check_audibility_1(const VirtualSource::ptr_t &vs)
 	return s->is_point_inside(vs->intersection_point);
 }
 
-bool Ism::_check_audibility_2(const VirtualSource::ptr_t &vs, const tree_it_t node)
+bool Ism::_check_audibility_2(const VirtualSource::ptr_t &vs, const tree_vs_t::iterator node)
 {
 	// intersection point is our virtual listener position
 	arma::frowvec3 pos_vl = vs->intersection_point; // already calculated in visibility test 1 (position of "virtual listener")
 	// get node of VS parent
-	tree_it_t node_parent = _tree.parent(node);
+	tree_vs_t::iterator node_parent = tree_vs.parent(node);
 
-	while (node_parent != _root_it) // while the parent node is not the root node
+	while (node_parent != root_tree_vs) // while the parent node is not the root node
 	{
 		VirtualSource::ptr_t vs_parent = *node_parent;
 		assert(vs_parent != NULL);
@@ -283,7 +284,7 @@ bool Ism::_check_audibility_2(const VirtualSource::ptr_t &vs, const tree_it_t no
 			return false;
 
 		pos_vl = inter_point; // the "new" virtual listener position
-		node_parent = _tree.parent(node_parent); // get node of VS parent
+		node_parent = tree_vs.parent(node_parent); // get node of VS parent
 	}
 
 	return true;

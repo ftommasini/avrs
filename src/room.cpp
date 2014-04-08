@@ -26,7 +26,7 @@ Room::Room(configuration_t *config)
 {
 	_config = config;
 	_area = 0.0f;
-	_new_surface = false;
+	_new_surface = true;
 }
 
 Room::~Room()
@@ -39,8 +39,6 @@ void Room::load_dxf()
 	DxfReader::ptr_t reader(new DxfReader());
 	boost::shared_ptr<DL_Dxf> dxf(new DL_Dxf());
 	const char *filename = _config->dxf_file.c_str();
-
-	DPRINT("File DXF: %s", _config->dxf_file.c_str());
 
 	if (!dxf->in(filename, reader.get()))  // if file open failed
 		throw AvrsException("Error loading DXF file");

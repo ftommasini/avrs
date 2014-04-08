@@ -44,8 +44,8 @@ public:
 	void calculate(bool discard_nodes);
 	void update_vs_orientations(const orientation_angles_t &listener_orientation);
 
-	Ism::tree_vs_t get_tree_vs();
-	Ism::tree_vs_t::iterator get_root_tree_vs();
+//	Ism::tree_vs_t &get_tree_vs();
+//	Ism::tree_vs_t::iterator get_root_tree_vs();
 	unsigned long get_count_vs();
 	unsigned long get_count_visible_vs();
 	unsigned long get_bytes_vs();
@@ -54,25 +54,25 @@ public:
 	void print_list();
 	void print_summary();
 
+	// tree for VSs
+	tree_vs_t tree_vs;
+	tree_vs_t::iterator root_tree_vs;  // root of the tree
+
 private:
 	configuration_t *_config;
 	Room::ptr_t _room;
 	float _time_ref_ms;
 
-	// tree for VSs
-	tree_vs_t _tree; // VSs tree
-	typedef tree_vs_t::iterator tree_it_t;
-	tree_it_t _root_it;  // root of tree
 	unsigned long _count_vs;
 
 	// audible VSs
 	std::vector<VirtualSource::ptr_t> _aud;
 	typedef std::vector<VirtualSource::ptr_t>::iterator aud_it_t;
 
-	void _propagate(VirtualSource::ptr_t vs, const tree_it_t node_parent,
+	void _propagate(VirtualSource::ptr_t vs, const tree_vs_t::iterator node_parent,
 			const unsigned int order, const bool discard_nodes);
 	bool _check_audibility_1(const VirtualSource::ptr_t &vs);
-	bool _check_audibility_2(const VirtualSource::ptr_t &vs, const tree_it_t node);
+	bool _check_audibility_2(const VirtualSource::ptr_t &vs, const tree_vs_t::iterator node);
 	void _calc_vs_orientation(const VirtualSource::ptr_t &vs);
 	void _sort_aud();
 

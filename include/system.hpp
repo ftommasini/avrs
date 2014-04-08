@@ -22,7 +22,9 @@
 #include <memory>  // auto_ptr
 
 // RTAI headers
+extern "C" {
 #include <rtai_lxrt.h>
+}
 
 // AVRS headers
 #include "configuration.hpp"
@@ -63,12 +65,10 @@ public:
 
 private:
 	System(std::string config_filename, bool show_config);  ///< Private constructor
-
-
 	System(const System &); ///< Prevent copy-construction
 	System &operator=(const System &);  ///< Prevent assignment
 
-	bool _init();
+	void _init();
 
 	volatile bool _is_running;
 
