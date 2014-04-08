@@ -36,13 +36,16 @@ class Ism
 {
 public:
 	typedef boost::shared_ptr<Ism> ptr_t;
+	typedef tree<VirtualSource::ptr_t> tree_vs_t;
 
 	Ism(configuration_t *config, const Room::ptr_t &r);
 	virtual ~Ism();
 
 	void calculate(bool discard_nodes);
-	void update_vs_orientation(const orientation_angles_t &listener_orientation);
+	void update_vs_orientations(const orientation_angles_t &listener_orientation);
 
+	Ism::tree_vs_t get_tree_vs();
+	Ism::tree_vs_t::iterator get_root_tree_vs();
 	unsigned long get_count_vs();
 	unsigned long get_count_visible_vs();
 	unsigned long get_bytes_vs();
@@ -54,10 +57,11 @@ public:
 private:
 	configuration_t *_config;
 	Room::ptr_t _room;
+	float _time_ref_ms;
 
 	// tree for VSs
-	tree<VirtualSource::ptr_t> _tree; // VSs tree
-	typedef tree<VirtualSource::ptr_t>::iterator tree_it_t;
+	tree_vs_t _tree; // VSs tree
+	typedef tree_vs_t::iterator tree_it_t;
 	tree_it_t _root_it;  // root of tree
 	unsigned long _count_vs;
 
@@ -80,6 +84,23 @@ private:
 		}
 	} comparevsdistance_t;
 };
+
+//void VirtualEnvironment::_update_vis()
+//{
+//	_vis.clear();  // clear vector
+//
+//	for (tree_it_t it = _tree.begin(); it != _tree.end(); it++)
+//	{
+//		virtualsource_t *vs = *it;
+//
+//		if (vs->visible)
+//			_vis.push_back(vs);
+//	}
+//
+//	_outputs.resize(_vis.size());  // output per visible VS
+//
+//	//DPRINT("Total VSs: %d - Visibles VSs: %d", (int) _tree.size(_root_it), (int) _vis.size());
+//}
 
 }  // namespace avrs
 

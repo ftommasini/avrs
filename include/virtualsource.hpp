@@ -33,12 +33,10 @@ typedef struct VirtualSource
 	point3d_t pos;
 	short order;
 	float dist_listener;
-	//	float time_abs_ms;
-	//	float time_rel_ms;
+	float time_abs_ms;
+	float time_rel_ms;
 	Surface::ptr_t surface_ptr;
 	point3d_t intersection_point;
-	//	bool vis_test_1;
-	//	bool vis_test_2;
 	bool audible;
 	point3d_t pos_ref_listener; // to listener
 	boost::shared_ptr<VirtualSource> parent_ptr;
@@ -53,20 +51,20 @@ typedef struct VirtualSource
 		audible = false;
 	}
 
-	VirtualSource(unsigned long id, arma::frowvec3 pos, short order, float dist_listener,
-			Surface::ptr_t surf_ptr, arma::frowvec3 intersection_point, bool audible,
-			arma::frowvec3 pos_ref_listener, boost::shared_ptr<VirtualSource> parent_ptr)
-	{
-		this->id = id;
-		this->pos = pos;
-		this->order = order;
-		this->dist_listener = dist_listener;
-		this->surface_ptr = surf_ptr;
-		this->intersection_point = intersection_point;
-		this->audible = audible;
-		this->pos_ref_listener = pos_ref_listener;
-		this->parent_ptr = parent_ptr;
-	}
+//	VirtualSource(unsigned long id, arma::frowvec3 pos, short order, float dist_listener,
+//			Surface::ptr_t surf_ptr, arma::frowvec3 intersection_point, bool audible,
+//			arma::frowvec3 pos_ref_listener, boost::shared_ptr<VirtualSource> parent_ptr)
+//	{
+//		this->id = id;
+//		this->pos = pos;
+//		this->order = order;
+//		this->dist_listener = dist_listener;
+//		this->surface_ptr = surf_ptr;
+//		this->intersection_point = intersection_point;
+//		this->audible = audible;
+//		this->pos_ref_listener = pos_ref_listener;
+//		this->parent_ptr = parent_ptr;
+//	}
 
 } virtualsource_t;
 

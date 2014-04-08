@@ -26,6 +26,7 @@
 
 #include <cmath>
 #include <armadillo>
+#include <boost/shared_ptr.hpp>
 
 #include "utils/math.hpp"
 #include "common.hpp"
@@ -38,7 +39,7 @@ using namespace arma;
 class Listener
 {
 public:
-	typedef std::auto_ptr<Listener> ptr_t;
+	typedef boost::shared_ptr<Listener> ptr_t;
 
 	virtual ~Listener();
     static ptr_t create();

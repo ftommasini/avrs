@@ -41,11 +41,10 @@ VirtualEnvironment::VirtualEnvironment(configuration_t *cs, TrackerBase::ptr_t t
 
 	// Room
 	_room = boost::make_shared<Room>(cs);
-	_count_vs = 0;
+//	_count_vs = 0;
 
 	// ISM
 	_ism = boost::make_shared<Ism>(cs, _room);
-
 
 	// FDN
 	const unsigned int N = 8;
@@ -95,10 +94,12 @@ VirtualEnvironment::VirtualEnvironment(configuration_t *cs, TrackerBase::ptr_t t
 		throw AvrsException("Error creating VirtualEnvironment");
 	}
 
-	calc_ISM();  // calculate VSs by ISM
+	_ism->calculate(false);
+	_outputs.resize(_ism->get_count_visible_vs());  // output per visible VS
+//	calc_ISM();  // calculate VSs by ISM
 
-	_update_vis();
-	_update_vs_orientations();
+//	_update_vis();
+//	_update_vs_orientations();
 }
 
 VirtualEnvironment::~VirtualEnvironment()
@@ -369,24 +370,9 @@ VirtualEnvironment::ptr_t VirtualEnvironment::create(configuration_t *cs, Tracke
 //	}
 //}
 
-void VirtualEnvironment::_update_vis()
-{
-	_vis.clear();  // clear vector
+// TODO ver si no va en ISM
 
-	for (tree_it_t it = _tree.begin(); it != _tree.end(); it++)
-	{
-		virtualsource_t *vs = *it;
 
-		if (vs->visible)
-			_vis.push_back(vs);
-	}
-
-	_outputs.resize(_vis.size());  // output per visible VS
-
-	//DPRINT("Total VSs: %d - Visibles VSs: %d", (int) _tree.size(_root_it), (int) _vis.size());
-}
-
-// todo maybe in a thread
 bool VirtualEnvironment::update_listener_orientation()
 {
 	trackerdata_t tmp_data;
@@ -409,7 +395,7 @@ bool VirtualEnvironment::update_listener_orientation()
 			_tracker_data = tmp_data;  // save the current tracker data
 			_listener->rotate(tmp_data.ori);  // update listener orientation
 			//_listener->move(tmp_data.pos.to_point3d());  // update listener position
-			_update_vs_orientations();  // and update VS orientations
+			_ism->update_vs_orientations(_listener->get_orientation());  // update VS orientations
 
 //			DPRINT("%+1.3f %+1.3f \t %+1.3f %+1.3f",
 //					_tracker_data.ori.az,
@@ -497,17 +483,19 @@ void VirtualEnvironment::renderize()
 	memcpy(&_render_buffer.left[0], &_zeros[0], _config_sim->bir_length_samples * sizeof(sample_t));
 	memcpy(&_render_buffer.right[0], &_zeros[0], _config_sim->bir_length_samples * sizeof(sample_t));
 
+	Ism::tree_vs_t tree = _ism->get_tree_vs();
+
 	// TODO SE PODRÍA MEJORAR SI SE GUARDAR EL ITERATOR EN CADA VS, ASI SE RECORRE SOLAMENTE LAS VISIBLES
 	// only for visible VSs
-	for (tree_it_t it = _tree.begin(); it != _tree.end(); it++)
+	for (Ism::tree_vs_t::iterator it = tree.begin(); it != tree.end(); it++)
 	{
-		virtualsource_t *vs = *it;
+		VirtualSource::ptr_t vs = *it;
 
-		if (!vs->visible)
+		if (!vs->audible)
 			continue;
 
 		// directivity filtering
-		data_t input = _sound_source->get_IR(vs->ref_listener_orientation);
+		data_t input = _sound_source->get_IR(vs->orientation_ref_listener);
 		assert(input.size() <= VS_SAMPLES);  // TODO REVISAR LONGITUDE DE EARLY REFLECTIONS
 		input.resize(VS_SAMPLES, 0.0f);
 
@@ -522,10 +510,10 @@ void VirtualEnvironment::renderize()
 
 		// HRTF filtering
 #ifndef HRTF_IIR
-		output = _hrtf_filter(input, vs->ref_listener_orientation);  // HRTF spectrums
+		output = _hrtf_filter(input, vs->orientation_ref_listener);  // HRTF spectrums
 
 #else
-		output = _hrtf_iir_filter(input, vs->ref_listener_orientation);
+		output = _hrtf_iir_filter(input, vs->orientation_ref_listener);
 #endif
 
 		// calculate the sample from reflectogram where starts this reflection
@@ -737,21 +725,21 @@ binauraldata_t VirtualEnvironment::_hrtf_iir_filter(data_t &input, const orienta
 
 #endif
 
-data_t VirtualEnvironment::_surfaces_filter(data_t &input, const tree_it_t node)
+data_t VirtualEnvironment::_surfaces_filter(data_t &input, const Ism::tree_vs_t::iterator node)
 {
  	data_t values = input;
+ 	Ism::tree_vs_t tree;
+ 	Ism::tree_vs_t::iterator root_it = _ism->get_root_tree_vs();
 
 	// get parent VS
-	tree_it_t current_node = node;
+ 	Ism::tree_vs_t::iterator current_node = node;
 
-	while (current_node != _root_it)  // while the current node is not the root node
+	while (current_node != root_it)  // while the current node is not the root node
 	{
-		virtualsource_t *vs = *current_node;
-		assert(vs != NULL);
+		VirtualSource::ptr_t vs = *current_node;
+		//assert(vs != NULL);
 
-//		start = rt_get_time_ns();
-
-		Surface::ptr_t s = _room->get_surface(vs->surface_index);
+		Surface::ptr_t s = vs->surface_ptr;
 		//_set coefficients and clear previous filter state
 		_filter_surfaces.setCoefficients(s->get_b_filter_coeff(), s->get_a_filter_coeff(), true);
 
@@ -759,11 +747,7 @@ data_t VirtualEnvironment::_surfaces_filter(data_t &input, const tree_it_t node)
 		for (uint i = 0; i < input.size(); i++)
 			values[i] = (sample_t) _filter_surfaces.tick(values[i]);
 
-		current_node = _tree.parent(current_node);  // get the parent
-
-//		end = rt_get_time_ns();
-//		elapsed = (float) (end - start) / 1E3; // in us
-//		DPRINT("Time: %6.3f us",  elapsed);
+		current_node = tree.parent(current_node);  // get the parent
 	}
 
 	return values;

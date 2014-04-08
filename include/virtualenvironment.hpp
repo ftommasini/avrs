@@ -77,7 +77,8 @@ public:
 
 	// ISM methods
 
-	void calc_ISM();
+//	void calc_ISM();
+	// TODO check
 	unsigned int n_vs() const;
 	unsigned int n_visible_vs();
 	// for debug!!!
@@ -167,7 +168,7 @@ private:
 //	bool _check_vis_2(virtualsource_t *vs, const tree_it_t vs_node);
 
 	void _calc_vs_orientation(virtualsource_t *vs);
-	void _update_vs_orientations();  // todo private
+//	void _update_vs_orientations();  // todo private
 //	void _sort_vis();
 	void _update_vis();
 
@@ -201,18 +202,18 @@ private:
 	binauraldata_t _hrtf_iir_filter(data_t &input, const orientation_angles_t &ori);
 #endif
 
-	data_t _surfaces_filter(data_t &input, const tree_it_t node);
+	data_t _surfaces_filter(data_t &input, const Ism::tree_vs_t::iterator node);
 
 	bool _listener_is_moved();
 
     // thread for VS chain filter
     static void *_vs_filter_wrapper(void *arg);
-    void *_vs_filter_thread(tree_it_t it, uint index);
+    void *_vs_filter_thread(Ism::tree_vs_t::iterator it, uint index);
 	std::vector<binauraldata_t> _outputs;  // keep the VS chain filter IR
 
 	typedef struct {
 		VirtualEnvironment *ve;
-		tree_it_t it;
+		Ism::tree_vs_t::iterator it;
 		uint index;
 	} threaddata_t;
 };
@@ -258,44 +259,44 @@ inline unsigned int VirtualEnvironment::n_surfaces() const
 
 inline unsigned int VirtualEnvironment::n_vs() const
 {
-	return (unsigned int) _tree.size(_root_it);
+	return _ism->get_count_vs();
 }
 
 inline unsigned int VirtualEnvironment::n_visible_vs()
 {
-	return (unsigned int) _vis.size();
+	return _ism->get_count_visible_vs();
 }
 
-// respecto al oyente (en el sistema de coordenadas L)
-inline void VirtualEnvironment::_calc_vs_orientation(virtualsource_t *vs)
-{
-	// azimuth calculus
-	vs->ref_listener_pos = vs->pos - _listener->get_position();
-	vs->initial_orientation.az =
-			-((atan2(vs->ref_listener_pos(Y), vs->ref_listener_pos(X)) * avrs::math::PIdiv180_inverse) - 90.0f); // in degrees
-
-	// elevation calculus
-	float r = sqrt(vs->ref_listener_pos(X) * vs->ref_listener_pos(X)
-			+ vs->ref_listener_pos(Y) * vs->ref_listener_pos(Y));
-	vs->initial_orientation.el =
-			-((atan2(r, vs->ref_listener_pos(Z)) * avrs::math::PIdiv180_inverse) - 90.0f); // in degrees
-
-	vs->initial_orientation = vs->initial_orientation - _listener->get_orientation();
-
-//	arma::rowvec vs_pos_r(4);
-//	vs_pos_r << vs->pos(0) << vs->pos(1) << vs->pos(2) << 0 << endr;
-//	arma::rowvec vs_pos_l(4);
-//	vs_pos_l = vs_pos_r * _listener->get_rotation_matrix();
-//	vs->ref_listener_pos << vs_pos_l(0) << vs_pos_l(1) << vs_pos_l(2) << endr;
-//	// azimuth
+//// respecto al oyente (en el sistema de coordenadas L)
+//inline void VirtualEnvironment::_calc_vs_orientation(virtualsource_t *vs)
+//{
+//	// azimuth calculus
+//	vs->ref_listener_pos = vs->pos - _listener->pos;
 //	vs->initial_orientation.az =
-//			-((atan2(vs->ref_listener_pos(Y), vs->ref_listener_pos(X)) * mathtools::PIdiv180_inverse) - 90.0f); // in degrees
-//	// elevation
+//			-((atan2(vs->ref_listener_pos(Y), vs->ref_listener_pos(X)) * avrs::math::PIdiv180_inverse) - 90.0f); // in degrees
+//
+//	// elevation calculus
 //	float r = sqrt(vs->ref_listener_pos(X) * vs->ref_listener_pos(X)
 //			+ vs->ref_listener_pos(Y) * vs->ref_listener_pos(Y));
 //	vs->initial_orientation.el =
-//			-((atan2(r, vs->ref_listener_pos(Z)) * mathtools::PIdiv180_inverse) - 90.0f); // in degrees
-}
+//			-((atan2(r, vs->ref_listener_pos(Z)) * avrs::math::PIdiv180_inverse) - 90.0f); // in degrees
+//
+//	vs->initial_orientation = vs->initial_orientation - _listener->get_orientation();
+//
+////	arma::rowvec vs_pos_r(4);
+////	vs_pos_r << vs->pos(0) << vs->pos(1) << vs->pos(2) << 0 << endr;
+////	arma::rowvec vs_pos_l(4);
+////	vs_pos_l = vs_pos_r * _listener->get_rotation_matrix();
+////	vs->ref_listener_pos << vs_pos_l(0) << vs_pos_l(1) << vs_pos_l(2) << endr;
+////	// azimuth
+////	vs->initial_orientation.az =
+////			-((atan2(vs->ref_listener_pos(Y), vs->ref_listener_pos(X)) * mathtools::PIdiv180_inverse) - 90.0f); // in degrees
+////	// elevation
+////	float r = sqrt(vs->ref_listener_pos(X) * vs->ref_listener_pos(X)
+////			+ vs->ref_listener_pos(Y) * vs->ref_listener_pos(Y));
+////	vs->initial_orientation.el =
+////			-((atan2(r, vs->ref_listener_pos(Z)) * mathtools::PIdiv180_inverse) - 90.0f); // in degrees
+//}
 
 inline bool VirtualEnvironment::_listener_is_moved()
 {

@@ -48,6 +48,10 @@ void Ism::calculate(bool discard_nodes)
 	vs->pos = _config->sound_source->pos;
 	vs->dist_listener = arma::norm(vs->pos - _config->listener->pos, 2);
 	vs->pos_ref_listener = vs->pos - _config->listener->pos;
+	_time_ref_ms = (vs->dist_listener / _config->speed_of_sound) * 1000.0f;
+	vs->time_abs_ms = _time_ref_ms;
+	vs->time_rel_ms = 0.0f;
+
 	_calc_vs_orientation(vs);
 
 	// append to top of tree
@@ -60,7 +64,7 @@ void Ism::calculate(bool discard_nodes)
 	_propagate(vs, _root_it, 1, discard_nodes);
 }
 
-void Ism::update_vs_orientation(const orientation_angles_t &listener_orientation)
+void Ism::update_vs_orientations(const orientation_angles_t &listener_orientation)
 {
 	// only for visible VSs
 	for (aud_it_t it = _aud.begin(); it != _aud.end(); it++)
@@ -68,6 +72,16 @@ void Ism::update_vs_orientation(const orientation_angles_t &listener_orientation
 		VirtualSource::ptr_t vs = *it;
 		vs->orientation_ref_listener = vs->orientation_initial - listener_orientation;
 	}
+}
+
+Ism::tree_vs_t Ism::get_tree_vs()
+{
+	return _tree;
+}
+
+Ism::tree_vs_t::iterator Ism::get_root_tree_vs()
+{
+	return _root_it;
 }
 
 unsigned long Ism::get_count_vs()
@@ -172,6 +186,8 @@ void Ism::_propagate(VirtualSource::ptr_t vs_parent, const tree_it_t node_parent
 				// update values for valid VS
 				vs_progeny->pos = pos;
 				vs_progeny->dist_listener = dist_listener;
+				vs_progeny->time_abs_ms = (vs_progeny->dist_listener / _config->speed_of_sound) * 1000.0f;;
+				vs_progeny->time_rel_ms = vs_progeny->time_abs_ms - _time_ref_ms;
 				vs_progeny->order = order;
 				vs_progeny->surface_ptr = s;
 				vs_progeny->id = ++_count_vs;
