@@ -431,6 +431,7 @@ binauraldata_t VirtualEnvironment::_hrtf_iir_filter(data_t &input, const orienta
 	_filter_r.setCoefficients(_hc.b_right, _hc.a_right, true);
 
 	// HRTF filtering
+	#pragma omp for
 	for (uint i = 0; i < input.size(); i++)
 	{
 		out_l[i] = _filter_l.tick(input[i]);
@@ -451,7 +452,7 @@ binauraldata_t VirtualEnvironment::_hrtf_iir_filter(data_t &input, const orienta
 		_delay.tick(out_r);
 	}
 
-//	#pragma omp parallel for
+	#pragma omp for
 	for (uint i = 0; i < out_l.size(); i++)
 	{
 		output.left[i] = (sample_t) out_l[i];
@@ -537,6 +538,7 @@ data_t VirtualEnvironment::_surfaces_filter(data_t &input, const Ism::tree_vs_t:
 		// filter for the current surface
 		for (uint i = 0; i < input.size(); i++)
 			values[i] = (sample_t) _filter_surfaces.tick(values[i]);
+
 //		t.stop();
 //		DPRINT("surface - time %.3f", t.elapsed_time(microsecond));
 

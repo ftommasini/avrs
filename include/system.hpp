@@ -100,10 +100,10 @@ private:
     void *_rt_thread(void *arg);
 
     // threads for real-time convolution
-    static void *_convolve_left_wrapper(void *arg);
-    void *_convolve_left_thread(void *arg);
-    static void *_convolve_right_wrapper(void *arg);
-    void *_convolve_right_thread(void *arg);
+//    static void *_convolve_left_wrapper(void *arg);
+//    void *_convolve_left_thread(void *arg);
+//    static void *_convolve_right_wrapper(void *arg);
+//    void *_convolve_right_thread(void *arg);
 };
 
 }  // namespace avrs

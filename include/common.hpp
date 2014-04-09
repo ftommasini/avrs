@@ -205,7 +205,6 @@ static const short int VS_SAMPLES = 256;
 
 
 #define HRTF_IIR
-//#define RTCONV_THREADS
 //#define VSFILTER_THREADS
 
 }  // namespace
