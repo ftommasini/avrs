@@ -85,6 +85,7 @@ int main(int argc, char *argv[])
 	// create auto_ptr pointer to the system
 	try
 	{
+		stk::Stk::setSampleRate(SAMPLE_RATE);  // set sample rate
 		//stk::Stk::printErrors(false);
 		sys = System::get_instance(params.filename, params.show_config);
 		assert(sys.get() != NULL);

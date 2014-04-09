@@ -24,6 +24,7 @@
 #include <rtai_lxrt.h>
 #include <rtai_mbx.h>
 #include <rtai_fifos.h>
+#include <stk/Stk.h>
 
 #include "utils/rttools.hpp"
 #include "utils/math.hpp"
@@ -224,7 +225,6 @@ void *System::_rt_thread(void *arg)
 #endif
 
 	_ve->calc_late_reverberation();
-
 	_out->start(); // start the output
 	_ve->start_simulation();
 

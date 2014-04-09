@@ -66,8 +66,7 @@ bool Player::_init()
 	RtAudio::StreamParameters parameters;
 	parameters.deviceId = _audio_dev.getDefaultOutputDevice();
 	parameters.nChannels = N_CHANNELS; // TODO global constant?
-	RtAudioFormat format = (sizeof(sample_t) == 8) ? RTAUDIO_FLOAT64
-			: RTAUDIO_FLOAT32;
+	RtAudioFormat format = (sizeof(sample_t) == 8) ? RTAUDIO_FLOAT64 : RTAUDIO_FLOAT32;
 	RtAudio::StreamOptions options;
 	options.flags = RTAUDIO_MINIMIZE_LATENCY | RTAUDIO_NONINTERLEAVED;
 	uint buffer_frames = BUFFER_SAMPLES; // TODO global constant?

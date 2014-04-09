@@ -18,7 +18,9 @@
 
 #include <boost/format.hpp>
 #include <boost/make_shared.hpp>
+#include <stk/FileWvOut.h>
 
+#include "utils/timerrtai.hpp"
 #include "dxfreader.hpp"
 #include "avrsexception.hpp"
 #include "virtualenvironment.hpp"
@@ -157,7 +159,10 @@ void VirtualEnvironment::renderize()
 		return;
 	}
 
+	TimerRtai t;
+
 	unsigned long i, j;
+	data_t input;
 	binauraldata_t output;
 
 	memcpy(&_render_buffer.left[0], &_zeros[0], _config->bir_length_samples * sizeof(sample_t));
@@ -171,22 +176,25 @@ void VirtualEnvironment::renderize()
 		if (!vs->audible)  	// only for audible VSs
 			continue;
 
+//		t.start();
 		// directivity filtering
-		data_t input = _sound_source->get_IR(vs->orientation_ref_listener);
-		assert(input.size() <= VS_SAMPLES);  // TODO REVISAR LONGITUDE DE EARLY REFLECTIONS
+		input = _sound_source->get_IR(vs->orientation_ref_listener);
+		assert(input.size() <= VS_SAMPLES);  // TODO REVISAR LONGITUD DE EARLY REFLECTIONS
 		input.resize(VS_SAMPLES, 0.0f);
+//		t.stop();
+//		DPRINT("Directivity - time %.3f", t.elapsed_time(microsecond));
 
-//		if (vs->id != 1)
-//		{
-			// surface filtering
-			input = _surfaces_filter(input, it);
-//		}
+		// surface filtering
+		input = _surfaces_filter(input, it);
 
+//		t.start();
 		// distance attenuation
 		float attenuation_factor = 1.0f / vs->dist_listener;
 
 		for (i = 0; i < input.size(); i++)
 			input[i] *= attenuation_factor;
+//		t.stop();
+//		DPRINT("Distance - time %.3f", t.elapsed_time(microsecond));
 
 		// HRTF filtering
 #ifndef HRTF_IIR
@@ -196,6 +204,7 @@ void VirtualEnvironment::renderize()
 		output = _hrtf_iir_filter(input, vs->orientation_ref_listener);
 #endif
 
+//		t.start();
 		// calculate the sample from reflectogram where starts this reflection
 		// TODO delay menor a una muestra
 		unsigned long sample = (unsigned long) round((vs->time_rel_ms * SAMPLE_RATE) / 1000.0f);
@@ -203,13 +212,56 @@ void VirtualEnvironment::renderize()
 		// add filter reflection to reflectogram
 		for (i = sample, j = 0; j < output.size(); i++, j++)
 		{
-			assert(i <= _render_buffer.left.size());
+			//assert(i <= _render_buffer.left.size());
 			_render_buffer.left[i] += output.left[j];
 			_render_buffer.right[i] += output.right[j];
 		}
-
-		_new_bir = true;
+//		t.stop ();
+//		DPRINT("Buffer - time %.3f", t.elapsed_time(microsecond));
 	}
+
+
+//	static long flag = 0;
+//	flag++;
+//
+//	if (flag == 100)
+//	{
+//	stk::FileWvOut out_l("early_l.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
+//	stk::FileWvOut out_r("early_r.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
+//
+//	for (i = 0; i < _length_bir; i++)
+//	{
+//		out_l.tick(_render_buffer.left[i]);
+//		out_r.tick(_render_buffer.right[i]);
+//	}
+//	}
+
+//	t.start();
+	// add late part to render buffer
+	#pragma omp for
+	for (i = 0; i < _length_bir; i++)
+	{
+		_render_buffer.left[i] += _late_buffer[i];
+		_render_buffer.right[i] += _late_buffer[i];
+
+	}
+//	t.stop();
+//	DPRINT("Union - time %.3f", t.elapsed_time(microsecond));
+
+	_new_bir = true;
+
+
+//	if (flag == 100)
+//	{
+//	stk::FileWvOut out_l("bir_l.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
+//	stk::FileWvOut out_r("bir_r.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
+//
+//	for (i = 0; i < _length_bir; i++)
+//	{
+//		out_l.tick(_render_buffer.left[i]);
+//		out_r.tick(_render_buffer.right[i]);
+//	}
+//	}
 }
 
 #else
@@ -363,13 +415,18 @@ binauraldata_t VirtualEnvironment::_hrtf_fir_filter(data_t &input, const orienta
 // IIR filter for single reflection
 binauraldata_t VirtualEnvironment::_hrtf_iir_filter(data_t &input, const orientation_angles_t &ori)
 {
+//	TimerRtai t;
 	binauraldata_t output(BUFFER_SAMPLES);
 	stk::StkFrames out_l(input.size(), 1);  // one channel
 	stk::StkFrames out_r(input.size(), 1);  // one channel
 
+//	t.start();
 	// get the best-fit HRTF for both ears
 	_hcdb->get_HRTF_coeff(&_hc, ori.az, ori.el);
+//	t.stop();
+//	DPRINT("Kd-tree - time %.3f", t.elapsed_time(microsecond));
 
+//	t.start();
 	_filter_l.setCoefficients(_hc.b_left, _hc.a_left, true);
 	_filter_r.setCoefficients(_hc.b_right, _hc.a_right, true);
 
@@ -394,11 +451,15 @@ binauraldata_t VirtualEnvironment::_hrtf_iir_filter(data_t &input, const orienta
 		_delay.tick(out_r);
 	}
 
+//	#pragma omp parallel for
 	for (uint i = 0; i < out_l.size(); i++)
 	{
 		output.left[i] = (sample_t) out_l[i];
 		output.right[i] = (sample_t) out_r[i];
 	}
+
+//	t.stop();
+//	DPRINT("HRTF - time %.3f", t.elapsed_time(microsecond));
 
 	return output;
 }
@@ -435,11 +496,8 @@ void VirtualEnvironment::calc_late_reverberation()
 		output[i] /= (max_value * scaling_factor);  // scaling (normalize and 1/r attenuation)
 	}
 
-	unsigned long sample_mix = (unsigned long)
-			((_config->max_distance / _config->speed_of_sound) * SAMPLE_RATE);
+	unsigned long sample_mix = (unsigned long) ((_config->max_distance / _config->speed_of_sound) * SAMPLE_RATE);
 	double k = sample_mix / -log(0.01);
-
-	//DPRINT("k = %f", k);
 
 	for (i = 0; i < sample_mix; i++)
 	{
@@ -450,10 +508,17 @@ void VirtualEnvironment::calc_late_reverberation()
 	{
 		_late_buffer[i] = (sample_t) output[i];
 	}
+
+
+//	stk::FileWvOut out("late.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
+//
+//	for (i = 0; i < _length_bir; i++)
+//		out.tick(_late_buffer[i]);
 }
 
 data_t VirtualEnvironment::_surfaces_filter(data_t &input, const Ism::tree_vs_t::iterator node)
 {
+//	TimerRtai t;
  	data_t values = input;
  	Ism::tree_vs_t::iterator root_it = _ism->root_tree_vs;
  	Ism::tree_vs_t::iterator current_node = node;
@@ -465,12 +530,15 @@ data_t VirtualEnvironment::_surfaces_filter(data_t &input, const Ism::tree_vs_t:
 		Surface::ptr_t s = vs->surface_ptr;
 		assert(s.get() != NULL);
 
+//		t.start();
 		//_set coefficients and clear previous filter state
 		_filter_surfaces.setCoefficients(s->get_b_filter_coeff(), s->get_a_filter_coeff(), true);
 
 		// filter for the current surface
 		for (uint i = 0; i < input.size(); i++)
 			values[i] = (sample_t) _filter_surfaces.tick(values[i]);
+//		t.stop();
+//		DPRINT("surface - time %.3f", t.elapsed_time(microsecond));
 
 		current_node = _ism->tree_vs.parent(current_node);  // get the parent
 	}
