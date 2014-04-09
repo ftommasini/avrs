@@ -290,7 +290,7 @@ void *System::_rt_thread(void *arg)
 
 	free(output_player);
 
-	//_out->stop(); // stop the output
+	_out->stop(); // stop the output
 	_ve->stop_simulation();
 
 	rt_make_soft_real_time();
@@ -299,31 +299,5 @@ void *System::_rt_thread(void *arg)
 
 	return 0;
 }
-
-//void *System::_convolve_left_wrapper(void *arg)
-//{
-//	return reinterpret_cast<System *> (arg)->_convolve_left_thread(NULL);
-//}
-//
-//void *System::_convolve_left_thread(void *arg)
-//{
-//	if (_ve->new_BIR())
-//		_conv_l->set_filter_t(_bir.left);
-//
-//	return _conv_l->convolve_signal(_input.data());
-//}
-//
-//void *System::_convolve_right_wrapper(void *arg)
-//{
-//	return reinterpret_cast<System *> (arg)->_convolve_right_thread(NULL);
-//}
-//
-//void *System::_convolve_right_thread(void *arg)
-//{
-//	if (_ve->new_BIR())
-//		_conv_r->set_filter_t(_bir.right);
-//
-//	return _conv_r->convolve_signal(_input.data());
-//}
 
 }  // namespace avrs

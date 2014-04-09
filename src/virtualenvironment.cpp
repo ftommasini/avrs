@@ -87,6 +87,9 @@ VirtualEnvironment::VirtualEnvironment(configuration_t::ptr_t cs, TrackerBase::p
 	_delay.setMaximumDelay(BUFFER_SAMPLES);
 #endif
 
+	_delay_vs_l.setMaximumDelay(BUFFER_SAMPLES);
+	_delay_vs_l.setMaximumDelay(BUFFER_SAMPLES);
+
 	// initialize tracker
 	_mbx_tracker = rttools::get_mbx(MBX_TRACKER_NAME, MBX_TRACKER_BLOCK * sizeof(trackerdata_t));
 
@@ -96,7 +99,12 @@ VirtualEnvironment::VirtualEnvironment(configuration_t::ptr_t cs, TrackerBase::p
 		throw AvrsException("Error creating VirtualEnvironment");
 	}
 
+//	TimerRtai t;
+//	t.start();
 	_ism->calculate(false);
+//	t.stop();
+//	DPRINT("ISM - time %.3f", t.elapsed_time(millisecond));
+
 	_outputs.resize(_ism->get_count_visible_vs());  // output per visible VS
 }
 
@@ -168,7 +176,7 @@ void VirtualEnvironment::renderize()
 	memcpy(&_render_buffer.left[0], &_zeros[0], _config->bir_length_samples * sizeof(sample_t));
 	memcpy(&_render_buffer.right[0], &_zeros[0], _config->bir_length_samples * sizeof(sample_t));
 
-	// TODO SE PODRÍA MEJORAR SI SE GUARDAR EL ITERATOR EN CADA VS, ASI SE RECORRE SOLAMENTE LAS VISIBLES
+	// TODO GUARDAR EL ITERATOR EN CADA VS, ASI SE RECORRE SOLAMENTE LAS VISIBLES
 	for (Ism::tree_vs_t::iterator it = _ism->tree_vs.begin(); it != _ism->tree_vs.end(); it++)
 	{
 		VirtualSource::ptr_t vs = *it;
@@ -204,9 +212,31 @@ void VirtualEnvironment::renderize()
 		output = _hrtf_iir_filter(input, vs->orientation_ref_listener);
 #endif
 
+		// TODO delay menor a una muestra
+//		_delay_vs_l.clear();
+//		_delay_vs_r.clear();
+//		float delay = (vs->time_rel_ms * SAMPLE_RATE) / 1000.0f;
+//		DPRINT("delay %f", delay);
+//
+//		if (delay >= 0.5f)
+//		{
+//		_delay_vs_l.setDelay(delay);
+//		_delay_vs_r.setDelay(delay);
+//		unsigned long sample = (unsigned long) round(delay);
+//
+//		for (i = 0; i < _length_bir; i++)
+//		{
+//			_render_buffer.left[i] += _delay_vs_l.tick(output.left[i]);
+//			_render_buffer.right[i] += _delay_vs_r.tick(output.right[i]);
+//		}
+//		}
+//		else
+//		{
+//			//
+//		}
+
 //		t.start();
 		// calculate the sample from reflectogram where starts this reflection
-		// TODO delay menor a una muestra
 		unsigned long sample = (unsigned long) round((vs->time_rel_ms * SAMPLE_RATE) / 1000.0f);
 
 		// add filter reflection to reflectogram

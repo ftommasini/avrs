@@ -57,7 +57,7 @@ public:
 private:
 	Player(float gain_factor);
 
-	bool _init();
+	void _init();
 
 	bool _running;
 	float _gain_factor;

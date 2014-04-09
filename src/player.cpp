@@ -40,6 +40,8 @@ Player::Player(float gain_factor)
 	_muted = false;
 	_running = false;
 	_count_empty = 0;
+
+	_init();
 }
 
 Player::~Player()
@@ -50,17 +52,10 @@ Player::~Player()
 Player::ptr_t Player::create(float gain_factor)
 {
 	ptr_t p_tmp(new Player(gain_factor));
-
-	if (!p_tmp->_init())
-	{
-		p_tmp.reset(); // NULL-like pointer
-		throw AvrsException("Error creating Player");
-	}
-
 	return p_tmp;
 }
 
-bool Player::_init()
+void Player::_init()
 {
 	// Setup the RtAudio stream.
 	RtAudio::StreamParameters parameters;
@@ -78,11 +73,9 @@ bool Player::_init()
 	}
 	catch (RtError &ex)
 	{
-		DPRINT("%s", ex.what());
-		return false;
+		ERROR("%s", ex.what());
+		throw AvrsException("Error creating Player");
 	}
-
-	return true;
 }
 
 bool Player::start()
@@ -104,7 +97,7 @@ bool Player::start()
 	}
 	catch (RtError &ex)
 	{
-		DPRINT("%s", ex.what());
+		ERROR("%s", ex.what());
 		close(_fifo_id);
 		return false;
 	}
@@ -126,17 +119,18 @@ bool Player::stop()
 	try
 	{
 		_audio_dev.stopStream();
-		_audio_dev.closeStream();
+		// FIXME error in pthread for 64-bit systems
+//		_audio_dev.closeStream();
 	}
 	catch (RtError &ex)
 	{
-		DPRINT("%s", ex.what());
+		ERROR("%s", ex.what());
 		close(_fifo_id);
 		return false;
 	}
 	catch (...)
 	{
-		DPRINT("Rare error...");
+		ERROR("Rare error...");
 	}
 
 	return true;
@@ -160,7 +154,6 @@ int Player::callback(void *output_buffer, void *input_buffer,
 	else
 	{
 		player->_count_empty++; // count empty readings
-		//DPRINT("empty reading %d", op->_count_empty);
 	}
 
 	return 0; // 1 for stop
