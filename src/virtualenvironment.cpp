@@ -33,20 +33,28 @@ VirtualEnvironment::VirtualEnvironment(configuration_t::ptr_t cs, TrackerBase::p
 {
 	assert(cs.get() != NULL);
 	_config = cs;
+
+	// Tracker
 	_tracker = tracker;
+	// inexistent orientations
+	_prev_tracker_data.ori.az = -500.0f;
+	_prev_tracker_data.ori.el = -500.0f;
+	// initialize tracker
+	_mbx_tracker = rttools::get_mbx(MBX_TRACKER_NAME, MBX_TRACKER_BLOCK * sizeof(trackerdata_t));
+
+	if (!_mbx_tracker)
+	{
+		ERROR("Cannot init TRACKER mailbox");
+		throw AvrsException("Error creating VirtualEnvironment");
+	}
+
+	// Sound source
 	_sound_source = cs->sound_source;
 	assert(_sound_source.get() != NULL);
+
+	// Listener
 	_listener = cs->listener;
 	assert(_listener.get() != NULL);
-
-	_new_bir = false;
-
-	// Room
-	_room = boost::make_shared<Room>(cs);
-	_room->load_dxf();
-
-	// ISM
-	_ism = boost::make_shared<Ism>(cs, _room);
 
 	// FDN
 	const unsigned int N = 8;
@@ -59,19 +67,16 @@ VirtualEnvironment::VirtualEnvironment(configuration_t::ptr_t cs, TrackerBase::p
 	double t60_pi = 1.1527; // reverberation time at half the sampling rate
 	_fdn = Fdn::create(N, gA, b, c, d, m, t60_DC, t60_pi);
 
-	// inexistent orientations
-	_prev_tracker_data.ori.az = -500.0f;
-	_prev_tracker_data.ori.el = -500.0f;
-
+	// BIR length
 	_length_bir = _config->bir_length_samples;
-
 	// resize data vectors
 	_render_buffer.left.resize(_length_bir, 0.0f);
 	_render_buffer.right.resize(_length_bir, 0.0f);
 	_zeros.resize(_length_bir, 0.0f);
 	_late_buffer.resize(_length_bir, 0.0f);
+	_new_bir = false;
 
-	// create and load HRTF DB into program
+	// create and load HRTF DB
 #ifndef HRTF_IIR
 	_hrtfdb = HrtfSet::create(_config->hrtf_file);
 	// for left ear
@@ -87,17 +92,15 @@ VirtualEnvironment::VirtualEnvironment(configuration_t::ptr_t cs, TrackerBase::p
 	_delay.setMaximumDelay(BUFFER_SAMPLES);
 #endif
 
-	_delay_vs_l.setMaximumDelay(BUFFER_SAMPLES);
-	_delay_vs_l.setMaximumDelay(BUFFER_SAMPLES);
+//	_delay_vs_l.setMaximumDelay(BUFFER_SAMPLES);
+//	_delay_vs_l.setMaximumDelay(BUFFER_SAMPLES);
 
-	// initialize tracker
-	_mbx_tracker = rttools::get_mbx(MBX_TRACKER_NAME, MBX_TRACKER_BLOCK * sizeof(trackerdata_t));
+	// Room
+	_room = boost::make_shared<Room>(cs);
+	_room->load_dxf();
 
-	if (!_mbx_tracker)
-	{
-		ERROR("Cannot init TRACKER mailbox");
-		throw AvrsException("Error creating VirtualEnvironment");
-	}
+	// ISM
+	_ism = boost::make_shared<Ism>(cs, _room);
 
 //	TimerRtai t;
 //	t.start();

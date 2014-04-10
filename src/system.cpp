@@ -249,7 +249,7 @@ void *System::_rt_thread(void *arg)
 		// update the BIR in the real-time convolver
 		t_conv.start();
 
-		if (_ve->new_BIR())
+		if (_ve->is_new_BIR())
 		{
 			_conv_l->set_filter_t(_bir.left);
 			_conv_r->set_filter_t(_bir.right);
@@ -275,7 +275,7 @@ void *System::_rt_thread(void *arg)
 
 		t_loop.stop();
 
-		if (_ve->new_BIR())
+		if (_ve->is_new_BIR())
 		{
 		DPRINT("Render: %6.3f - RT Convolution: %6.3f - Loop: %6.3f - Tick: %6.3f ms",
 				t_render.elapsed_time(millisecond),
