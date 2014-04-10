@@ -87,7 +87,7 @@ bool Player::start()
 
 	if (_fifo_id < 0)
 	{
-		DPRINT("Error opening %s", RTF_OUT_DEV);
+		ERROR("Error opening %s", RTF_OUT_DEV);
 		return false;
 	}
 
@@ -113,7 +113,6 @@ bool Player::stop()
 		return false; // already is not running
 
 	_running = false;
-
 	close(_fifo_id);
 
 	try
@@ -126,12 +125,7 @@ bool Player::stop()
 	catch (RtError &ex)
 	{
 		ERROR("%s", ex.what());
-		close(_fifo_id);
 		return false;
-	}
-	catch (...)
-	{
-		ERROR("Rare error...");
 	}
 
 	return true;
@@ -158,6 +152,25 @@ int Player::callback(void *output_buffer, void *input_buffer,
 	}
 
 	return 0; // 1 for stop
+}
+
+void Player::mute()
+{
+	if (!_muted)
+	{
+		_gain_factor_tmp = _gain_factor;
+		_gain_factor = 0.0f;
+		_muted = true;
+	}
+}
+
+void Player::unmute()
+{
+	if (_muted)
+	{
+		_gain_factor = _gain_factor_tmp;
+		_muted = false;
+	}
 }
 
 }  // namespace avrs

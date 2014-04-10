@@ -84,23 +84,6 @@ inline float Player::get_gain_factor() const
 	return _gain_factor;
 }
 
-inline void Player::mute()
-{
-	if (!_muted) {
-		_gain_factor_tmp = _gain_factor;
-		_gain_factor = 0.0f;
-		_muted = true;
-	}
-}
-
-inline void Player::unmute()
-{
-	if (_muted) {
-		_gain_factor = _gain_factor_tmp;
-		_muted = false;
-	}
-}
-
 inline bool Player::is_running()
 {
 	return _running;
