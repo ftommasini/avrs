@@ -270,8 +270,7 @@ void *System::_rt_thread(void *arg)
 
 		if (val != n_bytes)
 		{
-			DPRINT("ERROR sending through RT-FIFO, %d bytes instead of %d bytes", val, n_bytes * 2);
-			//rtf_reset(RTF_OUT_NUM);
+			ERROR("Error sending through RT-FIFO, %d bytes instead of %d bytes", val, n_bytes * 2);
 		}
 
 		t_loop.stop();

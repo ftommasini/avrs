@@ -119,8 +119,9 @@ bool Player::stop()
 	try
 	{
 		_audio_dev.stopStream();
-		// FIXME error in pthread for 64-bit systems
-//		_audio_dev.closeStream();
+		// TODO bug in RtAudio for 64-bit systems
+		//_audio_dev.closeStream();
+
 	}
 	catch (RtError &ex)
 	{

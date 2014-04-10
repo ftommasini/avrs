@@ -505,7 +505,8 @@ void VirtualEnvironment::calc_late_reverberation()
 
 	double val;
 	unsigned long i;
-	double max_value = 0.0f, abs_value;
+	double max_value = 0.0;
+	double abs_value;
 
 	for (i = 0; i < _length_bir; i++)
 	{
@@ -527,6 +528,7 @@ void VirtualEnvironment::calc_late_reverberation()
 		output[i] /= (max_value * scaling_factor);  // scaling (normalize and 1/r attenuation)
 	}
 
+	// mixing time (converted to sample)
 	unsigned long sample_mix = (unsigned long) ((_config->max_distance / _config->speed_of_sound) * SAMPLE_RATE);
 	double k = sample_mix / -log(0.01);
 
