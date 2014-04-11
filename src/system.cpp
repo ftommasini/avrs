@@ -181,7 +181,7 @@ void *System::_rt_thread(void *arg)
 	RTIME start_time;
 	int *retval = NULL;
 	// time measurements
-	TimerRtai t_loop, t_render, t_conv;
+//	TimerRtai t_loop, t_render, t_conv;
 	// other variables
 	int val;
 	unsigned int i;
@@ -228,7 +228,7 @@ void *System::_rt_thread(void *arg)
 
 	while (!g_end_system)
 	{
-		t_loop.start();
+//		t_loop.start();
 
 		// get input (anechoic signal)
 		for (i = 0; i < BUFFER_SAMPLES; i++)
@@ -239,15 +239,15 @@ void *System::_rt_thread(void *arg)
 			end_system(-1);
 
 		// renderize BIR
-		t_render.start();
+//		t_render.start();
 		_ve->renderize();
-		t_render.stop();
+//		t_render.stop();
 
 		// get the new BIR
 		_bir = _ve->get_BIR();
 
 		// update the BIR in the real-time convolver
-		t_conv.start();
+//		t_conv.start();
 
 		if (_ve->is_new_BIR())
 		{
@@ -259,7 +259,7 @@ void *System::_rt_thread(void *arg)
 		output_l = _conv_l->convolve_signal(_input.data());
 		output_r = _conv_r->convolve_signal(_input.data());
 
-		t_conv.stop();
+//		t_conv.stop();
 
 		// preparing output for RT-FIFO
 		memcpy(output_player, output_l, BUFFER_SAMPLES * sizeof(sample_t));
@@ -273,25 +273,23 @@ void *System::_rt_thread(void *arg)
 			ERROR("Error sending through RT-FIFO, %d bytes instead of %d bytes", val, n_bytes * 2);
 		}
 
-		t_loop.stop();
+//		t_loop.stop();
 
-		if (_ve->is_new_BIR())
-		{
-		DPRINT("Render: %6.3f - RT Convolution: %6.3f - Loop: %6.3f - Tick: %6.3f ms",
-				t_render.elapsed_time(millisecond),
-				t_conv.elapsed_time(millisecond),
-				t_loop.elapsed_time(millisecond),
-				TICK_TIME / 1.0e+6f);
-		}
+//		if (_ve->is_new_BIR())
+//		{
+//		DPRINT("Render: %6.3f - RT Convolution: %6.3f - Loop: %6.3f - Tick: %6.3f ms",
+//				t_render.elapsed_time(millisecond),
+//				t_conv.elapsed_time(millisecond),
+//				t_loop.elapsed_time(millisecond),
+//				TICK_TIME / 1.0e+6f);
+//		}
 
 		rt_task_wait_period();
 	}
 
 	free(output_player);
-
 	_out->stop(); // stop the output
 	_ve->stop_simulation();
-
 	rt_make_soft_real_time();
 	rt_task_delete(sys_task);
 	rtf_destroy(RTF_OUT_NUM);
