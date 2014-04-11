@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011-2013 Fabián C. Tommasini <fabian@tommasini.com.ar>
+ * Copyright (C) 2011-2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -143,6 +143,12 @@ void ConfigurationManager::load_configuration(const std::string filename)
 
 	if (!load_surface_filters(_conf->filter_surf_file))
 		throw AvrsException("Error loading surface filters");
+
+	if (!cfr.readInto(_conf->rt60_0, "ROOM_RT60_0"))
+		throw AvrsException("Error loading reverberation time at DC");
+
+	if (!cfr.readInto(_conf->rt60_pi, "ROOM_RT60_PI"))
+		throw AvrsException("Error loading reverberation time at PI");
 
 	// ISM parameters
 	if (!cfr.readInto(_conf->max_distance, "ISM_MAX_DISTANCE"))

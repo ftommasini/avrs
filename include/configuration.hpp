@@ -36,7 +36,6 @@ namespace avrs
 typedef struct Configuration
 {
 	typedef boost::shared_ptr<Configuration> ptr_t;
-	//typedef Configuration* ptr_t;
 
 	// General
 	std::string name;
@@ -51,6 +50,8 @@ typedef struct Configuration
 	float volume;
 	unsigned int n_surfaces;
 	std::string filter_surf_file;
+	double rt60_0;
+	double rt60_pi;
 
 	// ISM parameters
 	float max_distance;
@@ -90,7 +91,6 @@ public:
 	void show_configuration();
 
 private:
-	//configuration_ptr _conf;
 	configuration_t::ptr_t _conf;
 	std::string _filename;
 	std::string _path;

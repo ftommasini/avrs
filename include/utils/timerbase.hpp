@@ -19,6 +19,10 @@
 #ifndef TIMERBASE_HPP_
 #define TIMERBASE_HPP_
 
+#include <string>
+#include <iostream>
+#include <boost/format.hpp>
+
 namespace avrs
 {
 
@@ -33,14 +37,21 @@ typedef enum
 class TimerBase
 {
 public:
+	virtual ~TimerBase() { ; }
 	virtual void start() = 0;
 	virtual void stop() = 0;
 	virtual double elapsed_time(timer_unit_t u) = 0;
-	virtual void print_elapsed_time() = 0;
+	virtual void print_elapsed_time(timer_unit_t u, std::string header = "");
+	virtual void print_elapsed_time(std::string header = "");
 
 protected:
 	double _diff;
+
+private:
+	std::string _get_unit(timer_unit_t u);
 };
+
+
 
 }  // namespace avrs
 

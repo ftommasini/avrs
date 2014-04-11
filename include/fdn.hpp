@@ -16,33 +16,37 @@
  *
  */
 
-/* Based on ...
- STK order 4 single input, single output feedback
- delay network, with each delay line cascaded by
- a one-pole lowpass filter. There is also a tone
- correction filter.
-
- This private class implements an order 4 SISO FDN
- with B = [1,1,1,1]^T, C = [1,1,1,1]^T, and feedback
- matrix A = A_4, where A_N = gA*(I_N - (2/N)*u_N*(u_N)^T).
- (I_N denotes the N by N identity matrix, and
- u_N = [1,...,1]^T, an N-vector of ones.) Each delay is
- cascaded by a lowpass filter according to the
- difference equation:
- y_i(n) = g_i(1-a_i)*x_i(n) + a_i*y_i(n-1)
- where the subscript i = {1,2,3,4} denotes each of the
- 4 delay lines. A tone correction filter is applied
- to the FDN output and summed with the input sample
- to produce the final system output.
-
- You set the reverberation time at DC and at half the
- sampling rate, the gain coefficient gA of the A matrix,
- and the delay line lengths of each of the 4 delay lines
- during instantiation. The default constructor sets up a
- 0-sample length for each delay line with gA = 0.0, g_i = 1.0,
- and a_i = 0.0 for all i and no tone correction (resulting in
- no delay, feedback, or filtering).
-*/
+/*
+ * Based on JotReverb of "REALSIMPLE Lab on Reverberation"
+ * by Julius O. Smith III and Nelson Lee
+ * see: https://ccrma.stanford.edu/realsimple/reverb/JotReverb_STK.html
+ *
+ * 8-line, single input, single output feedback delay network,
+ * with each delay line cascaded by a one-pole lowpass filter.
+ * There is also a tone correction filter.
+ *
+ * This class implements an order 8 SISO FDN with
+ * b = [1,1,1,1,1,1,1,1]^T, c = [1,1,1,1,1,1,1,1]^T,
+ * and feedback matrix A = A_8,
+ * where A_N = gA*(I_N - (2/N)*u_N*(u_N)^T).
+ * (I_N denotes the N by N identity matrix, and
+ * u_N = [1,...,1]^T, an N-vector of ones.) Each delay is
+ * cascaded by a lowpass filter according to the
+ * difference equation:
+ * y_i(n) = g_i(1-a_i)*x_i(n) + a_i*y_i(n-1)
+ * where the subscript i = {1,2,3,4,5,6,7,8} denotes each of the
+ * 8 delay lines. A tone correction filter is applied
+ * to the FDN output and summed with the input sample
+ * to produce the final system output.
+ *
+ * You set the reverberation time at DC and at half the
+ * sampling rate, the gain coefficient gA of the A matrix,
+ * and the delay line lengths of each of the 4 delay lines
+ * during instantiation. The default constructor sets up a
+ * 0-sample length for each delay line with gA = 0.0, g_i = 1.0,
+ * and a_i = 0.0 for all i and no tone correction (resulting in
+ * no delay, feedback, or filtering).
+ */
 
 
 #ifndef _FDN_HPP_
@@ -109,10 +113,10 @@ private:
 //	mat _a_coeff;
 
 	std::vector<unsigned long> _m; // length of delay lines
-	std::vector<Delay *> _delayline; // array of pointers to delay line objects
+	std::vector< boost::shared_ptr<Delay> > _delayline; // array of pointers to delay line objects
 	//std::vector<Iir *> _filter; // array of pointers to filter objects
-	std::vector<OnePole *> _lp_filter;  // array of pointers to low-pass filter objects
-	OneZero *_tc; // pointer to tone correction filter
+	std::vector< boost::shared_ptr<OnePole> > _lp_filter;  // array of pointers to low-pass filter objects
+	boost::shared_ptr<OneZero> _tc; // pointer to tone correction filter
 };
 
 }  // namespace avrs
