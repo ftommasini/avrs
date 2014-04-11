@@ -65,6 +65,48 @@ void Ism::calculate(bool discard_nodes)
 	_propagate(vs, root_tree_vs, 1, discard_nodes);
 }
 
+// check only audibility
+//void Ism::update_vs_audibility()
+//{
+//	// tree pre-order traversal
+//	for (tree_it_t i = _tree.begin(); i != _tree.end(); i++)
+//	{
+//		virtualsource_t *vs = (virtualsource_t *) *i;
+//
+//		// first visibility test
+//		vs->vis_test_1 = _check_vis_1(vs);  // update the visibility 1
+//
+//		// second visibility test
+//		// order greater than 1, and must be passed first visibility test
+//		if (vs->order > 1 && vs->vis_test_1)
+//		{
+//			vs->vis_test_2 = _check_vis_2(vs, i, vs->order);  // update the visibility 2
+//			vs->visible = (vs->vis_test_1 && vs->vis_test_2);  // both test must be passed
+//		}
+//		else
+//		{
+//			vs->visible = vs->vis_test_1;
+//		}
+//	}
+//}
+
+//void Ism::_update_vis()
+//{
+//	_vis.clear();  // clear vector
+//
+//	for (tree_it_t it = _tree.begin(); it != _tree.end(); it++)
+//	{
+//		virtualsource_t *vs = *it;
+//
+//		if (vs->visible)
+//			_vis.push_back(vs);
+//	}
+//
+//	_outputs.resize(_vis.size());  // output per visible VS
+//
+//	//DPRINT("Total VSs: %d - Visibles VSs: %d", (int) _tree.size(_root_it), (int) _vis.size());
+//}
+
 void Ism::update_vs_orientations(const orientation_angles_t &listener_orientation)
 {
 	// only for visible VSs

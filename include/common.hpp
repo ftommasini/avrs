@@ -57,7 +57,7 @@ typedef struct Position
 {
 	float x;	///< X position (in cm)
 	float y;	///< Y position (in cm)
-	float z;	///z Z position (in cm)
+	float z;	///< Z position (in cm)
 
 	Position()
 	{
@@ -205,7 +205,6 @@ static const short int VS_SAMPLES = 256;
 
 
 #define HRTF_IIR
-//#define RTCONV_THREADS
 //#define VSFILTER_THREADS
 
 }  // namespace

@@ -40,6 +40,8 @@ Player::Player(float gain_factor)
 	_muted = false;
 	_running = false;
 	_count_empty = 0;
+
+	_init();
 }
 
 Player::~Player()
@@ -50,24 +52,16 @@ Player::~Player()
 Player::ptr_t Player::create(float gain_factor)
 {
 	ptr_t p_tmp(new Player(gain_factor));
-
-	if (!p_tmp->_init())
-	{
-		p_tmp.reset(); // NULL-like pointer
-		throw AvrsException("Error creating Player");
-	}
-
 	return p_tmp;
 }
 
-bool Player::_init()
+void Player::_init()
 {
 	// Setup the RtAudio stream.
 	RtAudio::StreamParameters parameters;
 	parameters.deviceId = _audio_dev.getDefaultOutputDevice();
 	parameters.nChannels = N_CHANNELS; // TODO global constant?
-	RtAudioFormat format = (sizeof(sample_t) == 8) ? RTAUDIO_FLOAT64
-			: RTAUDIO_FLOAT32;
+	RtAudioFormat format = (sizeof(sample_t) == 8) ? RTAUDIO_FLOAT64 : RTAUDIO_FLOAT32;
 	RtAudio::StreamOptions options;
 	options.flags = RTAUDIO_MINIMIZE_LATENCY | RTAUDIO_NONINTERLEAVED;
 	uint buffer_frames = BUFFER_SAMPLES; // TODO global constant?
@@ -79,11 +73,9 @@ bool Player::_init()
 	}
 	catch (RtError &ex)
 	{
-		DPRINT("%s", ex.what());
-		return false;
+		ERROR("%s", ex.what());
+		throw AvrsException("Error creating Player");
 	}
-
-	return true;
 }
 
 bool Player::start()
@@ -95,7 +87,7 @@ bool Player::start()
 
 	if (_fifo_id < 0)
 	{
-		DPRINT("Error opening %s", RTF_OUT_DEV);
+		ERROR("Error opening %s", RTF_OUT_DEV);
 		return false;
 	}
 
@@ -105,7 +97,7 @@ bool Player::start()
 	}
 	catch (RtError &ex)
 	{
-		DPRINT("%s", ex.what());
+		ERROR("%s", ex.what());
 		close(_fifo_id);
 		return false;
 	}
@@ -121,23 +113,19 @@ bool Player::stop()
 		return false; // already is not running
 
 	_running = false;
-
 	close(_fifo_id);
 
 	try
 	{
 		_audio_dev.stopStream();
-		_audio_dev.closeStream();
+		// TODO bug in RtAudio for 64-bit systems
+		//_audio_dev.closeStream();
+
 	}
 	catch (RtError &ex)
 	{
-		DPRINT("%s", ex.what());
-		close(_fifo_id);
+		ERROR("%s", ex.what());
 		return false;
-	}
-	catch (...)
-	{
-		DPRINT("Rare error...");
 	}
 
 	return true;
@@ -161,10 +149,28 @@ int Player::callback(void *output_buffer, void *input_buffer,
 	else
 	{
 		player->_count_empty++; // count empty readings
-		//DPRINT("empty reading %d", op->_count_empty);
 	}
 
 	return 0; // 1 for stop
+}
+
+void Player::mute()
+{
+	if (!_muted)
+	{
+		_gain_factor_tmp = _gain_factor;
+		_gain_factor = 0.0f;
+		_muted = true;
+	}
+}
+
+void Player::unmute()
+{
+	if (_muted)
+	{
+		_gain_factor = _gain_factor_tmp;
+		_muted = false;
+	}
 }
 
 }  // namespace avrs

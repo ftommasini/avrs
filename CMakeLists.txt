@@ -5,13 +5,14 @@ project(avrs)
 
 # The version number
 set(VERSION_MAJOR 0)
-set(VERSION_MINOR 2)
-set(VERSION_PATCH 6)
+set(VERSION_MINOR 3)
+set(VERSION_PATCH 0)
 
 # Configuration options
-set(WIIMOTE_SUPPORT OFF CACHE BOOL "Build avrs with wiimote-based tracker library")
+set(WIIMOTE_SUPPORT OFF CACHE BOOL 
+    "Build avrs with wiimote-based tracker library")
 
-if (VERSION_PATCH MATCHES "0")
+if(VERSION_PATCH MATCHES "0")
 	set(VERSION_NUMBER "${VERSION_MAJOR}.${VERSION_MINOR}")
 else()
 	set(VERSION_NUMBER "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
@@ -123,16 +124,32 @@ endif()
 # OpenMP
 find_package(OpenMP)
 
+# Build type
+if(NOT CMAKE_BUILD_TYPE)  # Debug by default
+    set(CMAKE_BUILD_TYPE Debug CACHE STRING
+        "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel"
+        FORCE)
+endif()
+
+message(STATUS "Build type ${CMAKE_BUILD_TYPE}")
+
+# Set flags for Debug (overwrite flags)
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O2 -pipe")  
+set(CMAKE_C_FLAGS_DEBUG "-g -O2 -pipe")
+
+# Set flags for Release (overwrite flags)
+set(CMAKE_CXX_FLAGS_RELEASE "-O2 -pipe -DNDEBUG")  
+set(CMAKE_C_FLAGS_RELEASE "-O2 -pipe -DNDEBUG")
+
+# Set flags on C++ compiler (append flags)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -D__LINUX_ALSA__ -D__LITTLE_ENDIAN__ -D_REENTRANT")
+
 if(OPENMP_FOUND)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
 
-# Set flags on C++ compiler
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -pipe")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__LINUX_ALSA__ -D__LITTLE_ENDIAN__ -D_REENTRANT")
-
-# Set flags on C compiler
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -pipe -Werror")
+# Set flags on C compiler (append flags)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror")
 
 include_directories(
 	include

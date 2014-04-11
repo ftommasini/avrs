@@ -71,20 +71,19 @@ private:
 	void _init();
 
 	volatile bool _is_running;
-
 	RTIME _sampling_interval;
-
-	// one for now, maybe more in the future
-	VirtualEnvironment::ptr_t _ve;
 
 	ConfigurationManager _config_manager;
 	configuration_t::ptr_t _config_sim;
+
+	VirtualEnvironment::ptr_t _ve;
 
 	InputWaveLoop::ptr_t _in;
 	Player::ptr_t _out;
 
 	data_t _input;
 	binauraldata_t _bir;
+
 	Convolver::ptr_t _conv_l;
 	Convolver::ptr_t _conv_r;
 
@@ -98,12 +97,6 @@ private:
 	 * @param arg
 	 */
     void *_rt_thread(void *arg);
-
-    // threads for real-time convolution
-    static void *_convolve_left_wrapper(void *arg);
-    void *_convolve_left_thread(void *arg);
-    static void *_convolve_right_wrapper(void *arg);
-    void *_convolve_right_thread(void *arg);
 };
 
 }  // namespace avrs

@@ -89,7 +89,7 @@ private:
 	Fdn(unsigned int N, double gain_A, const double *b, const double *c,
 			double d, const long *m, double RTatDC, double RTatPI);
 
-	bool _init();
+	void _init();
 	void _stabilize(long n_ticks);
 
 	unsigned int _N;

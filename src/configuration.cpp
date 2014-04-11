@@ -177,8 +177,6 @@ void ConfigurationManager::load_configuration(const std::string filename)
 		_conf->sound_source->pos.at(coord++) = (float) atof(t1.get_token().c_str());
 	}
 
-	// orientation of sound source is discarded
-
 	// Listener
 	_conf->listener = Listener::create();
 	assert(_conf->listener.get() != NULL);
@@ -197,6 +195,8 @@ void ConfigurationManager::load_configuration(const std::string filename)
 	}
 
 	_conf->listener->set_position_reference(pos);
+
+	// orientation of sound source is discarded
 
 //	if (!cfr.readInto(tmp, "LISTENER_ORIENTATION"))
 //		throw AvrsException("Error in configuration file: LISTENER_ORIENTATION is missing");

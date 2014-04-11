@@ -50,6 +50,8 @@ Fdn::Fdn(unsigned int N, double gain_A, const double *b, const double *c,
 
 //	_b_coeff.load("data/filters_num.txt", raw_ascii);
 //	_a_coeff.load("data/filters_den.txt", raw_ascii);
+
+	_init();
 }
 
 Fdn::~Fdn()
@@ -68,22 +70,16 @@ Fdn::ptr_t Fdn::create(unsigned int N, double gain_A, const double *b,
 		const double *c, double d, const long *m, double RTatDC, double RTatPI)
 {
 	ptr_t p_tmp(new Fdn(N, gain_A, b, c, d, m, RTatDC, RTatPI));
-
-	if (!p_tmp->_init())
-	{
-		p_tmp.reset();
-		throw AvrsException("Error creating FDN");
-	}
-
 	return p_tmp;
 }
 
-bool Fdn::_init()
+void Fdn::_init()
 {
 	// Setup filters
 
 	// Tone control filter
 	_tc = new OneZero();
+	// hard-coded values
 	_tc->setB0(1.2462);
 	_tc->setB1(-0.2462);
 
@@ -93,13 +89,9 @@ bool Fdn::_init()
 	T = 1.0 / (Stk::sampleRate());
 
 	if (_t60_0 == 0.0)
-	{
 		alpha = 1.0; // to prevent dividing by 0
-	}
 	else
-	{
 		alpha = _t60_pi / _t60_0;
-	}
 
 	double tmp_val = (log(10) / 4) * (1 - (1 / (alpha * alpha)));
 	std::vector<StkFloat> g(_N);
@@ -149,8 +141,6 @@ bool Fdn::_init()
 	// eliminate the first part of the output
 	long n_ticks = _m[_N - 1] * 2;
 	_stabilize(n_ticks);
-
-	return true;
 }
 
 void Fdn::clear(void)
@@ -175,7 +165,7 @@ StkFloat Fdn::tick(StkFloat sample)
 	for (unsigned int i = 0; i < _N; i++)
 	{
 		_s_delayed[i] = _delayline[i]->tick(_s[i]);
-		//_s_filtered[i] = _s_delayed[i];  // wihtout attenuation
+		//_s_filtered[i] = _s_delayed[i];  // without attenuation
 
 		_s_filtered[i] = _lp_filter[i]->tick(_s_delayed[i]);
 		//_s_filtered[i] = _filter[i]->tick(_s_delayed[i]);

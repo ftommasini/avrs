@@ -29,6 +29,7 @@
 #include <stk/Iir.h>
 #include <stk/Fir.h>
 #include <stk/Delay.h>
+#include <stk/DelayA.h>
 #include <boost/shared_ptr.hpp>
 
 extern "C" {
@@ -95,7 +96,7 @@ public:
 	 * @return the current BIR
 	 */
 	binauraldata_t &get_BIR();
-	bool new_BIR() const;
+	bool is_new_BIR() const;
 
 private:
 	VirtualEnvironment(configuration_t::ptr_t cs, TrackerBase::ptr_t tracker);
@@ -108,6 +109,8 @@ private:
 	unsigned long _length_bir;
 	data_t _zeros;
 	bool _new_bir;
+//	stk::DelayA _delay_vs_l;
+//	stk::DelayA _delay_vs_r;
 
 	// Tracker
 	TrackerBase::ptr_t _tracker;
@@ -121,29 +124,27 @@ private:
 	SoundSource::ptr_t _sound_source;
 	// Listener
 	Listener::ptr_t _listener;
-
-	// ISM
+	// Early reflections
 	Ism::ptr_t _ism;
-
 	// Late reverberation
 	Fdn::ptr_t _fdn;
 	data_t _late_buffer;
 
 	// renderer
-//#ifndef HRTF_IIR
-//	HrtfSet::ptr_t _hrtfdb;
-//	hrtf_t _hrtf;
-//	HrtfConvolver::ptr_t _hrtf_conv_l;
-//	HrtfConvolver::ptr_t _hrtf_conv_r;
-//	stk::Fir _fir_l;
-//	stk::Fir _fir_r;
-//#else
+#ifndef HRTF_IIR
+	HrtfSet::ptr_t _hrtfdb;
+	hrtf_t _hrtf;
+	HrtfConvolver::ptr_t _hrtf_conv_l;
+	HrtfConvolver::ptr_t _hrtf_conv_r;
+	stk::Fir _fir_l;
+	stk::Fir _fir_r;
+#else
 	HrtfCoeffSet::ptr_t _hcdb;
 	hrtfcoeff_t _hc;
 	stk::Iir _filter_l;
 	stk::Iir _filter_r;
 	stk::Delay _delay;
-//#endif
+#endif
 
 	stk::Iir _filter_surfaces;
 
@@ -194,7 +195,7 @@ inline binauraldata_t &VirtualEnvironment::get_BIR()
 	return _render_buffer;
 }
 
-inline bool VirtualEnvironment::new_BIR() const
+inline bool VirtualEnvironment::is_new_BIR() const
 {
 	return _new_bir;
 }
