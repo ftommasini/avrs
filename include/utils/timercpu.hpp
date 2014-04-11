@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef TIMER_HPP_
-#define TIMER_HPP_
+#ifndef TIMERCPU_HPP_
+#define TIMERCPU_HPP_
 
 #if defined(_WIN32)
 #include <Windows.h>
@@ -37,13 +37,12 @@
 namespace avrs
 {
 
-class TimerCpu : TimerBase
+class TimerCpu : public TimerBase
 {
 public:
 	virtual void start();
 	virtual void stop();
 	virtual double elapsed_time(timer_unit_t u);
-	virtual void print_elapsed_time();
 
 private:
 	double _t0;

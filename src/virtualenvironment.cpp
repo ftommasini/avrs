@@ -100,11 +100,11 @@ VirtualEnvironment::VirtualEnvironment(configuration_t::ptr_t cs, TrackerBase::p
 	// ISM
 	_ism = boost::make_shared<Ism>(cs, _room);
 
-//	TimerRtai t;
-//	t.start();
+	TimerRtai t;
+	t.start();
 	_ism->calculate(false);
-//	t.stop();
-//	DPRINT("ISM - time %.3f", t.elapsed_time(millisecond));
+	t.stop();
+	t.print_elapsed_time(millisecond, "ISM");
 
 	_outputs.resize(_ism->get_count_visible_vs());  // output per visible VS
 }

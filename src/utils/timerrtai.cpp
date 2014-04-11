@@ -16,9 +16,6 @@
  *
  */
 
-#include <iostream>
-#include <boost/format.hpp>
-
 #include "utils/timerrtai.hpp"
 
 namespace avrs
@@ -54,16 +51,6 @@ double TimerRtai::elapsed_time(timer_unit_t u)
 	default:
 		return -1.0;
 	}
-}
-
-void TimerRtai::print_elapsed_time()
-{
-	 boost::format fmter("Time [s]:\t%.9f\nTime [ms]:\t%.6f\nTime [us]:\t%.3f\nTime [ns]:\t%.0f\n");
-	 std::cout << boost::format(fmter)
-	    		% (_diff / 1E9)
-	    		% (_diff / 1E6)
-	    		% (_diff / 1E3)
-	    		% _diff;
 }
 
 }  // namespace avrs
