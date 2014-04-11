@@ -26,13 +26,12 @@
 namespace avrs
 {
 
-class TimerRtai : TimerBase
+class TimerRtai : public TimerBase
 {
 public:
 	virtual void start();
 	virtual void stop();
 	virtual double elapsed_time(timer_unit_t u);
-	virtual void print_elapsed_time();
 
 private:
 	RTIME _t0;

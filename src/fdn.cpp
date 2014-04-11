@@ -16,8 +16,9 @@
  *
  */
 
-#include <cmath> // for basic math functions
+#include <cmath>
 #include <stk/Stk.h>
+#include <boost/make_shared.hpp>
 
 #include "avrsexception.hpp"
 #include "fdn.hpp"
@@ -56,14 +57,14 @@ Fdn::Fdn(unsigned int N, double gain_A, const double *b, const double *c,
 
 Fdn::~Fdn()
 {
-	for (unsigned int i = 0; i < _N; i++)
-	{
-		delete _delayline[i];
-		delete _lp_filter[i];
-//		delete _filter[i];
-	}
-
-	delete _tc;
+//	for (unsigned int i = 0; i < _N; i++)
+//	{
+//		delete _delayline[i];
+//		delete _lp_filter[i];
+////		delete _filter[i];
+//	}
+//
+//	delete _tc;
 }
 
 Fdn::ptr_t Fdn::create(unsigned int N, double gain_A, const double *b,
@@ -78,7 +79,7 @@ void Fdn::_init()
 	// Setup filters
 
 	// Tone control filter
-	_tc = new OneZero();
+	_tc = boost::make_shared<OneZero>();
 	// hard-coded values
 	_tc->setB0(1.2462);
 	_tc->setB1(-0.2462);
@@ -100,12 +101,12 @@ void Fdn::_init()
 	// Absorption filters
 	for (unsigned int i = 0; i < _N; i++)
 	{
-		_delayline[i] = new Delay(_m[i], _m[i]);
+		_delayline[i] = boost::make_shared<Delay>(_m[i], _m[i]); //new Delay(_m[i], _m[i]);
 
 		float exponent = -(3.0 * _m[i] * T) / _t60_0;
 		g[i] = pow(10, exponent);
 		a[i] = log10(g[i]) * tmp_val;
-		_lp_filter[i] = new OnePole();
+		_lp_filter[i] = boost::make_shared<OnePole>(); //new OnePole();
 		_lp_filter[i]->setB0(g[i] * (1 - a[i]));
 		_lp_filter[i]->setA1(a[i]);
 
@@ -131,10 +132,9 @@ void Fdn::_init()
 	}
 
 	// Feedback matrix (A) calculation
-	colvec u = ones<colvec> (_N);
-	mat I = eye<mat> (_N, _N);
+	colvec u = ones<colvec>(_N);
+	mat I = eye<mat>(_N, _N);
 	_A = _gA * ((2.0 / _N) * u * trans(u) - I);
-
 	clear();
 
 	// stabilize the FDN
