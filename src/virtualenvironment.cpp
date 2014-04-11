@@ -63,9 +63,7 @@ VirtualEnvironment::VirtualEnvironment(configuration_t::ptr_t cs, TrackerBase::p
 	double b[N] = { 1, 1, 1, 1, 1, 1, 1, 1 };
 	double c[N] = { 1, -1, 1, -1, 1, -1, 1, -1};
 	double d = 0.0;
-	double t60_DC = 2.5675; // reverberation time at DC
-	double t60_pi = 1.1527; // reverberation time at half the sampling rate
-	_fdn = Fdn::create(N, gA, b, c, d, m, t60_DC, t60_pi);
+	_fdn = Fdn::create(N, gA, b, c, d, m, _config->rt60_0, _config->rt60_pi);
 
 	// BIR length
 	_length_bir = _config->bir_length_samples;
