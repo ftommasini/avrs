@@ -16,15 +16,18 @@
  *
  */
 
-/* Based on ...
- STK order 4 single input, single output feedback
- delay network, with each delay line cascaded by
- a one-pole lowpass filter. There is also a tone
- correction filter.
-
- This private class implements an order 4 SISO FDN
- with B = [1,1,1,1]^T, C = [1,1,1,1]^T, and feedback
- matrix A = A_4, where A_N = gA*(I_N - (2/N)*u_N*(u_N)^T).
+/*
+ * Based on JotReverb of "REALSIMPLE Lab on Reverberation"
+ * by Julius O. Smith III and Nelson Lee
+ * see: https://ccrma.stanford.edu/realsimple/reverb/JotReverb_STK.html
+ *
+ * 8-line, single input, single output feedback delay network,
+ * with each delay line cascaded by a one-pole lowpass filter.
+ * There is also a tone correction filter.
+ *
+ * This class implements an order 8 SISO FDN with
+ * b = [1,1,1,1,1,1,1,1]^T, c = [1,1,1,1,1,1,1,1]^T,
+ * and feedback matrix A = A_8, where A_N = gA*(I_N - (2/N)*u_N*(u_N)^T).
  (I_N denotes the N by N identity matrix, and
  u_N = [1,...,1]^T, an N-vector of ones.) Each delay is
  cascaded by a lowpass filter according to the
