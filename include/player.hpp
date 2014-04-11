@@ -22,6 +22,7 @@
 #include <cassert>
 #include <memory>
 #include <stk/RtAudio.h>
+#include <boost/shared_ptr.hpp>
 
 // AVRS headers
 #include "common.hpp"
@@ -35,7 +36,7 @@ namespace avrs
 class Player
 {
 public:
-	typedef std::auto_ptr<Player> ptr_t;
+	typedef boost::shared_ptr<Player> ptr_t;
 
 	virtual ~Player();
 	/// Static factory function for InputWave objects
@@ -56,7 +57,7 @@ public:
 private:
 	Player(float gain_factor);
 
-	bool _init();
+	void _init();
 
 	bool _running;
 	float _gain_factor;
@@ -81,23 +82,6 @@ inline void Player::set_gain_factor(float gain_factor)
 inline float Player::get_gain_factor() const
 {
 	return _gain_factor;
-}
-
-inline void Player::mute()
-{
-	if (!_muted) {
-		_gain_factor_tmp = _gain_factor;
-		_gain_factor = 0.0f;
-		_muted = true;
-	}
-}
-
-inline void Player::unmute()
-{
-	if (_muted) {
-		_gain_factor = _gain_factor_tmp;
-		_muted = false;
-	}
 }
 
 inline bool Player::is_running()

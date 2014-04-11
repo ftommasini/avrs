@@ -23,6 +23,7 @@
 #include <cmath>
 #include <memory>
 #include <vector>
+#include <boost/shared_ptr.hpp>
 #include <ANN/ANN.h>
 
 #include "common.hpp"
@@ -54,7 +55,7 @@ typedef struct HrtfCoeff
 class HrtfCoeffSet
 {
 public:
-	typedef std::auto_ptr<HrtfCoeffSet> ptr_t;
+	typedef boost::shared_ptr<HrtfCoeffSet> ptr_t;
 
 	~HrtfCoeffSet();
 

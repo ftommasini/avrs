@@ -24,12 +24,14 @@
 #include <rtai_lxrt.h>
 #include <rtai_mbx.h>
 #include <rtai_fifos.h>
+#include <stk/Stk.h>
 
+#include "utils/rttools.hpp"
+#include "utils/math.hpp"
+#include "utils/timerrtai.hpp"
 #include "common.hpp"
 #include "avrsexception.hpp"
 #include "configuration.hpp"
-#include "utils/rttools.hpp"
-#include "utils/math.hpp"
 #include "system.hpp"
 
 namespace avrs
@@ -43,8 +45,7 @@ System::System(std::string config_filename, bool show_config)
 	if (show_config)
 		_config_manager.show_configuration();
 
-	if (!_init())
-		throw AvrsException("Error creating System");
+	_init();
 }
 
 System::~System()
@@ -59,7 +60,7 @@ System::ptr_t System::get_instance(std::string config_filename, bool show_config
 	return p_instance;
 }
 
-bool System::_init()
+void System::_init()
 {
 	_in = InputWaveLoop::create(_config_sim->anechoic_file);
 	assert(_in.get() != NULL);
@@ -94,8 +95,6 @@ bool System::_init()
 	// Print information of ISM
 	std::cout << "Total VSs calculated: " << _ve->n_vs()  << std::endl;
 	std::cout << "Audible VSs: " << _ve->n_visible_vs() << std::endl;
-
-	return true;
 }
 
 // SRT main task
@@ -128,7 +127,7 @@ bool System::run()
 
 	if (!wait_task)
 	{
-		DPRINT("Cannot init WAIT task");
+		ERROR("Cannot init WAIT task");
 		return false;
 	}
 
@@ -181,15 +180,11 @@ void *System::_rt_thread(void *arg)
 	RT_TASK *sys_task;
 	RTIME start_time;
 	int *retval = NULL;
-	// for time measurements
-	RTIME start_loop, end_loop;
-	RTIME start_render, end_render;
-	RTIME start_conv, end_conv;
-	float elapsed_loop, elapsed_render, elapsed_conv;
+	// time measurements
+//	TimerRtai t_loop, t_render, t_conv;
 	// other variables
 	int val;
-	bool ok;
-	uint i;
+	unsigned int i;
 
 	rt_allow_nonroot_hrt();
 	mlockall(MCL_CURRENT | MCL_FUTURE);
@@ -223,13 +218,7 @@ void *System::_rt_thread(void *arg)
 	for (i = 0; i < BUFFER_SAMPLES; i++)
 		output_l[i] = output_r[i] = 0.0f;
 
-#ifdef RTCONV_THREADS
-	pthread_t t_l;
-	pthread_t t_r;
-#endif
-
 	_ve->calc_late_reverberation();
-
 	_out->start(); // start the output
 	_ve->start_simulation();
 
@@ -239,31 +228,28 @@ void *System::_rt_thread(void *arg)
 
 	while (!g_end_system)
 	{
-		start_loop = rt_get_time_ns();
+//		t_loop.start();
 
 		// get input (anechoic signal)
 		for (i = 0; i < BUFFER_SAMPLES; i++)
 			_input[i] = _in->tick();
 
 		// update the position
-		ok = _ve->update_listener_orientation();
-
-		if (!ok)
+		if (!_ve->update_listener_orientation())
 			end_system(-1);
 
 		// renderize BIR
-		start_render = rt_get_time_ns();
+//		t_render.start();
 		_ve->renderize();
-		end_render = rt_get_time_ns();
+//		t_render.stop();
 
 		// get the new BIR
 		_bir = _ve->get_BIR();
 
 		// update the BIR in the real-time convolver
-		start_conv = rt_get_time_ns();
+//		t_conv.start();
 
-#ifndef RTCONV_THREADS
-		if (_ve->new_BIR())
+		if (_ve->is_new_BIR())
 		{
 			_conv_l->set_filter_t(_bir.left);
 			_conv_r->set_filter_t(_bir.right);
@@ -272,14 +258,8 @@ void *System::_rt_thread(void *arg)
 		// convolve with anechoic signal
 		output_l = _conv_l->convolve_signal(_input.data());
 		output_r = _conv_r->convolve_signal(_input.data());
-#else
-		pthread_create(&t_l, NULL, System::_convolve_left_wrapper, this);
-		pthread_create(&t_r, NULL, System::_convolve_right_wrapper, this);
-		pthread_join(t_l,  (void **) &output_l);
-		pthread_join(t_r, (void **) &output_r);
-#endif
 
-		end_conv = rt_get_time_ns();
+//		t_conv.stop();
 
 		// preparing output for RT-FIFO
 		memcpy(output_player, output_l, BUFFER_SAMPLES * sizeof(sample_t));
@@ -290,56 +270,31 @@ void *System::_rt_thread(void *arg)
 
 		if (val != n_bytes)
 		{
-			DPRINT("ERROR sending through RT-FIFO, %d bytes instead of %d bytes", val, n_bytes * 2);
-			//rtf_reset(RTF_OUT_NUM);
+			ERROR("Error sending through RT-FIFO, %d bytes instead of %d bytes", val, n_bytes * 2);
 		}
 
-		end_loop = rt_get_time_ns();
-		elapsed_loop = (float) (end_loop - start_loop) / 1E6; // in ms
-		elapsed_render = (float) (end_render - start_render) / 1E6; // in ms
-		elapsed_conv = (float) (end_conv - start_conv) / 1E6; // in ms
+//		t_loop.stop();
+
+//		if (_ve->is_new_BIR())
+//		{
 //		DPRINT("Render: %6.3f - RT Convolution: %6.3f - Loop: %6.3f - Tick: %6.3f ms",
-//				elapsed_render, elapsed_conv, elapsed_loop, TICK_TIME / 1.0e+6f);
+//				t_render.elapsed_time(millisecond),
+//				t_conv.elapsed_time(millisecond),
+//				t_loop.elapsed_time(millisecond),
+//				TICK_TIME / 1.0e+6f);
+//		}
 
 		rt_task_wait_period();
 	}
 
 	free(output_player);
-
-	//_out->stop(); // stop the output
+	_out->stop(); // stop the output
 	_ve->stop_simulation();
-
 	rt_make_soft_real_time();
 	rt_task_delete(sys_task);
 	rtf_destroy(RTF_OUT_NUM);
 
 	return 0;
-}
-
-void *System::_convolve_left_wrapper(void *arg)
-{
-	return reinterpret_cast<System *> (arg)->_convolve_left_thread(NULL);
-}
-
-void *System::_convolve_left_thread(void *arg)
-{
-	if (_ve->new_BIR())
-		_conv_l->set_filter_t(_bir.left);
-
-	return _conv_l->convolve_signal(_input.data());
-}
-
-void *System::_convolve_right_wrapper(void *arg)
-{
-	return reinterpret_cast<System *> (arg)->_convolve_right_thread(NULL);
-}
-
-void *System::_convolve_right_thread(void *arg)
-{
-	if (_ve->new_BIR())
-		_conv_r->set_filter_t(_bir.right);
-
-	return _conv_r->convolve_signal(_input.data());
 }
 
 }  // namespace avrs

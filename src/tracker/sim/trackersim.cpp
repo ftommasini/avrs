@@ -24,6 +24,7 @@
 
 #include "tracker/sim/trackersim.hpp"
 #include "utils/rttools.hpp"
+#include "avrsexception.hpp"
 
 namespace avrs
 {
@@ -34,6 +35,7 @@ TrackerSim::TrackerSim(sim_t sim, unsigned int read_interval_ms, std::string fil
 	_sim_type = sim;
 	_read_interval_ms = read_interval_ms;
 	_filename = filename;
+	_init();
 }
 
 TrackerSim::~TrackerSim()
@@ -44,24 +46,18 @@ TrackerSim::~TrackerSim()
 TrackerSim::ptr_t TrackerSim::create(sim_t sim, unsigned int read_interval_ms, std::string filename)
 {
 	ptr_t p_tmp(new TrackerSim(sim, read_interval_ms, filename));
-
-	if (!p_tmp->_init())
-		p_tmp.release();
-
 	return p_tmp;
 }
 
-bool TrackerSim::_init()
+void TrackerSim::_init()
 {
 	if (_sim_type == from_file)
 	{
 		_file = fopen(_filename.c_str(), "rb");
 
 		if (!_file)
-			return false;
+			throw AvrsException("Error creating VirtualEnvironment");
 	}
-
-	return true;
 }
 
 void TrackerSim::start()

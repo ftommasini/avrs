@@ -28,6 +28,7 @@
 #include <string>
 #include <stk/FileWvIn.h>
 #include <stk/FileLoop.h>
+#include <boost/shared_ptr.hpp>
 
 // AVRS headers
 #include "common.hpp"
@@ -42,7 +43,7 @@ namespace avrs
 class InputBase
 {
 public:
-	typedef std::auto_ptr<InputBase> ptr_t;
+	typedef boost::shared_ptr<InputBase> ptr_t;
 
 	virtual sample_t tick() = 0; // pure virtual
 	virtual void tick(sample_t *val, uint n) = 0; // pure virtual

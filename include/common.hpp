@@ -57,7 +57,7 @@ typedef struct Position
 {
 	float x;	///< X position (in cm)
 	float y;	///< Y position (in cm)
-	float z;	///z Z position (in cm)
+	float z;	///< Z position (in cm)
 
 	Position()
 	{
@@ -166,6 +166,8 @@ typedef struct OrientationAngles
 static const short int X = 0;
 static const short int Y = 1;
 static const short int Z = 2;
+/// Precision required for calculus
+static const float PRECISION = 1E-6f;
 /// Sample rate
 static const int SAMPLE_RATE = 44100;
 /// Number of output channels
@@ -203,7 +205,6 @@ static const short int VS_SAMPLES = 256;
 
 
 #define HRTF_IIR
-//#define RTCONV_THREADS
 //#define VSFILTER_THREADS
 
 }  // namespace

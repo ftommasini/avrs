@@ -11,3 +11,6 @@ version.hpp
 .cproject
 .nfs*
 *.tar.gz
+Debug/*
+Release/*
+time.txt

@@ -132,12 +132,9 @@ void Wiimote::wm_callback(cwiid_wiimote_t *g_wiimote, int mesg_count,
 					{
 						ir_sizes[i] = mesg[j].ir_mesg.src[i].size + 1;  // TODO why this???
 					}
-
-					//printf("Time: %ld, x: %d, y: %d\n", timestamp->tv_nsec, ir.data[i][0], ir.data[i][1]);
 				}
 
 				//g_current_time = timestamp->tv_nsec;  // TODO mutex??
-
 			}
 
 			ir.timestamp = timestamp->tv_nsec;

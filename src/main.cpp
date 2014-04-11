@@ -85,7 +85,10 @@ int main(int argc, char *argv[])
 	// create auto_ptr pointer to the system
 	try
 	{
-		//stk::Stk::printErrors(false);
+		stk::Stk::setSampleRate(SAMPLE_RATE);  // set sample rate
+#ifdef NDEBUG
+		stk::Stk::printErrors(false);
+#endif
 		sys = System::get_instance(params.filename, params.show_config);
 		assert(sys.get() != NULL);
 		printf("Running... (end with \'q\' + Enter)\n");

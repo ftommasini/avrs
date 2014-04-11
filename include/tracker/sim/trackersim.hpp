@@ -24,6 +24,7 @@
 #define TRACKERSIM_HPP_
 
 #include <memory>
+#include <boost/shared_ptr.hpp>
 
 #include "tracker/trackerbase.hpp"
 
@@ -36,7 +37,7 @@ namespace avrs
 class TrackerSim : public TrackerBase
 {
 public:
-	typedef std::auto_ptr<TrackerSim> ptr_t;
+	typedef boost::shared_ptr<TrackerSim> ptr_t;
 
 	typedef enum
 	{
@@ -60,8 +61,7 @@ private:
     TrackerSim(sim_t sim, unsigned int read_interval_ms, std::string filename = "");
 
     /// initialize the tracker.
-    /// @return @b true if successful, @b false otherwise
-    bool _init();
+    void _init();
 
 	trackerdata_t _data;
 	sim_t _sim_type;

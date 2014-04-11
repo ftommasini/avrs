@@ -26,11 +26,15 @@
 #include <sys/time.h>
 #include <cstdio>
 #include <stddef.h>
-#include <rtai_mbx.h>
 #include <stk/Iir.h>
 #include <stk/Fir.h>
 #include <stk/Delay.h>
+#include <stk/DelayA.h>
 #include <boost/shared_ptr.hpp>
+
+extern "C" {
+#include <rtai_mbx.h>
+}
 
 #include "utils/tree.hpp"
 #include "utils/rttools.hpp"
@@ -38,47 +42,20 @@
 #include "tracker/sim/trackersim.hpp"
 #include "tracker/wiimote/trackerwiimote.hpp"
 #include "convolver.hpp"
-#include "surface.hpp"
+#include "room.hpp"
 #include "soundsource.hpp"
 #include "listener.hpp"
+#include "ism.hpp"
 #include "headfilter.hpp"
 #include "fdn.hpp"
 #include "common.hpp"
 #include "configuration.hpp"
+#include "virtualsource.hpp"
 
 #include "hrtfconvolver.hpp"
 
 namespace avrs
 {
-
-typedef struct VirtualSource
-{
-	unsigned int id;
-	point3d_t pos;
-	unsigned int order;
-	float dist_listener;
-	float time_abs_ms;
-	float time_rel_ms;
-	int surface_index;
-	point3d_t inter_point;
-	bool vis_test_1;
-	bool vis_test_2;
-	bool visible;
-	point3d_t ref_listener_pos; // to listener
-	orientation_angles_t ref_listener_orientation; // referenced to listener
-	orientation_angles_t initial_orientation; // initial orientation
-
-	VirtualSource()
-	{
-		id = 0;
-		order = 0;
-		dist_listener = 0.0f;
-		surface_index = -1;
-		vis_test_1 = false;
-		vis_test_2 = false;
-		visible = false;
-	}
-} virtualsource_t;
 
 /**
  * Class for generation of virtual environment Binaural Impulse Response (BIR)
@@ -86,36 +63,19 @@ typedef struct VirtualSource
 class VirtualEnvironment
 {
 public:
-	typedef std::auto_ptr<VirtualEnvironment> ptr_t;
+	typedef boost::shared_ptr<VirtualEnvironment> ptr_t;
 
 	virtual ~VirtualEnvironment();
 	/// Static factory function for VirtualEnvironment objects
-	static ptr_t create(configuration_t *cs, TrackerBase::ptr_t tracker);
+	static ptr_t create(configuration_t::ptr_t cs, TrackerBase::ptr_t tracker);
 
-	// Room methods
-
-	float get_room_area();
-	float get_room_volume() const;
+	float get_room_area() const;
 	unsigned int n_surfaces() const;
-	void add_surface(Surface *s);
-	void update_surfaces_data();  // TODO private?
-
-	// ISM methods
-
-	void calc_ISM();
 	unsigned int n_vs() const;
 	unsigned int n_visible_vs();
-	// for debug!!!
-	void print_vis();
-	//void check_vis();
-
-	void calc_late_reverberation();
-
-	// Generic methods
 
 	void start_simulation();
 	void stop_simulation();
-
 	void calibrate_tracker();
 
 	/**
@@ -129,24 +89,28 @@ public:
 	 * Render the binaural impulse response (BIR) in real-time process by using current tracker data
 	 */
 	void renderize();
+
+	void calc_late_reverberation();
 	/**
 	 * Get the current BIR
 	 * @return the current BIR
 	 */
 	binauraldata_t &get_BIR();
-	bool new_BIR() const;
+	bool is_new_BIR() const;
 
 private:
-	VirtualEnvironment(configuration_t *cs, TrackerBase::ptr_t tracker);
+	VirtualEnvironment(configuration_t::ptr_t cs, TrackerBase::ptr_t tracker);
 
-	bool _init();
+	configuration_t::ptr_t _config;
 
-	configuration_t *_config_sim;
+	// Buffers
 	data_t _input_buffer;
 	binauraldata_t _render_buffer;  // keep the complete BIR
 	unsigned long _length_bir;
 	data_t _zeros;
 	bool _new_bir;
+//	stk::DelayA _delay_vs_l;
+//	stk::DelayA _delay_vs_r;
 
 	// Tracker
 	TrackerBase::ptr_t _tracker;
@@ -154,65 +118,33 @@ private:
 	trackerdata_t _tracker_data;
 	trackerdata_t _prev_tracker_data;
 
-	// Surfaces
-	std::vector<Surface *> _surfaces;
-	typedef std::vector<Surface *>::iterator surfaces_it_t;
-	float _area;
-	float _volume;
-	volatile bool _new_data; // flag that indicates new surfaces data
-
+	// Room
+	Room::ptr_t _room;
+	// Sound source
 	SoundSource::ptr_t _sound_source;
+	// Listener
 	Listener::ptr_t _listener;
-
-	// VS propagation
-	unsigned int _max_order;
-	float _max_dist;
-	tree<virtualsource_t *> _tree; // VSs tree
-	typedef tree<virtualsource_t *>::iterator tree_it_t;
-	tree_it_t _root_it;
-	volatile unsigned int _count_vs;
-	float _time_ref_ms;
-
-	// visible VS vector
-	std::vector<virtualsource_t *> _vis;
-	typedef std::vector<virtualsource_t *>::iterator vis_it_t;
-
-	typedef struct CompareVSDistance
-	{
-		bool operator()(virtualsource_t *i, virtualsource_t *j)
-		{
-			return (i->dist_listener < j->dist_listener);
-		}
-	} cmpvsdistance_t;
-
-	void _propagate_ISM(virtualsource_t *vs, tree_it_t vs_node,
-			const unsigned int order);
-	bool _check_vis_1(Surface *s, virtualsource_t *vs);
-	bool _check_vis_2(virtualsource_t *vs, const tree_it_t vs_node);
-	void _calc_vs_orientation(virtualsource_t *vs);
-	void _update_vs_orientations();  // todo private
-	void _sort_vis();
-	void _update_vis();
-
+	// Early reflections
+	Ism::ptr_t _ism;
 	// Late reverberation
 	Fdn::ptr_t _fdn;
 	data_t _late_buffer;
 
 	// renderer
-//#ifndef HRTF_IIR
-//	HrtfSet::ptr_t _hrtfdb;
-//	hrtf_t _hrtf;
-//	HrtfConvolver::ptr_t _hrtf_conv_l;
-//	HrtfConvolver::ptr_t _hrtf_conv_r;
-//	stk::Fir _fir_l;
-//	stk::Fir _fir_r;
-//#else
+#ifndef HRTF_IIR
+	HrtfSet::ptr_t _hrtfdb;
+	hrtf_t _hrtf;
+	HrtfConvolver::ptr_t _hrtf_conv_l;
+	HrtfConvolver::ptr_t _hrtf_conv_r;
+	stk::Fir _fir_l;
+	stk::Fir _fir_r;
+#else
 	HrtfCoeffSet::ptr_t _hcdb;
 	hrtfcoeff_t _hc;
 	stk::Iir _filter_l;
 	stk::Iir _filter_r;
 	stk::Delay _delay;
-//#endif
+#endif
 
 	stk::Iir _filter_surfaces;
 
@@ -224,18 +156,17 @@ private:
 	binauraldata_t _hrtf_iir_filter(data_t &input, const orientation_angles_t &ori);
 #endif
 
-	data_t _surfaces_filter(data_t &input, const tree_it_t node);
-
+	data_t _surfaces_filter(data_t &input, const Ism::tree_vs_t::iterator node);
 	bool _listener_is_moved();
 
     // thread for VS chain filter
     static void *_vs_filter_wrapper(void *arg);
-    void *_vs_filter_thread(tree_it_t it, uint index);
+    void *_vs_filter_thread(Ism::tree_vs_t::iterator it, uint index);
 	std::vector<binauraldata_t> _outputs;  // keep the VS chain filter IR
 
 	typedef struct {
 		VirtualEnvironment *ve;
-		tree_it_t it;
+		Ism::tree_vs_t::iterator it;
 		uint index;
 	} threaddata_t;
 };
@@ -264,71 +195,35 @@ inline binauraldata_t &VirtualEnvironment::get_BIR()
 	return _render_buffer;
 }
 
-inline bool VirtualEnvironment::new_BIR() const
+inline bool VirtualEnvironment::is_new_BIR() const
 {
 	return _new_bir;
 }
 
-inline float VirtualEnvironment::get_room_area()
+inline float VirtualEnvironment::get_room_area() const
 {
-	return _area;
-}
-
-inline float VirtualEnvironment::get_room_volume() const
-{
-	return _volume;
+	return _room->get_total_area();
 }
 
 inline unsigned int VirtualEnvironment::n_surfaces() const
 {
-	return (unsigned int) _surfaces.size();
+	return _room->n_surfaces();
 }
 
 inline unsigned int VirtualEnvironment::n_vs() const
 {
-	return (unsigned int) _tree.size(_root_it);
+	return _ism->get_count_vs();
 }
 
 inline unsigned int VirtualEnvironment::n_visible_vs()
 {
-	return (unsigned int) _vis.size();
-}
-
-// respecto al oyente (en el sistema de coordenadas L)
-inline void VirtualEnvironment::_calc_vs_orientation(virtualsource_t *vs)
-{
-	// azimuth calculus
-	vs->ref_listener_pos = vs->pos - _listener->get_position();
-	vs->initial_orientation.az =
-			-((atan2(vs->ref_listener_pos(Y), vs->ref_listener_pos(X)) * avrs::math::PIdiv180_inverse) - 90.0f); // in degrees
-
-	// elevation calculus
-	float r = sqrt(vs->ref_listener_pos(X) * vs->ref_listener_pos(X)
-			+ vs->ref_listener_pos(Y) * vs->ref_listener_pos(Y));
-	vs->initial_orientation.el =
-			-((atan2(r, vs->ref_listener_pos(Z)) * avrs::math::PIdiv180_inverse) - 90.0f); // in degrees
-
-	vs->initial_orientation = vs->initial_orientation - _listener->get_orientation();
-
-//	arma::rowvec vs_pos_r(4);
-//	vs_pos_r << vs->pos(0) << vs->pos(1) << vs->pos(2) << 0 << endr;
-//	arma::rowvec vs_pos_l(4);
-//	vs_pos_l = vs_pos_r * _listener->get_rotation_matrix();
-//	vs->ref_listener_pos << vs_pos_l(0) << vs_pos_l(1) << vs_pos_l(2) << endr;
-//	// azimuth
-//	vs->initial_orientation.az =
-//			-((atan2(vs->ref_listener_pos(Y), vs->ref_listener_pos(X)) * mathtools::PIdiv180_inverse) - 90.0f); // in degrees
-//	// elevation
-//	float r = sqrt(vs->ref_listener_pos(X) * vs->ref_listener_pos(X)
-//			+ vs->ref_listener_pos(Y) * vs->ref_listener_pos(Y));
-//	vs->initial_orientation.el =
-//			-((atan2(r, vs->ref_listener_pos(Z)) * mathtools::PIdiv180_inverse) - 90.0f); // in degrees
+	return _ism->get_count_visible_vs();
 }
 
 inline bool VirtualEnvironment::_listener_is_moved()
 {
-	if (fabs(_prev_tracker_data.ori.az - _tracker_data.ori.az) >= _config_sim->angle_threshold ||
-		fabs(_prev_tracker_data.ori.el - _tracker_data.ori.el) >= _config_sim->angle_threshold)
+	if (fabs(_prev_tracker_data.ori.az - _tracker_data.ori.az) >= _config->angle_threshold ||
+		fabs(_prev_tracker_data.ori.el - _tracker_data.ori.el) >= _config->angle_threshold)
 	{
 		_prev_tracker_data = _tracker_data;  // the listener exceeded the threshold, so save the new data
 		return true;

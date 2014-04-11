@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2013 Fabián C. Tommasini <fabian@tommasini.com.ar>
+ * Copyright (C) 2009-2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@
 
 #include <memory>
 #include <map>
+#include <boost/shared_ptr.hpp>
 
 #include "common.hpp"
 
@@ -31,6 +32,8 @@ namespace avrs
 class Surface
 {
 public:
+	typedef boost::shared_ptr<Surface> ptr_t;
+
 	Surface(unsigned int id, const float *x_vert, const float *y_vert,
 			const float *z_vert, int n_vert);
 	Surface(unsigned int id, const double *x_vert, const double *y_vert,
@@ -43,14 +46,14 @@ public:
 	float get_dist_origin() const;
 	avrs::point3d_t &get_normal();
 	arma::frowvec4 &get_plane_coeff();
-//	point3d_t &get_vertex(unsigned int index);
+
 	void set_b_filter_coeff(std::vector<double> &b_coeff);
 	std::vector<double> &get_b_filter_coeff();
 	void set_a_filter_coeff(std::vector<double> &a_coeff);
 	std::vector<double> &get_a_filter_coeff();
 
 private:
-	bool _init();
+	void _init();
 
 	unsigned int _id;
 	arma::fmat _vert;  // 4x3 matrix (four xyz points for now)
@@ -58,12 +61,8 @@ private:
 	avrs::point3d_t _normal;  // normal to plane
 	float _dist_origin;  // distance to origin
 	float _area;
-
 	arma::frowvec4 _plane_coeff;  // (a, b, c, d) coefficients of plane equation [ax + by + cz + d = 0]
 
-	// absorption coefficients in Sabines (freq, value)
-	//std::map<int,float> _abs_coeff;
-	//std::vector<int> _freq_abs_coeff;  // in Hz
 	// material filter coefficients
 	std::vector<double> _b_filter_coeff;
 	std::vector<double> _a_filter_coeff;
@@ -73,6 +72,14 @@ private:
 	void _calc_normal();
 	void _calc_dist_origin();
 	void _calc_area();
+
+#ifndef BORISH
+	arma::fmat _vert_proj;  // 4x2 matrix with the projection to 2D points of _vert matrix
+	unsigned int _coord_to_remove;
+
+	arma::frowvec2 _project_to_2d(arma::frowvec3 p);
+	int _pnpoly(int nvert, float *vertx, float *verty, float testx, float testy);
+#endif
 };
 
 inline unsigned int Surface::get_id() const
@@ -99,12 +106,6 @@ inline arma::frowvec4 &Surface::get_plane_coeff()
 {
 	return _plane_coeff;
 }
-
-//inline point3d_t Surface::get_vertex(unsigned int index)
-//{
-//	assert(index <= 4);
-//	return _vert.row(index);
-//}
 
 inline void Surface::set_b_filter_coeff(std::vector<double> &b_coeff)
 {

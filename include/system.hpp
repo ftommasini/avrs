@@ -19,10 +19,12 @@
 #ifndef SYSTEM_HPP_
 #define SYSTEM_HPP_
 
-#include <memory>  // auto_ptr
+#include <boost/shared_ptr.hpp>
 
 // RTAI headers
+extern "C" {
 #include <rtai_lxrt.h>
+}
 
 // AVRS headers
 #include "configuration.hpp"
@@ -50,10 +52,10 @@ static inline void end_system(int sig)
 class System
 {
 public:
-	typedef std::auto_ptr<System> ptr_t; ///< auto_ptr to System
+	typedef boost::shared_ptr<System> ptr_t; ///< auto_ptr to System
 
 	virtual ~System();
-	static System::ptr_t get_instance(std::string config_filename, bool show_config);
+	static ptr_t get_instance(std::string config_filename, bool show_config);
 
 	/**
 	 * Run the system. Sets up RT process and runs through loop
@@ -63,28 +65,25 @@ public:
 
 private:
 	System(std::string config_filename, bool show_config);  ///< Private constructor
-
-
 	System(const System &); ///< Prevent copy-construction
 	System &operator=(const System &);  ///< Prevent assignment
 
-	bool _init();
+	void _init();
 
 	volatile bool _is_running;
-
 	RTIME _sampling_interval;
-
-	// one for now, maybe more in the future
-	VirtualEnvironment::ptr_t _ve;
 
 	ConfigurationManager _config_manager;
 	configuration_t::ptr_t _config_sim;
+
+	VirtualEnvironment::ptr_t _ve;
 
 	InputWaveLoop::ptr_t _in;
 	Player::ptr_t _out;
 
 	data_t _input;
 	binauraldata_t _bir;
+
 	Convolver::ptr_t _conv_l;
 	Convolver::ptr_t _conv_r;
 
@@ -98,12 +97,6 @@ private:
 	 * @param arg
 	 */
     void *_rt_thread(void *arg);
-
-    // threads for real-time convolution
-    static void *_convolve_left_wrapper(void *arg);
-    void *_convolve_left_thread(void *arg);
-    static void *_convolve_right_wrapper(void *arg);
-    void *_convolve_right_thread(void *arg);
 };
 
 }  // namespace avrs

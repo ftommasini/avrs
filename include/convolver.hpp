@@ -1,9 +1,10 @@
 /*
+ * Copyright (C) 2012-2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
+ *
  * Copyright (c) 2006-2012 Quality & Usability Lab
  *                         Deutsche Telekom Laboratories, TU Berlin
  *                         Ernst-Reuter-Platz 7, 10587 Berlin, Germany
  *                         <SoundScapeRenderer@telekom.de>
- * Copyright (C) 2012-2013 Fabián C. Tommasini <fabian@tommasini.com.ar>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

@@ -23,16 +23,10 @@
 namespace avrs
 {
 
-#define PRECISION (1e-3f)
-
-/*
- * Surface
- */
-
 Surface::Surface(unsigned int id, const float *x_vert, const float *y_vert,
 		const float *z_vert, int n_vert)
 {
-	assert(n_vert == 4);  // restricted to 4 vertices for now
+	assert(n_vert == 4);  // restricted to 4 vertices
 
 	_id = id;
 	_vert.set_size(4, 3);
@@ -70,38 +64,127 @@ Surface::~Surface()
 	;
 }
 
-//Surface::ptr_t Surface::create(unsigned int id, const float *x_vert, const float *y_vert,
-//		const float *z_vert, int n_vert)
-//{
-//	ptr_t p_tmp(new Surface(id, x_vert, y_vert, z_vert, n_vert));
-//
-//	if (!p_tmp->_init())
-//		p_tmp.reset();
-//
-//	return p_tmp;
-//}
-//
-//Surface::ptr_t Surface::create(unsigned int id, const double *x_vert, const double *y_vert,
-//		const double *z_vert, int n_vert)
-//{
-//	ptr_t p_tmp(new Surface(id, x_vert, y_vert, z_vert, n_vert));
-//
-//	if (!p_tmp->_init())
-//		p_tmp.reset();
-//
-//	return p_tmp;
-//}
+#ifdef BORISH
 
-bool Surface::_init()
+/**
+ * @see
+ * "Extension of the image model to arbitrary polyhedra".
+ * Jeffrey Borish, J. Acoust. Soc. Am. 75, 1827 (1984), DOI:10.1121/1.390983
+ */
+bool Surface::is_point_inside(arma::frowvec3 point)
 {
+	static arma::frowvec3 dir_cos;
+	static arma::frowvec3 dir_cos_ref;
+	static arma::frowvec3 v1;
+	static arma::frowvec3 v2;
+	static arma::frowvec3 c;
+
+	// test for first vertex
+	v1 = _vert.row(3) - point;
+	v2 = _vert.row(0) - point;
+	c = cross(v1, v2);
+
+	// the checking for parallelism is omitted
+	// norm(c, 2) == 0
+
+	dir_cos_ref = c / norm(c, 2); // direction cosines (reference)
+
+	// the rest of vertices
+	for (arma::u32 i = 0; i < _vert.n_rows - 1; i++)
+	{
+		v1 = _vert.row(i) - point;
+		v2 = _vert.row(i + 1) - point;
+		c = cross(v1, v2);
+
+		// the checking for parallelism is omitted
+		// norm(c, 2) == 0
+
+		dir_cos = c / norm(c, 2); // direction cosines
+
+		for (arma::u32 j = 0; j < 3; j++)
+		{
+			if (fabs(dir_cos[j] - dir_cos_ref[j]) >= PRECISION)
+				return false;
+		}
+	}
+
+	return true;
+}
+
+#else
+
+bool Surface::is_point_inside(arma::frowvec3 point)
+{
+	// projection to 2D
+	arma::frowvec2 p = _project_to_2d(point);
+	float testx = p(X);
+	float testy = p(Y);
+	int nvert = _vert_proj.n_rows;
+	float *vertx = _vert_proj.colptr(X);
+	float *verty = _vert_proj.colptr(Y);
+
+	return (_pnpoly(nvert, vertx, verty, testx, testy) % 2);
+}
+
+// Private functions
+
+void Surface::_init()
+{
+#ifndef BORISH
+	// calculate range of coordinates
+	arma::frowvec3 vert_max = max(_vert);
+	arma::frowvec3 vert_min = min(_vert);
+	arma::frowvec3 vert_range = vert_max - vert_min;  // range
+	vert_range.min(_coord_to_remove);  // smallest range
+
+	_vert_proj.set_size(4, 2);
+
+	for (arma::u32 i = 0; i < (arma::u32) _vert_proj.n_rows; i++)
+	{
+		arma::frowvec2 r = _project_to_2d(_vert.row(i));
+		_vert_proj.row(i) = r;
+	}
+#endif
+
 	_calc_center();
 	_calc_plane_coeff();
 	_calc_normal();
 	_calc_dist_origin();
 	_calc_area();
-
-	return true;
 }
+
+arma::frowvec2 Surface::_project_to_2d(arma::frowvec3 p)
+{
+	unsigned int j = 0;
+	arma::frowvec2 projection;
+
+	for (unsigned int i = 0; i < 3; i++)
+	{
+		if (i == _coord_to_remove)
+			continue;
+
+		projection(j++) = p(i);
+	}
+
+	return projection;
+}
+
+// http://www.ecse.rpi.edu/~wrf/Research/Short_Notes/pnpoly.html
+int Surface::_pnpoly(int nvert, float *vertx, float *verty, float testx, float testy)
+{
+  int i, j, c = 0;
+
+  for (i = 0, j = nvert-1; i < nvert; j = i++)
+  {
+    if ( ((verty[i] > testy) != (verty[j] > testy)) &&
+	     (testx < (vertx[j] - vertx[i]) * (testy - verty[i]) / (verty[j] - verty[i]) + vertx[i]) )
+       c = !c;
+  }
+
+  return c;
+}
+
+#endif
 
 void Surface::_calc_center()
 {
@@ -153,170 +236,6 @@ void Surface::_calc_area()
 	avrs::point3d_t ac = _vert.row(0) - _vert.row(2);  // ac vector
 	avrs::point3d_t bd = _vert.row(1) - _vert.row(3);  // bd vector
 	_area = 0.5f * norm(cross(ac, bd), 2);
-}
-
-/**
- * @see "Extension of the image model to arbitrary polyhedra".
- * Jeffrey Borish, J. Acoust. Soc. Am. 75, 1827 (1984), DOI:10.1121/1.390983
- */
-bool Surface::is_point_inside(avrs::point3d_t point)
-{
-	static avrs::point3d_t dir_cos;
-	static avrs::point3d_t dir_cos_ref;
-	//static umat ineq;
-	static avrs::point3d_t v1;
-	static avrs::point3d_t v2;
-	static avrs::point3d_t c;
-
-	// test for first vertex
-	v1 = _vert.row(3) - point;
-	v2 = _vert.row(0) - point;
-	c = cross(v1, v2);
-
-	// the checking for parallelism is omitted
-	// norm(c, 2) == 0
-
-	dir_cos_ref = c / norm(c, 2);  // direction cosines (reference)
-
-	// the rest of vertices
-	for (arma::u32 i = 0; i < _vert.n_rows - 1; i++)
-	{
-		v1 = _vert.row(i) - point;
-		v2 = _vert.row(i + 1) - point;
-		c = cross(v1, v2);
-
-		// the checking for parallelism is omitted
-		// norm(c, 2) == 0
-
-		dir_cos = c / norm(c, 2);  // direction cosines
-
-		for (arma::u32 j = 0; j < 3; j++)
-		{
-			if (fabs(dir_cos[j] - dir_cos_ref[j]) >= PRECISION)
-				return false;
-		}
-//		ineq = find(abs(dir_cos - dir_cos_ref) > 0);  // save inequalities
-//		if (!ineq.is_empty())
-//			return false;
-	}
-
-	return true;
-
-	/*
-vert = get(plano, 'Vertices');
-
-if sobreBorde(vert, pCorte) == 1
-    ok = 2;
-    return;
-end
-
-% test para verificar si el punto de corte est� dentro de los l�mites
-v1 = vert(4,:) - pCorte;
-v2 = vert(1,:) - pCorte;
-c = cross(v1, v2);
-
-if norm(c) == 0
-    ok = 0;
-    return;
-end
-
-cosDir1 = roundn(c / norm(c), -5);  % cosenos directores para el producto cruz
-
-for i = 1:3  % para el resto de los v�rtices
-    v1 = vert(i,:) - pCorte;
-    v2 = vert(i + 1,:) - pCorte;
-    c = cross(v1, v2);
-
-    if norm(c) == 0
-        ok = 0;
-        return;
-    end
-
-    cosDir2 = roundn(c / norm(c), -5);  % cosenos directores para el producto cruz
-
-    if isequal(cosDir1, cosDir2)
-        ok = 1;
-    else
-        ok = 0;
-        return;
-    end
-end
-	 */
-
-/*
-// PARECE QUE NO FUNCIONA ESTE METODO!!
-
-	// adapted from: http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
-	// firstly, the point must be in the same plane (not checked!)
-	// then...
-	u32 row_idx, col_idx;
-	float min_value;
-	min_value = _vert.min(row_idx, col_idx);  // search for minimum value
-
-	fmat v_test(4,2);
-	frowvec2 p_test;
-
-	col_idx=2;
-
-	switch (col_idx)
-	{
-	case X:
-		v_test = _vert.cols(1,2);
-		p_test << point(1) << point(2);
-		std::cout << "X" << std::endl;
-		break;
-
-	case Y:
-		v_test = join_rows(_vert.col(0), _vert.col(2));
-		p_test << point(0) << point(2);
-		std::cout << "Y" << std::endl;
-		break;
-
-	case Z:
-		v_test = _vert.cols(0,1);
-		p_test << point(0) << point(1);
-		std::cout << "Z" << std::endl;
-		break;
-	}
-
-	// now, verify if it is inside
-	u32 i, j;
-	bool c = false;
-
-	for (i = 0, j = v_test.n_rows - 1; i < v_test.n_rows; j = i++)  // for each vertex
-	{
-		if ( ((v_test(i,Y) > p_test(Y)) != (v_test(j,Y) > p_test(Y)))  &&
-			 (p_test(X) < (v_test(j,X) - v_test(i,X)) * (p_test(Y) - v_test(i,Y)) / (v_test(j,Y) - v_test(i,Y)) + v_test(i,X)) )
-		{
-			c = !c;
-		}
-	}
-
-	return c;
-	*/
-/*
-int pnpoly(int nvert, float *vertx, float *verty, float testx, float testy)
-{
-  int i, j, c = 0;
-  for (i = 0, j = nvert-1; i < nvert; j = i++) {
-    if ( ((verty[i]>testy) != (verty[j]>testy)) &&
-	 (testx < (vertx[j]-vertx[i]) * (testy-verty[i]) / (verty[j]-verty[i]) + vertx[i]) )
-       c = !c;
-  }
-  return c;
-}
-*/
-	/*
-	3D Polygons
-
-    By this, I mean a flat polygon embedded in a plane in 3D.
-
-    Simply project the polygon's vertices, and the test point, into 2D.
-
-    Do the projection by deleting one coordinate, e.g., project (x,y,z) to (x,z).
-
-    For numerical stability, delete the coordinate with the smallest range.
-	 */
 }
 
 }  // namespace avrs

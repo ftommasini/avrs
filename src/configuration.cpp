@@ -22,6 +22,7 @@
 
 #include <cstdio>
 #include <boost/filesystem.hpp>
+#include <boost/make_shared.hpp>
 
 #include "utils/configfilereader.hpp"
 #include "utils/tokenizer.hpp"
@@ -35,12 +36,12 @@ namespace avrs
 
 ConfigurationManager::ConfigurationManager()
 {
-	_conf = new configuration_t;
+	_conf = boost::make_shared<configuration_t>();
 }
 
 ConfigurationManager::~ConfigurationManager()
 {
-	delete _conf;
+	;
 }
 
 configuration_t::ptr_t ConfigurationManager::get_configuration()
@@ -90,9 +91,9 @@ void ConfigurationManager::show_configuration()
 
 	printf("\nListener section\n\n");
 	printf("LISTENER_POSITION = %.2f, %.2f, %.2f\n",
-			(_conf->listener->get_position())[0],
-			(_conf->listener->get_position())[1],
-			(_conf->listener->get_position())[2]);
+			(_conf->listener->pos)[0],
+			(_conf->listener->pos)[1],
+			(_conf->listener->pos)[2]);
 	printf("LISTENER_ORIENTATION = %.2f, %.2f\n",
 			_conf->listener->get_orientation().az,
 			_conf->listener->get_orientation().el);
@@ -176,8 +177,6 @@ void ConfigurationManager::load_configuration(const std::string filename)
 		_conf->sound_source->pos.at(coord++) = (float) atof(t1.get_token().c_str());
 	}
 
-	// orientation of sound source is discarded
-
 	// Listener
 	_conf->listener = Listener::create();
 	assert(_conf->listener.get() != NULL);
@@ -196,6 +195,8 @@ void ConfigurationManager::load_configuration(const std::string filename)
 	}
 
 	_conf->listener->set_position_reference(pos);
+
+	// orientation of sound source is discarded
 
 //	if (!cfr.readInto(tmp, "LISTENER_ORIENTATION"))
 //		throw AvrsException("Error in configuration file: LISTENER_ORIENTATION is missing");

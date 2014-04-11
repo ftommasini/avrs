@@ -22,16 +22,16 @@
 
 #include <iostream>
 #include <cstdio>
+#include <boost/make_shared.hpp>
 
 #include "dxfreader.hpp"
 
 namespace avrs
 {
 
-DxfReader::DxfReader(VirtualEnvironment *ve)
+DxfReader::DxfReader()
 {
-	assert(ve != NULL);
-	_ve = ve;
+	;
 }
 
 void DxfReader::addLayer(const DL_LayerData& data)
@@ -72,7 +72,12 @@ void DxfReader::addVertex(const DL_VertexData& data)
 void DxfReader::add3dFace(const DL_3dFaceData& data)
 {
 	static unsigned int id = 0;
-	_ve->add_surface(new Surface(++id, data.x, data.y, data.z, 4));
+	_surfaces.push_back(boost::make_shared<Surface>(++id, data.x, data.y, data.z, 4));
+}
+
+std::vector<Surface::ptr_t> DxfReader::get_surfaces()
+{
+	return _surfaces;
 }
 
 void DxfReader::print_attributes()
