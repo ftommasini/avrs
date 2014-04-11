@@ -57,7 +57,7 @@ VirtualEnvironment::VirtualEnvironment(configuration_t::ptr_t cs, TrackerBase::p
 	assert(_listener.get() != NULL);
 
 	// FDN
-	const unsigned int N = 8;
+	const unsigned int N = 8;  // lines of FDN
 	long m[N] = { 601, 691, 773, 839, 919, 997, 1061, 1129 };
 	double gA = 1.0; // gain coefficient for the A feedback matrix
 	double b[N] = { 1, 1, 1, 1, 1, 1, 1, 1 };
