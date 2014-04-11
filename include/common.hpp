@@ -57,7 +57,7 @@ typedef struct Position
 {
 	float x;	///< X position (in cm)
 	float y;	///< Y position (in cm)
-	float z;	///z Z position (in cm)
+	float z;	///< Z position (in cm)
 
 	Position()
 	{
