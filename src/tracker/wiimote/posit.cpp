@@ -1,3 +1,24 @@
+/*
+ * Copyright (C) 2013-2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
+ *
+ * Copyright (C) 2009-2012 Mariano Araneda
+ *                         Fabián C. Tommasini <fabian@tommasini.com.ar>
+ *  *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see http://www.gnu.org/licenses/.
+ *
+ */
+
 /**
  * @file posit.cpp
  * @authors Mariano Araneda
@@ -148,9 +169,6 @@ void pos(object_t object, image_t image, camera_t *camera)
 	camera->translation[0] = image.imagePts[0][0] / scale;
 	camera->translation[1] = image.imagePts[0][1] / scale;
 	camera->translation[2] = camera->focalLength / scale;
-	
-	//printf("%f \n", camera->translation[2]);
-	//printf("%f \n", scale);
 
 	/* Computing ROTATION */
 	for (i = 0; i < 3; i++)
