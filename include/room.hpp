@@ -38,7 +38,8 @@ public:
 	Room(configuration_t::ptr_t config);
 	virtual ~Room();
 
-	float get_total_area() const;
+	float total_area() const;
+	float volume() const;
 	unsigned int n_surfaces() const;
 	void add_surface(Surface::ptr_t s);
 	void load_dxf();
@@ -51,6 +52,7 @@ private:
 	std::vector<Surface::ptr_t> _surfaces;
 	bool _new_surface;  // flag that indicates new surface data
 	float _area;
+	float _volume;
 
 	void _update_data();
 	void _update_area();

@@ -274,7 +274,7 @@ inline void rectangular2polar(double *point, float *az_deg, float *el_deg)
 }
 
 // normalized sinc function
-inline void double sinc(double x)
+inline double sinc(double x)
 {
 	if (x == 0.0)
 		return 1;

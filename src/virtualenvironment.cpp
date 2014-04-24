@@ -95,7 +95,6 @@ VirtualEnvironment::VirtualEnvironment(configuration_t::ptr_t cs, TrackerBase::p
 
 	// Room
 	_room = boost::make_shared<Room>(cs);
-	_room->load_dxf();
 
 	// ISM
 	_ism = boost::make_shared<Ism>(cs, _room);
@@ -172,6 +171,7 @@ void VirtualEnvironment::renderize()
 
 	unsigned long i, j;
 	data_t input;
+	data_t image;
 	binauraldata_t output;
 
 	memcpy(&_render_buffer.left[0], &_zeros[0], _config->bir_length_samples * sizeof(sample_t));
@@ -213,29 +213,6 @@ void VirtualEnvironment::renderize()
 		output = _hrtf_iir_filter(input, vs->orientation_ref_listener);
 #endif
 
-		// TODO delay menor a una muestra
-//		_delay_vs_l.clear();
-//		_delay_vs_r.clear();
-//		float delay = (vs->time_rel_ms * SAMPLE_RATE) / 1000.0f;
-//		DPRINT("delay %f", delay);
-//
-//		if (delay >= 0.5f)
-//		{
-//		_delay_vs_l.setDelay(delay);
-//		_delay_vs_r.setDelay(delay);
-//		unsigned long sample = (unsigned long) round(delay);
-//
-//		for (i = 0; i < _length_bir; i++)
-//		{
-//			_render_buffer.left[i] += _delay_vs_l.tick(output.left[i]);
-//			_render_buffer.right[i] += _delay_vs_r.tick(output.right[i]);
-//		}
-//		}
-//		else
-//		{
-//			//
-//		}
-
 //		t.start();
 		// calculate the sample from reflectogram where starts this reflection
 		unsigned long sample = (unsigned long) round((vs->time_rel_ms * SAMPLE_RATE) / 1000.0f);
@@ -250,7 +227,6 @@ void VirtualEnvironment::renderize()
 //		t.stop ();
 //		DPRINT("Buffer - time %.3f", t.elapsed_time(microsecond));
 	}
-
 
 //	static long flag = 0;
 //	flag++;
@@ -543,6 +519,14 @@ void VirtualEnvironment::calc_late_reverberation()
 		_late_buffer[i] = (sample_t) output[i];
 	}
 
+	// add late part to render buffer
+	#pragma omp for
+	for (i = 0; i < _length_bir; i++)
+	{
+		_render_buffer.left[i] += _late_buffer[i];
+		_render_buffer.right[i] += _late_buffer[i];
+
+	}
 
 //	stk::FileWvOut out("late.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
 //

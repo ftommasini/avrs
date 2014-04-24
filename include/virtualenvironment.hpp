@@ -91,6 +91,9 @@ public:
 	void renderize();
 
 	void calc_late_reverberation();
+
+	double mixing_time();
+
 	/**
 	 * Get the current BIR
 	 * @return the current BIR
@@ -104,11 +107,13 @@ private:
 	configuration_t::ptr_t _config;
 
 	// Buffers
-	data_t _input_buffer;
-	binauraldata_t _render_buffer;  // keep the complete BIR
+	data_t _early_buffer;  // early reflections
+	data_t _late_buffer;  // diffusion + late reverberation
+	binauraldata_t _render_buffer;  // complete BIR
+
 	unsigned long _length_bir;
 	data_t _zeros;
-	bool _new_bir;
+	bool _new_bir;  // flag indicates new BIR
 //	stk::DelayA _delay_vs_l;
 //	stk::DelayA _delay_vs_r;
 
@@ -128,7 +133,6 @@ private:
 	Ism::ptr_t _ism;
 	// Late reverberation
 	Fdn::ptr_t _fdn;
-	data_t _late_buffer;
 
 	// renderer
 #ifndef HRTF_IIR
@@ -178,16 +182,16 @@ inline void VirtualEnvironment::start_simulation()
 		_tracker->start();
 }
 
-inline void VirtualEnvironment::calibrate_tracker()
-{
-	if (_tracker.get() != NULL)
-		_tracker->calibrate();
-}
-
 inline void VirtualEnvironment::stop_simulation()
 {
 	if (_tracker.get() != NULL)
 		_tracker->stop();
+}
+
+inline void VirtualEnvironment::calibrate_tracker()
+{
+	if (_tracker.get() != NULL)
+		_tracker->calibrate();
 }
 
 inline binauraldata_t &VirtualEnvironment::get_BIR()
@@ -202,7 +206,7 @@ inline bool VirtualEnvironment::is_new_BIR() const
 
 inline float VirtualEnvironment::get_room_area() const
 {
-	return _room->get_total_area();
+	return _room->total_area();
 }
 
 inline unsigned int VirtualEnvironment::n_surfaces() const
@@ -218,6 +222,11 @@ inline unsigned int VirtualEnvironment::n_vs() const
 inline unsigned int VirtualEnvironment::n_visible_vs()
 {
 	return _ism->get_count_visible_vs();
+}
+
+inline double VirtualEnvironment::mixing_time()
+{
+	return sqrt(_room->volume());
 }
 
 inline bool VirtualEnvironment::_listener_is_moved()

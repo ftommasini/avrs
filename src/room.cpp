@@ -25,8 +25,10 @@ namespace avrs
 Room::Room(configuration_t::ptr_t config)
 {
 	_config = config;
+	_volume = _config->volume;
 	_area = 0.0f;
 	_new_surface = true;
+	load_dxf();
 }
 
 Room::~Room()
@@ -47,9 +49,14 @@ void Room::load_dxf()
 	_update_data();
 }
 
-float Room::get_total_area() const
+float Room::total_area() const
 {
 	return _area;
+}
+
+float Room::volume() const
+{
+	return _volume;
 }
 
 unsigned int Room::n_surfaces() const
