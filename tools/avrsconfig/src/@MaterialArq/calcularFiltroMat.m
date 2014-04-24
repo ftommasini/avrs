@@ -15,7 +15,7 @@ function [B A] =  calcularFiltroMat(m, orden, fs, n)
 % Creado: 2005
 % Modificado: 05/2011
 
-coefRef = m.CoefReflexion;
+coefRef = -abs(m.CoefReflexion);
 ndiv2 = n / 2;
 % resoluci�n en frecuencias
 deltaF = fs / n;

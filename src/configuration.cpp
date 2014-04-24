@@ -20,7 +20,7 @@
  * @file configuration.cpp
  */
 
-#include <cstdio>
+#include <fstream>
 #include <boost/filesystem.hpp>
 #include <boost/make_shared.hpp>
 
@@ -262,57 +262,52 @@ std::string ConfigurationManager::full_path(const std::string relative_path)
 	return p_full.string();
 }
 
-bool ConfigurationManager::load_surface_filters(string filename)
+bool ConfigurationManager::load_surface_filters(std::string filename)
 {
-	FILE *p_file;
-	size_t n;
-	unsigned int n_surf, order;
+	bool ok = true;
+	std::ifstream file;
+	file.exceptions(std::ifstream::failbit | std::ifstream::badbit );
 
-	p_file = fopen(filename.c_str(), "rb");
+	try {
+		file.open(filename.c_str(), std::ios::in | std::ios::binary);
 
-	if (!p_file)
+		// Number of surfaces to read
+		uint n_surf;
+		file.read(reinterpret_cast<char *>(&n_surf), sizeof(uint));
+
+		// Filters order
+		uint order;
+		file.read(reinterpret_cast<char *>(&order), sizeof(uint));
+
+		for (uint i = 0; i < n_surf; i++)
+		{
+			std::vector<double> row_b(order + 1);
+			std::vector<double> row_a(order + 1);
+
+			// B coefficients
+			file.read(reinterpret_cast<char *>(&row_b[0]), sizeof(double) * (order + 1));
+			// A coefficients
+			file.read(reinterpret_cast<char *>(&row_a[0]), sizeof(double) * (order + 1));
+
+			_conf->b_coeff.push_back(row_b);
+			_conf->a_coeff.push_back(row_a);
+		}
+
+		file.close();
+		ok = true;
+	}
+	catch (std::ifstream::failure ex)
 	{
-		return false;
+		std::cout << ex.what() << std::endl;
+		ok = false;
+	}
+	catch (std::string ex)
+	{
+		std::cout << ex << std:: endl;
+		ok = false;
 	}
 
-	// Number of surfaces to read
-	n = fread(&n_surf, sizeof(unsigned int), 1, p_file);
-
-	if (n != 1)
-		goto error;
-
-	// Filters order
-	n = fread(&order, sizeof(unsigned int), 1, p_file);
-
-	if (n != 1)
-		goto error;
-
-	for (unsigned int i = 0; i < n_surf; i++)
-	{
-		std::vector<double> row_b(order + 1);
-
-		n = fread(&row_b[0], sizeof(double), order + 1, p_file);
-
-		if (n != order + 1)
-			goto error;
-
-		_conf->b_coeff.push_back(row_b);
-		std::vector<double> row_a(order + 1);
-
-		n = fread(&row_a[0], sizeof(double), order + 1, p_file);
-
-		if (n != order + 1)
-			goto error;
-
-		_conf->a_coeff.push_back(row_a);
-	}
-
-	fclose(p_file);
-	return true;
-
-error: // read error management
-	fclose(p_file);
-	return false;
+	return ok;
 }
 
 }  // namespace avrs
