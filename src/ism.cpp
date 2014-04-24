@@ -30,6 +30,7 @@ Ism::Ism(configuration_t::ptr_t config, const Room::ptr_t &r)
 	_config = config;
 	_room = r;
 	_count_vs = 0;
+	_time_ref_ms = 0.0f;
 }
 
 Ism::~Ism()

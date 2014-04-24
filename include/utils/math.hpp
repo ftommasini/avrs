@@ -273,6 +273,15 @@ inline void rectangular2polar(double *point, float *az_deg, float *el_deg)
 	*el_deg = rad2deg(el_r);
 }
 
+// normalized sinc function
+inline void double sinc(double x)
+{
+	if (x == 0.0)
+		return 1;
+
+	return sin(PI * x) / (PI * x);
+}
+
 }  // namespace math
 
 }  // namespace avrs
