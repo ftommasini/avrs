@@ -44,6 +44,7 @@ typedef struct Configuration
 	float angle_threshold;
 	float bir_length_sec; ///< binaural impulse response (BIR) length in seconds
 	unsigned long bir_length_samples;
+	std::string air_absorption_file;
 
 	// Room
 	std::string dxf_file;

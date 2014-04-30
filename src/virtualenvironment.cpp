@@ -106,6 +106,8 @@ VirtualEnvironment::VirtualEnvironment(configuration_t::ptr_t cs, TrackerBase::p
 	t.print_elapsed_time(millisecond, "ISM");
 
 	_outputs.resize(_ism->get_count_visible_vs());  // output per visible VS
+
+	_air_absorption = AirAbsorption::create(_config->air_absorption_file);
 }
 
 VirtualEnvironment::~VirtualEnvironment()

@@ -246,6 +246,11 @@ void ConfigurationManager::load_configuration(const std::string filename)
 
 	_conf->speed_of_sound = avrs::math::speed_of_sound(_conf->temperature);
 
+	if (!cfr.readInto(tmp, "AIR_ABSORPTION_FILE"))
+		throw AvrsException("Error in configuration file: AIR_ABSORPTION_FILE is missing");
+
+	_conf->air_absorption_file = full_path(tmp);
+
 	if (!cfr.readInto(_conf->angle_threshold, "ANGLE_THRESHOLD"))
 		throw AvrsException("Error in configuration file: ANGLE_THRESHOLD is missing");
 

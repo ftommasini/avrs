@@ -50,6 +50,7 @@ extern "C" {
 #include "fdn.hpp"
 #include "common.hpp"
 #include "configuration.hpp"
+#include "airabsorption.hpp"
 #include "virtualsource.hpp"
 
 #include "hrtfconvolver.hpp"
@@ -133,6 +134,8 @@ private:
 	Ism::ptr_t _ism;
 	// Late reverberation
 	Fdn::ptr_t _fdn;
+	// Air absorption
+	AirAbsorption::ptr_t _air_absorption;
 
 	// renderer
 #ifndef HRTF_IIR
