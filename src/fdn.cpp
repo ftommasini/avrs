@@ -101,12 +101,12 @@ void Fdn::_init()
 	// Absorption filters
 	for (unsigned int i = 0; i < _N; i++)
 	{
-		_delayline[i] = boost::make_shared<Delay>(_m[i], _m[i]); //new Delay(_m[i], _m[i]);
+		_delayline[i] = boost::make_shared<Delay>(_m[i], _m[i]);
 
 		float exponent = -(3.0 * _m[i] * T) / _t60_0;
 		g[i] = pow(10, exponent);
 		a[i] = log10(g[i]) * tmp_val;
-		_lp_filter[i] = boost::make_shared<OnePole>(); //new OnePole();
+		_lp_filter[i] = boost::make_shared<OnePole>();
 		_lp_filter[i]->setB0(g[i] * (1 - a[i]));
 		_lp_filter[i]->setA1(a[i]);
 
