@@ -176,8 +176,8 @@ void VirtualEnvironment::renderize()
 	data_t image;
 	binauraldata_t output;
 
-	memcpy(&_render_buffer.left[0], &_zeros[0], _config->bir_length_samples * sizeof(sample_t));
-	memcpy(&_render_buffer.right[0], &_zeros[0], _config->bir_length_samples * sizeof(sample_t));
+	memcpy(&_render_buffer.left[0], &_zeros[0], sample_mix_time() * sizeof(sample_t));
+	memcpy(&_render_buffer.right[0], &_zeros[0], sample_mix_time() * sizeof(sample_t));
 
 	// TODO GUARDAR EL ITERATOR EN CADA VS, ASI SE RECORRE SOLAMENTE LAS VISIBLES
 	for (Ism::tree_vs_t::iterator it = _ism->tree_vs.begin(); it != _ism->tree_vs.end(); it++)
@@ -222,7 +222,6 @@ void VirtualEnvironment::renderize()
 		// add filter reflection to reflectogram
 		for (i = sample, j = 0; j < output.size(); i++, j++)
 		{
-			//assert(i <= _render_buffer.left.size());
 			_render_buffer.left[i] += output.left[j];
 			_render_buffer.right[i] += output.right[j];
 		}
@@ -230,47 +229,45 @@ void VirtualEnvironment::renderize()
 //		DPRINT("Buffer - time %.3f", t.elapsed_time(microsecond));
 	}
 
-//	static long flag = 0;
-//	flag++;
-//
-//	if (flag == 100)
-//	{
-//	stk::FileWvOut out_l("early_l.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
-//	stk::FileWvOut out_r("early_r.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
-//
-//	for (i = 0; i < _length_bir; i++)
-//	{
-//		out_l.tick(_render_buffer.left[i]);
-//		out_r.tick(_render_buffer.right[i]);
-//	}
-//	}
+	static long flag = 0;
+	flag++;
+
+	if (flag == 50)
+	{
+	stk::FileWvOut out_l("early_l.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
+	stk::FileWvOut out_r("early_r.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
+
+	for (i = 0; i < _length_bir; i++)
+	{
+		out_l.tick(_render_buffer.left[i]);
+		out_r.tick(_render_buffer.right[i]);
+	}
+	}
 
 //	t.start();
-	// add late part to render buffer
+	// add late part to render buffer (up to mixing time)
 	#pragma omp for
-	for (i = 0; i < _length_bir; i++)
+	for (i = 0; i < sample_mix_time(); i++)
 	{
 		_render_buffer.left[i] += _late_buffer[i];
 		_render_buffer.right[i] += _late_buffer[i];
-
 	}
 //	t.stop();
 //	DPRINT("Union - time %.3f", t.elapsed_time(microsecond));
 
 	_new_bir = true;
 
+	if (flag == 50)
+	{
+	stk::FileWvOut out_l("bir_l.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
+	stk::FileWvOut out_r("bir_r.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
 
-//	if (flag == 100)
-//	{
-//	stk::FileWvOut out_l("bir_l.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
-//	stk::FileWvOut out_r("bir_r.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
-//
-//	for (i = 0; i < _length_bir; i++)
-//	{
-//		out_l.tick(_render_buffer.left[i]);
-//		out_r.tick(_render_buffer.right[i]);
-//	}
-//	}
+	for (i = 0; i < _length_bir; i++)
+	{
+		out_l.tick(_render_buffer.left[i]);
+		out_r.tick(_render_buffer.right[i]);
+	}
+	}
 }
 
 #else
@@ -504,12 +501,12 @@ void VirtualEnvironment::calc_late_reverberation()
 	{
 		d = (i * _config->speed_of_sound) / SAMPLE_RATE;  // calculation of distance travel by sound
 		scaling_factor = (d > 1.0f ? d : 1);
+//		scaling_factor = 1;
 		output[i] /= (max_value * scaling_factor);  // scaling (normalize and 1/r attenuation)
 	}
 
-	// mixing time (converted to sample)
-	//unsigned long sample_mix = (unsigned long) ((_config->max_distance / _config->speed_of_sound) * SAMPLE_RATE);
-	uint sample_mix = (uint) ((mixing_time() * SAMPLE_RATE) / 1000);
+	// mix time (converted to sample)
+	unsigned long sample_mix = sample_mix_time();
 	DPRINT("%d", sample_mix);
 
 	for (i = 0; i < sample_mix; i++)
@@ -526,7 +523,7 @@ void VirtualEnvironment::calc_late_reverberation()
 		_render_buffer.right[i] += _late_buffer[i];
 	}
 
-	stk::FileWvOut out("late.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
+	stk::FileWvOut out("late2.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
 
 	for (i = 0; i < _length_bir; i++)
 		out.tick(_late_buffer[i]);

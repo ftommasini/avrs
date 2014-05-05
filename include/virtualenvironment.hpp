@@ -90,10 +90,9 @@ public:
 	 * Render the binaural impulse response (BIR) in real-time process by using current tracker data
 	 */
 	void renderize();
-
 	void calc_late_reverberation();
-
-	double mixing_time();
+	double mix_time();
+	unsigned long sample_mix_time();
 
 	/**
 	 * Get the current BIR
@@ -227,9 +226,15 @@ inline unsigned int VirtualEnvironment::n_visible_vs()
 	return _ism->get_count_visible_vs();
 }
 
-inline double VirtualEnvironment::mixing_time()
+inline double VirtualEnvironment::mix_time()
 {
 	return sqrt(_room->volume());
+}
+
+inline unsigned long VirtualEnvironment::sample_mix_time()
+{
+	//return (uint) ((mixing_time() * SAMPLE_RATE) / 1000);
+	return (unsigned long) ((_config->max_distance / _config->speed_of_sound) * SAMPLE_RATE);
 }
 
 inline bool VirtualEnvironment::_listener_is_moved()
