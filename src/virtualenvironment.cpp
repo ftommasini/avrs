@@ -176,8 +176,8 @@ void VirtualEnvironment::renderize()
 	data_t image;
 	binauraldata_t output;
 
-	memcpy(&_render_buffer.left[0], &_zeros[0], sample_mix_time() * sizeof(sample_t));
-	memcpy(&_render_buffer.right[0], &_zeros[0], sample_mix_time() * sizeof(sample_t));
+	memcpy(&_render_buffer.left[0], &_late_buffer[0], sample_mix_time() * sizeof(sample_t));
+	memcpy(&_render_buffer.right[0], &_late_buffer[0], sample_mix_time() * sizeof(sample_t));
 
 	// TODO GUARDAR EL ITERATOR EN CADA VS, ASI SE RECORRE SOLAMENTE LAS VISIBLES
 	for (Ism::tree_vs_t::iterator it = _ism->tree_vs.begin(); it != _ism->tree_vs.end(); it++)
@@ -229,12 +229,17 @@ void VirtualEnvironment::renderize()
 //		DPRINT("Buffer - time %.3f", t.elapsed_time(microsecond));
 	}
 
+	_new_bir = true;
+
+
+	// FOR DEBUG!!!
 	static long flag = 0;
 	flag++;
 
 	if (flag == 50)
 	{
-	stk::FileWvOut out_l("early_l.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
+
+		stk::FileWvOut out_l("early_l.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
 	stk::FileWvOut out_r("early_r.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
 
 	for (i = 0; i < _length_bir; i++)
@@ -242,23 +247,7 @@ void VirtualEnvironment::renderize()
 		out_l.tick(_render_buffer.left[i]);
 		out_r.tick(_render_buffer.right[i]);
 	}
-	}
 
-//	t.start();
-	// add late part to render buffer (up to mixing time)
-	#pragma omp for
-	for (i = 0; i < sample_mix_time(); i++)
-	{
-		_render_buffer.left[i] += _late_buffer[i];
-		_render_buffer.right[i] += _late_buffer[i];
-	}
-//	t.stop();
-//	DPRINT("Union - time %.3f", t.elapsed_time(microsecond));
-
-	_new_bir = true;
-
-	if (flag == 50)
-	{
 	stk::FileWvOut out_l("bir_l.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
 	stk::FileWvOut out_r("bir_r.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
 
@@ -267,6 +256,7 @@ void VirtualEnvironment::renderize()
 		out_l.tick(_render_buffer.left[i]);
 		out_r.tick(_render_buffer.right[i]);
 	}
+
 	}
 }
 
