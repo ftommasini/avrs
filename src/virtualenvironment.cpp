@@ -483,7 +483,7 @@ void VirtualEnvironment::calc_late_reverberation()
 	std::vector<double> output(_length_bir);  // temporary
 
 	double val;
-	unsigned long i;
+	uint i;
 	double max_value = 0.0;
 	double abs_value;
 
@@ -508,18 +508,15 @@ void VirtualEnvironment::calc_late_reverberation()
 	}
 
 	// mixing time (converted to sample)
-	unsigned long sample_mix = (unsigned long) ((_config->max_distance / _config->speed_of_sound) * SAMPLE_RATE);
-	double k = sample_mix / -log(0.01);
+	//unsigned long sample_mix = (unsigned long) ((_config->max_distance / _config->speed_of_sound) * SAMPLE_RATE);
+	uint sample_mix = (uint) ((mixing_time() * SAMPLE_RATE) / 1000);
+	DPRINT("%d", sample_mix);
 
 	for (i = 0; i < sample_mix; i++)
-	{
-		_late_buffer[i] = (sample_t) (output[i] * (1.0 - exp(-(i + 1.0) / k)));  // attenuation function for early part
-	}
+		_late_buffer[i] = (sample_t) (output[i] * (1.0 - pow(0.01, (i + 1.0) / sample_mix)));  // attenuation function for early part
 
 	for (i = sample_mix; i < _length_bir; i++)
-	{
 		_late_buffer[i] = (sample_t) output[i];
-	}
 
 	// add late part to render buffer
 	#pragma omp for
@@ -527,13 +524,12 @@ void VirtualEnvironment::calc_late_reverberation()
 	{
 		_render_buffer.left[i] += _late_buffer[i];
 		_render_buffer.right[i] += _late_buffer[i];
-
 	}
 
-//	stk::FileWvOut out("late.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
-//
-//	for (i = 0; i < _length_bir; i++)
-//		out.tick(_late_buffer[i]);
+	stk::FileWvOut out("late.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
+
+	for (i = 0; i < _length_bir; i++)
+		out.tick(_late_buffer[i]);
 }
 
 data_t VirtualEnvironment::_surfaces_filter(data_t &input, const Ism::tree_vs_t::iterator node)
