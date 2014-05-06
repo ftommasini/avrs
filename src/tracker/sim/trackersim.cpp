@@ -40,7 +40,7 @@ TrackerSim::TrackerSim(sim_t sim, unsigned int read_interval_ms, std::string fil
 
 TrackerSim::~TrackerSim()
 {
-	this->stop();
+	stop();
 }
 
 TrackerSim::ptr_t TrackerSim::create(sim_t sim, unsigned int read_interval_ms, std::string filename)
@@ -259,12 +259,12 @@ void TrackerSim::sim_from_file()
 void TrackerSim::sim_constant()
 {
 	// hardcoded values
-	_data.pos.x = 5.0f;
-	_data.pos.y = 3.0f;
+	_data.pos.x = 4.32f;
+	_data.pos.y = 2.61f;
 	_data.pos.z = 1.0f;
 
-	_data.ori.az = -15.0f;
-	_data.ori.el = -2.5f;
+	_data.ori.az = 180.0f;
+	_data.ori.el = 0.0f;
 	_data.ori.ro = 0.0f;
 }
 

@@ -80,10 +80,15 @@ void System::_init()
 			read_interval_ms);
 #else
 	std::cout << "Starting simulated tracker\n";
+
+//	_tracker = TrackerSim::create(
+//			TrackerSim::from_file,
+//			read_interval_ms,
+//			_config_sim->tracker_sim_file);
+
 	_tracker = TrackerSim::create(
-			TrackerSim::from_file,
-			read_interval_ms,
-			_config_sim->tracker_sim_file);
+			TrackerSim::constant,
+			read_interval_ms);
 #endif
 
 	assert(_tracker.get() != NULL);
