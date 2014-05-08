@@ -205,6 +205,7 @@ static const short int VS_SAMPLES = 256;
 
 
 #define HRTF_IIR
+//#define FDN_SCALING_DISTANCE
 //#define VSFILTER_THREADS
 
 }  // namespace
