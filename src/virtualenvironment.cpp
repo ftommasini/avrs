@@ -485,16 +485,24 @@ void VirtualEnvironment::calc_late_reverberation()
 
 	// mix time (converted to sample)
 	unsigned long sample_mix = sample_mix_time();
+
+#ifdef FDN_SCALING_DISTANCE
+	for (i = 0; i < _length_bir; i++)
+	{
+		float d = (i * _config->speed_of_sound) / SAMPLE_RATE;  // calculation of distance travel by sound
+		float scaling_factor = (d > 1.0f ? d : 1);
+		output[i] /= (max_value * scaling_factor);  // scaling (normalize and 1/r attenuation)
+	}
+
+	// attenuation function for early part
+	for (i = 0; i < sample_mix; i++)
+		_late_buffer[i] = (sample_t) (output[i] * (1.0 - pow(0.01, (i + 1.0) / sample_mix)));
+
+	for (i = sample_mix; i < _length_bir; i++)
+		_late_buffer[i] = (sample_t) output[i];
+#else
 	float dist_mix = (float) (sample_mix * _config->speed_of_sound) / SAMPLE_RATE;
 	float scaling_factor = (1 / dist_mix) / fabs(output[sample_mix]);  // for scale properly
-
-//	for (i = 0; i < _length_bir; i++)
-//	{
-////		d = (i * _config->speed_of_sound) / SAMPLE_RATE;  // calculation of distance travel by sound
-////		scaling_factor = (d > 1.0f ? d : 1);
-////		scaling_factor = 1;
-//		output[i] /= (max_value * scaling_factor);  // scaling (normalize and 1/r attenuation)
-//	}
 
 	// attenuation function for early part
 	for (i = 0; i < sample_mix; i++)
@@ -502,6 +510,7 @@ void VirtualEnvironment::calc_late_reverberation()
 
 	for (i = sample_mix; i < _length_bir; i++)
 		_late_buffer[i] = (sample_t) (output[i] * scaling_factor);
+#endif
 
 	// add late part to render buffer
 	#pragma omp for
