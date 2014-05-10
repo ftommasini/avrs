@@ -36,6 +36,7 @@ Installing the v4.8 compilers does not remove the previous v4.6 compiler. We nee
 	$ sudo update-alternatives --config gcc
 
 Then select GCC v4.8.
+
 Calling the C compiler with `--version` confirms the right version is correctly installed:
 
 	$ gcc --version
