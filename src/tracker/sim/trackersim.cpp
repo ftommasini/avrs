@@ -93,7 +93,6 @@ inline void TrackerSim::calibrate()
 	;  // nothing to do
 }
 
-
 void *TrackerSim::_threadWrapper(void *arg)
 {
 	return reinterpret_cast<TrackerSim*> (arg)->_thread(NULL);
