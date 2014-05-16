@@ -21,6 +21,7 @@
  */
 
 #include <rtai_lxrt.h>
+#include <boost/filesystem.hpp>
 
 #include "tracker/sim/trackersim.hpp"
 #include "utils/rttools.hpp"
@@ -269,8 +270,9 @@ void TrackerSim::sim_constant()
 
 void TrackerSim::load_sim_constant_file()
 {
-	std::string filename = "tracker_sim_constant.dat";
-	ConfigFileReader cfr(filename);
+	std::string filename = "tracker_sim_constant.conf";
+	boost::filesystem::path p_full = boost::filesystem::current_path() / "etc" / filename;
+	ConfigFileReader cfr(p_full.string());
 
 	if (!cfr.readInto(_data.pos.x, "X"))
 		throw AvrsException("Error in tracker file: X is missing");
