@@ -25,6 +25,7 @@
 #include <rtai_mbx.h>
 #include <rtai_fifos.h>
 #include <stk/Stk.h>
+#include <stk/FileWvOut.h>
 
 #include "utils/rttools.hpp"
 #include "utils/math.hpp"
@@ -251,18 +252,17 @@ void *System::_rt_thread(void *arg)
 		// get the new BIR
 		_bir = _ve->get_BIR();
 
-		if (_ve->is_new_BIR())
-		{
-			stk::FileWvOut out_bir("bir.wav", 2, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
-
-			for (i = 0; i < _bir.size(); i++)
-			{
-				stk::StkFrames frame(1, 2);  // 2 channels
-
-				out_bir.tick(_bir.left);
-			}
-
-		}
+//		if (_ve->is_new_BIR())
+//		{
+//			stk::FileWvOut out_l("bir_l.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
+//			stk::FileWvOut out_r("bir_r.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
+//
+//			for (i = 0; i < _bir.size(); i++)
+//			{
+//				out_l.tick(_bir.left[i]);
+//				out_r.tick(_bir.right[i]);
+//			}
+//		}
 
 		// update the BIR in the real-time convolver
 //		t_conv.start();
