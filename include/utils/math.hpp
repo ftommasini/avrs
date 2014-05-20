@@ -229,9 +229,14 @@ inline float roundn(float x, int n)
 	return (float) (p * round(x / p));
 }
 
+/**
+ * Approximate speed of sound in dry air (0% humidity) at temperatures near 0ºC
+ * @param temp Temperature in ºC
+ * @return Speed of sound in m/s
+ */
 inline float speed_of_sound(float temp)
 {
-	return 331.4 * sqrt(1 + (temp / 273));
+	return 331.3 * sqrt(1 + (temp / 273.15));
 }
 
 inline arma::mat::fixed<4,4> rotation_matrix_from_angles(const avrs::orientation_angles_t &o)
