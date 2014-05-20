@@ -57,6 +57,7 @@ typedef struct Configuration
 	// ISM parameters
 	float max_distance;
 	unsigned int max_order;
+	float transition_time;
 
 	std::vector< std::vector<double> > b_coeff;
 	std::vector< std::vector<double> > a_coeff;

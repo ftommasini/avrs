@@ -96,11 +96,6 @@ void System::_init()
 
 	_ve = VirtualEnvironment::create(_config_sim, _tracker);
 	assert(_ve.get() != NULL);
-
-	//_ve->print_vis();  // for debug only
-	// Print information of ISM
-	std::cout << "Total VSs calculated: " << _ve->n_vs()  << std::endl;
-	std::cout << "Audible VSs: " << _ve->n_visible_vs() << std::endl;
 }
 
 // SRT main task
@@ -252,17 +247,17 @@ void *System::_rt_thread(void *arg)
 		// get the new BIR
 		_bir = _ve->get_BIR();
 
-//		if (_ve->is_new_BIR())
-//		{
-//			stk::FileWvOut out_l("bir_l.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
-//			stk::FileWvOut out_r("bir_r.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
-//
-//			for (i = 0; i < _bir.size(); i++)
-//			{
-//				out_l.tick(_bir.left[i]);
-//				out_r.tick(_bir.right[i]);
-//			}
-//		}
+		if (_ve->is_new_BIR())
+		{
+			stk::FileWvOut out_l("bir_l.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
+			stk::FileWvOut out_r("bir_r.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
+
+			for (i = 0; i < _bir.size(); i++)
+			{
+				out_l.tick(_bir.left[i]);
+				out_r.tick(_bir.right[i]);
+			}
+		}
 
 		// update the BIR in the real-time convolver
 //		t_conv.start();

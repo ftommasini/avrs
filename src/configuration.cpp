@@ -157,6 +157,9 @@ void ConfigurationManager::load_configuration(const std::string filename)
 	if (!cfr.readInto(_conf->max_order, "ISM_MAX_ORDER"))
 		throw AvrsException("Error in configuration file: ISM_MAX_ORDER is missing");
 
+	if (!cfr.readInto(_conf->transition_time, "ISM_TRANSITION_TIME"))
+		throw AvrsException("Error in configuration file: ISM_TRANSITION_TIME is missing");
+
 	// Sound Source
 	if (!cfr.readInto(tmp, "SOUND_SOURCE_IR_FILE"))
 		throw AvrsException("Error in configuration file: SOUND_SOURCE_IR_FILE is missing");

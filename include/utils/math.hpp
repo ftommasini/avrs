@@ -29,6 +29,7 @@
 #ifndef MATH_HPP_
 #define MATH_HPP_
 
+#include <vector>
 #include <limits>
 #include <cmath>
 #include <armadillo>
@@ -285,6 +286,34 @@ inline double sinc(double x)
 		return 1;
 
 	return sin(PI * x) / (PI * x);
+}
+
+inline std::vector<double> generate_range(double a, double inc, double b)
+{
+    std::vector<double> array;
+
+    while(a <= b)
+    {
+        array.push_back(a);
+        a += inc;
+    }
+
+    return array;
+}
+
+inline std::vector<double> linspace(double a, double b, int n)
+{
+    std::vector<double> array(n);
+    double step = (b - a) / (n - 1);
+
+    for (int i = 0; i < n; i++)
+    {
+    	array.push_back(a + (i * step));
+    }
+
+    array[n - 1] = b;
+
+    return array;
 }
 
 }  // namespace math

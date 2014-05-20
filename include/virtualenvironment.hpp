@@ -91,7 +91,6 @@ public:
 	 */
 	void renderize();
 	void calc_late_reverberation();
-	double mix_time();
 	unsigned long sample_mix_time();
 
 	/**
@@ -226,15 +225,13 @@ inline unsigned int VirtualEnvironment::n_visible_vs()
 	return _ism->get_count_visible_vs();
 }
 
-inline double VirtualEnvironment::mix_time()
-{
-	return sqrt(_room->volume());
-}
-
 inline unsigned long VirtualEnvironment::sample_mix_time()
 {
-	//return (uint) ((mixing_time() * SAMPLE_RATE) / 1000);
-	return (unsigned long) ((_config->max_distance / _config->speed_of_sound) * SAMPLE_RATE);
+	if (_config->transition_time < 0.0f)
+		return (unsigned long)((_config->max_distance / _config->speed_of_sound) * SAMPLE_RATE);
+		//return (unsigned long)((sqrt(_room->volume()) * SAMPLE_RATE) / 1000);  // mixing time
+
+	return (unsigned long)((_config->transition_time / _config->speed_of_sound) * SAMPLE_RATE);
 }
 
 inline bool VirtualEnvironment::_listener_is_moved()

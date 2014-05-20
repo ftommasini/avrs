@@ -139,7 +139,7 @@ void Fdn::_init()
 
 	// stabilize the FDN
 	// eliminate the first part of the output
-	long n_ticks = _m[_N - 1] * 2;
+	long n_ticks = _m[_N - 1] * 4;
 	_stabilize(n_ticks);
 }
 

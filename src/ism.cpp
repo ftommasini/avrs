@@ -186,6 +186,8 @@ void Ism::print_list()
 
 void Ism::print_summary()
 {
+	std::cout << "ISM Order:\t" << _config->max_order << std::endl;
+	std::cout << "ISM Distance:\t"  << _config->max_distance << std::endl;
 	std::cout << "Total VSs:\t" << get_count_vs() << std::endl;
 	std::cout << "Total MB:\t" << boost::format("%.3f\n") % (get_bytes_vs() / (1024.0 * 1024.0));
 	std::cout << "Audible VSs:\t" << get_count_visible_vs() << std::endl;
