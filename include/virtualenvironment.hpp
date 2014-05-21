@@ -111,8 +111,6 @@ private:
 	unsigned long _length_bir;
 	data_t _zeros;
 	bool _new_bir;  // flag indicates new BIR
-//	stk::DelayA _delay_vs_l;
-//	stk::DelayA _delay_vs_r;
 
 	// Tracker
 	TrackerBase::ptr_t _tracker;

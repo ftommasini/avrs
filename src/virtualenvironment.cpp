@@ -79,9 +79,6 @@ VirtualEnvironment::VirtualEnvironment(configuration_t::ptr_t cs, TrackerBase::p
 	_hcdb = HrtfCoeffSet::create(_config->hrtf_file);
 	_delay.setMaximumDelay(BUFFER_SAMPLES);
 
-//	_delay_vs_l.setMaximumDelay(BUFFER_SAMPLES);
-//	_delay_vs_l.setMaximumDelay(BUFFER_SAMPLES);
-
 	// Room
 	_room = boost::make_shared<Room>(cs);
 	std::cout << "Room loaded" << std::endl;
@@ -318,24 +315,32 @@ void VirtualEnvironment::calc_late_reverberation()
 		input[i] = math::sinc(x[i]);
 
 	std::vector<double> output(_length_bir);  // temporary
-	double val;
 	uint i;
+
+	for (i = 0; i < _length_bir; i++)
+		output[i] = _fdn->tick(input[i]);
+
+	// mix time (converted to sample)
+	unsigned long sample_mix = sample_mix_time();
+	double val_mix = output[sample_mix];
+
+	// scaling
+	for (i = 0; i< _length_bir; i++)
+		output[i] /= val_mix;
+
+
+#ifdef FDN_SCALING_DISTANCE
 	double max_value = 0.0;
 	double abs_value;
 
 	for (i = 0; i < _length_bir; i++)
 	{
-		output[i] = _fdn->tick(input[i]);
 		abs_value = fabs(output[i]);
 
 		if (abs_value > max_value)
 			max_value = abs_value;
 	}
 
-	// mix time (converted to sample)
-	unsigned long sample_mix = sample_mix_time();
-
-#ifdef FDN_SCALING_DISTANCE
 	for (i = 0; i < _length_bir; i++)
 	{
 		float d = (i * _config->speed_of_sound) / SAMPLE_RATE;  // calculation of distance travel by sound
@@ -354,14 +359,8 @@ void VirtualEnvironment::calc_late_reverberation()
 	float scaling_factor = (1 / dist_mix) / fabs(output[sample_mix]);  // for scale properly
 
 	// attenuation function for early part
-//	for (i = 0; i < sample_mix; i++)
-//		_late_buffer[i] = (sample_t) (output[i] * (1.0 - pow(0.01, (i + 1.0) / sample_mix)) * scaling_factor);
-
-	scaling_factor = 0.3f;
-
-	// attenuation function for early part
 	for (i = 0; i < sample_mix; i++)
-		_late_buffer[i] = (sample_t) (output[i] * scaling_factor) ;
+		_late_buffer[i] = (sample_t) (output[i] * (1.0 - pow(0.01, (i + 1.0) / sample_mix)) * scaling_factor);
 
 	// normalization for late part
 	for (i = sample_mix; i < _length_bir; i++)
