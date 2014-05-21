@@ -84,6 +84,8 @@ VirtualEnvironment::VirtualEnvironment(configuration_t::ptr_t cs, TrackerBase::p
 
 	// Room
 	_room = boost::make_shared<Room>(cs);
+	std::cout << "Room loaded" << std::endl;
+	std::cout << "Volume: " << _room->volume() << " - Total area: " << _room->total_area() << std::endl;
 
 	// ISM
 	_ism = boost::make_shared<Ism>(cs, _room);
@@ -305,14 +307,15 @@ void VirtualEnvironment::calc_late_reverberation()
 //	orientation_angles_t ori;  // dummy
 //	data_t input = _sound_source->get_IR(ori);
 
-	data_t input(_length_bir);
-	input[0] = 1.0;  // delta dirac
+//	data_t input(_length_bir);
+//	input[0] = 1.0;  // delta dirac
 
-//	int n = 64;
-//	std::vector<double> x = math::linspace(-PI, -PI, n);
-//
-//	for (int i = 0; i < n; i++)
-//		input[i] = math::sinc(x[i]);
+	data_t input(_length_bir);
+	int n = 64;
+	std::vector<double> x = math::linspace(-PI, -PI, n);
+
+	for (int i = 0; i < n; i++)
+		input[i] = math::sinc(x[i]);
 
 	std::vector<double> output(_length_bir);  // temporary
 	double val;
@@ -351,8 +354,14 @@ void VirtualEnvironment::calc_late_reverberation()
 	float scaling_factor = (1 / dist_mix) / fabs(output[sample_mix]);  // for scale properly
 
 	// attenuation function for early part
+//	for (i = 0; i < sample_mix; i++)
+//		_late_buffer[i] = (sample_t) (output[i] * (1.0 - pow(0.01, (i + 1.0) / sample_mix)) * scaling_factor);
+
+	scaling_factor = 0.3f;
+
+	// attenuation function for early part
 	for (i = 0; i < sample_mix; i++)
-		_late_buffer[i] = (sample_t) (output[i] * (1.0 - pow(0.01, (i + 1.0) / sample_mix)) * scaling_factor);
+		_late_buffer[i] = (sample_t) (output[i] * scaling_factor) ;
 
 	// normalization for late part
 	for (i = sample_mix; i < _length_bir; i++)
