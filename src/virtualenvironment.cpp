@@ -63,7 +63,8 @@ VirtualEnvironment::VirtualEnvironment(configuration_t::ptr_t cs, TrackerBase::p
 	double b[N] = { 1, 1, 1, 1, 1, 1, 1, 1 };
 	double c[N] = { 1, -1, 1, -1, 1, -1, 1, -1};
 	double d = 0.0;
-	_fdn = Fdn::create(N, gA, b, c, d, m, _config->rt60_0, _config->rt60_pi);
+	_fdn = Fdn::create(N, gA, b, c, d, m, _config->rt60_0, _config->rt60_pi,
+			_config->fdn_b_coeff, _config->fdn_a_coeff);
 
 	// BIR length
 	_length_bir = _config->bir_length_samples;
@@ -104,9 +105,9 @@ VirtualEnvironment::VirtualEnvironment(configuration_t::ptr_t cs, TrackerBase::p
 	_ism->calculate(false);
 	t.stop();
 	t.print_elapsed_time(millisecond, "ISM");
+	_ism->print_summary();
 
 	_outputs.resize(_ism->get_count_visible_vs());  // output per visible VS
-
 	_air_absorption = AirAbsorption::create(_config->air_absorption_file);
 }
 
@@ -158,8 +159,6 @@ bool VirtualEnvironment::update_listener_orientation()
 	return true;
 }
 
-#ifndef VSFILTER_THREADS
-
 void VirtualEnvironment::renderize()
 {
 	// check if the listener is moved
@@ -173,10 +172,13 @@ void VirtualEnvironment::renderize()
 	unsigned long i, j;
 	data_t input;
 	data_t image;
-	binauraldata_t output;
+	binauraldata_t output(BUFFER_SAMPLES);
 
 	memcpy(&_render_buffer.left[0], &_late_buffer[0], sample_mix_time() * sizeof(sample_t));
 	memcpy(&_render_buffer.right[0], &_late_buffer[0], sample_mix_time() * sizeof(sample_t));
+
+//	memcpy(&_render_buffer.left[0], &_zeros[0], sample_mix_time() * sizeof(sample_t));
+//	memcpy(&_render_buffer.right[0], &_zeros[0], sample_mix_time() * sizeof(sample_t));
 
 	// TODO GUARDAR EL ITERATOR EN CADA VS, ASI SE RECORRE SOLAMENTE LAS VISIBLES
 	for (Ism::tree_vs_t::iterator it = _ism->tree_vs.begin(); it != _ism->tree_vs.end(); it++)
@@ -199,7 +201,7 @@ void VirtualEnvironment::renderize()
 
 //		t.start();
 		// distance attenuation
-		float attenuation_factor = 1.0f / vs->dist_listener;
+		float attenuation_factor = 1.0f / (vs->dist_listener);// * vs->dist_listener);  // 1/r^2  ???
 
 		for (i = 0; i < input.size(); i++)
 			input[i] *= attenuation_factor;
@@ -207,12 +209,13 @@ void VirtualEnvironment::renderize()
 //		DPRINT("Distance - time %.3f", t.elapsed_time(microsecond));
 
 		// HRTF filtering
-#ifndef HRTF_IIR
-		output = _hrtf_filter(input, vs->orientation_ref_listener);  // HRTF spectrums
-
-#else
 		output = _hrtf_iir_filter(input, vs->orientation_ref_listener);
-#endif
+
+//		for (i = 0; i < input.size(); i++)
+//		{
+//			output.left[i] = input[i];
+//			output.right[i] = input[i];
+//		}
 
 //		t.start();
 		// calculate the sample from reflectogram where starts this reflection
@@ -230,182 +233,31 @@ void VirtualEnvironment::renderize()
 
 	_new_bir = true;
 
-
 	// FOR DEBUG!!!
-//	static long flag = 0;
-//	flag++;
-//
-//	if (flag == 50)
-//	{
-//
-//	stk::FileWvOut out1_l("early_l.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
-//	stk::FileWvOut out1_r("early_r.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
-//
-//	for (i = 0; i < _length_bir; i++)
-//	{
-//		out1_l.tick(_render_buffer.left[i]);
-//		out1_r.tick(_render_buffer.right[i]);
-//	}
-//
-//	stk::FileWvOut out2_l("bir_l.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
-//	stk::FileWvOut out2_r("bir_r.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
-//
-//	for (i = 0; i < _length_bir; i++)
-//	{
-//		out2_l.tick(_render_buffer.left[i]);
-//		out2_r.tick(_render_buffer.right[i]);
-//	}
-//
-//	}
-}
+	static long flag = 0;
+	flag++;
 
-#else
-
-void VirtualEnvironment::renderize()
-{
-	// check if the listener is moved
-	if (!_listener_is_moved())
+	if (flag == 1)
 	{
-		_new_bir = false;
-		return;
-	}
+		stk::FileWvOut out1_l("early_l.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
+		stk::FileWvOut out1_r("early_r.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
 
-	pthread_t t_id[_vis.size()];
-	unsigned int t_index = 0;
-	unsigned int vs_sample[_vis.size()];
-	threaddata_t td[_vis.size()];
-	unsigned int i, j;
-	binauraldata_t output;
-
-	memcpy(&_render_buffer.left[0], &_zeros[0], _config->bir_length_samples * sizeof(sample_t));
-	memcpy(&_render_buffer.right[0], &_zeros[0], _config->bir_length_samples * sizeof(sample_t));
-
-	// TODO SE PODRÍA MEJORAR SI SE GUARDAR EL ITERATOR EN CADA VS, ASI SE RECORRE SOLAMENTE LAS VISIBLES
-
-	// only for visible VSs
-	for (tree_it_t it = _tree.begin(); it != _tree.end(); it++)
-	{
-		virtualsource_t *vs = *it;
-
-		if (!vs->visible)
-			continue;
-
-		td[t_index].ve = this;
-		td[t_index].it = it;
-		td[t_index].index = t_index;
-		vs_sample[t_index] = (unsigned int) round((vs->time_rel_ms * SAMPLE_RATE) / 1000.0f);
-		pthread_create(&t_id[t_index], NULL, VirtualEnvironment::_vs_filter_wrapper, &td[t_index]);
-		t_index++;
-	}
-
-	for (t_index = 0; t_index < _outputs.size(); t_index++)
-	{
-		pthread_join(t_id[t_index], NULL);
-
-		// add filter reflection to reflectogram
-		for (i = vs_sample[t_index], j = 0; j < _outputs[t_index].left.size(); i++, j++)
+		for (i = 0; i < sample_mix_time(); i++)
 		{
-			assert(i <= _render_buffer.left.size());
-			_render_buffer.left[i] += _outputs[t_index].left[j];
-			_render_buffer.right[i] += _outputs[t_index].right[j];
+			out1_l.tick(_render_buffer.left[i]);
+			out1_r.tick(_render_buffer.right[i]);
+		}
+
+		stk::FileWvOut out2_l("bir_l.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
+		stk::FileWvOut out2_r("bir_r.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
+
+		for (i = 0; i < _length_bir; i++)
+		{
+			out2_l.tick(_render_buffer.left[i]);
+			out2_r.tick(_render_buffer.right[i]);
 		}
 	}
 }
-
-#endif
-
-#ifndef HRTF_IIR
-
-void *VirtualEnvironment::_vs_filter_wrapper(void *arg)
-{
-	threaddata_t *td = (threaddata_t *) arg;
-//	VirtualEnvironment *ve = td->ve;
-//	virtualsource_t *vs = *(td->it);
-
-	return td->ve->_vs_filter_thread(td->it, td->index);
-}
-
-void *VirtualEnvironment::_vs_filter_thread(tree_it_t it, uint index)
-{
-	virtualsource_t *vs = *it;
-	unsigned int i;
-
-	// directivity filtering
-	data_t input = _sound_source->get_IR(vs->ref_listener_orientation);
-	assert(input.size() <= BUFFER_SAMPLES);
-	input.resize(BUFFER_SAMPLES, 0.0f);
-
-	// surface filtering
-	input = _surfaces_filter(input, it);
-
-	// distance attenuation
-	float attenuation_factor = 1.0f / vs->dist_listener;
-
-	for (i = 0; i < input.size(); i++)
-		input[i] *= attenuation_factor;
-
-	// HRTF filtering
-	_outputs[index] = _hrtf_filter(input, vs->ref_listener_orientation);
-
-	return 0;  // TODO maybe the index
-}
-
-// filter for single reflection
-binauraldata_t VirtualEnvironment::_hrtf_filter(data_t &input, const orientation_angles_t &ori)
-{
-	binauraldata_t output(BUFFER_SAMPLES);
-
-	_hrtfdb->get_HRTF(&_hrtf, ori.az, ori.el);  // get the best-fit HRTF for both ears
-
-	// convolution with 1 image-source
-	_hrtf_conv_l->setSKernel(_hrtf.left, N_FFT);
-	_hrtf_conv_r->setSKernel(_hrtf.right, N_FFT);
-
-	_hrtf_conv_l->setTSegment(&input[0], SEGMENT_LENGTH);
-	_hrtf_conv_r->setTSegment(&input[0], SEGMENT_LENGTH);
-
-	_hrtf_conv_l->convolve(&output.left[0]);
-	_hrtf_conv_r->convolve(&output.right[0]);
-
-//	_hrtf_conv_l->convolve(&_left[0]);
-//	_hrtf_conv_r->convolve(&_right[0]);
-
-//	l = _left;
-//	r = _right;
-	return output;
-}
-
-// filter for single reflection
-binauraldata_t VirtualEnvironment::_hrtf_fir_filter(data_t &input, const orientation_angles_t &ori)
-{
-	binauraldata_t output(BUFFER_SAMPLES);
-	stk::StkFrames out_l(input.size(), 1);  // one channel
-	stk::StkFrames out_r(input.size(), 1);  // one channel
-
-	// get the best-fit HRTF for both ears
-	_hrtfdb->get_HRTF(&_hrtf, ori.az, ori.el);
-
-	_fir_l.setCoefficients(_hc.left, true);
-	_fir_r.setCoefficients(_hc.rigth, true);
-
-	// HRIR filtering
-	for (uint i = 0; i < input.size(); i++)
-	{
-		out_l[i] = _fir_l.tick(input[i]);
-		out_r[i] = _fir_r.tick(input[i]);
-	}
-
-	for (uint i = 0; i < out_l.size(); i++)
-	{
-		output.left[i] = (sample_t) out_l[i];
-		output.right[i] = (sample_t) out_r[i];
-	}
-
-	return output;
-}
-
-
-#else
 
 // IIR filter for single reflection
 binauraldata_t VirtualEnvironment::_hrtf_iir_filter(data_t &input, const orientation_angles_t &ori)
@@ -460,14 +312,21 @@ binauraldata_t VirtualEnvironment::_hrtf_iir_filter(data_t &input, const orienta
 	return output;
 }
 
-#endif
-
 void VirtualEnvironment::calc_late_reverberation()
 {
-	orientation_angles_t ori;  // dummy
-	data_t input = _sound_source->get_IR(ori);
-	std::vector<double> output(_length_bir);  // temporary
+//	orientation_angles_t ori;  // dummy
+//	data_t input = _sound_source->get_IR(ori);
 
+	data_t input(_length_bir);
+	input[0] = 1.0;  // delta dirac
+
+//	int n = 64;
+//	std::vector<double> x = math::linspace(-PI, -PI, n);
+//
+//	for (int i = 0; i < n; i++)
+//		input[i] = math::sinc(x[i]);
+
+	std::vector<double> output(_length_bir);  // temporary
 	double val;
 	uint i;
 	double max_value = 0.0;
@@ -475,8 +334,7 @@ void VirtualEnvironment::calc_late_reverberation()
 
 	for (i = 0; i < _length_bir; i++)
 	{
-		val = (i >= input.size() ? 0.0 : (double) input[i]);
-		output[i] = _fdn->tick(val);
+		output[i] = _fdn->tick(input[i]);
 		abs_value = fabs(output[i]);
 
 		if (abs_value > max_value)
@@ -508,6 +366,7 @@ void VirtualEnvironment::calc_late_reverberation()
 	for (i = 0; i < sample_mix; i++)
 		_late_buffer[i] = (sample_t) (output[i] * (1.0 - pow(0.01, (i + 1.0) / sample_mix)) * scaling_factor);
 
+	// normalization for late part
 	for (i = sample_mix; i < _length_bir; i++)
 		_late_buffer[i] = (sample_t) (output[i] * scaling_factor);
 #endif
@@ -521,10 +380,10 @@ void VirtualEnvironment::calc_late_reverberation()
 	}
 
 	// FOR DEBUG!!!
-//	stk::FileWvOut out("late.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
-//
-//	for (i = 0; i < _length_bir; i++)
-//		out.tick(_late_buffer[i]);
+	stk::FileWvOut out("late.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
+
+	for (i = 0; i < _length_bir; i++)
+		out.tick(_late_buffer[i]);
 }
 
 data_t VirtualEnvironment::_surfaces_filter(data_t &input, const Ism::tree_vs_t::iterator node)

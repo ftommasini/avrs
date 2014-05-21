@@ -188,6 +188,17 @@ void ConfigurationManager::load_configuration(const std::string filename)
 
 	// orientation of sound source is discarded (omnidirectional only)
 
+	// FDN
+	if (!cfr.readInto(tmp, "FDN_FILTER_COEFF_B"))
+		throw AvrsException("Error in configuration file: FDN_FILTER_COEFF_B is missing");
+
+	_conf->fdn_b_coeff = full_path(tmp);
+
+	if (!cfr.readInto(tmp, "FDN_FILTER_COEFF_A"))
+		throw AvrsException("Error in configuration file: FDN_FILTER_COEFF_A is missing");
+
+	_conf->fdn_a_coeff = full_path(tmp);
+
 	// Listener
 	_conf->listener = Listener::create();
 	assert(_conf->listener.get() != NULL);
