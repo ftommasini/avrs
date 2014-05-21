@@ -53,8 +53,6 @@ extern "C" {
 #include "airabsorption.hpp"
 #include "virtualsource.hpp"
 
-#include "hrtfconvolver.hpp"
-
 namespace avrs
 {
 
@@ -134,33 +132,17 @@ private:
 	Fdn::ptr_t _fdn;
 	// Air absorption
 	AirAbsorption::ptr_t _air_absorption;
-
-	// renderer
-#ifndef HRTF_IIR
-	HrtfSet::ptr_t _hrtfdb;
-	hrtf_t _hrtf;
-	HrtfConvolver::ptr_t _hrtf_conv_l;
-	HrtfConvolver::ptr_t _hrtf_conv_r;
-	stk::Fir _fir_l;
-	stk::Fir _fir_r;
-#else
+	// Surface material filters
+	stk::Iir _filter_surfaces;
+	// Renderer
 	HrtfCoeffSet::ptr_t _hcdb;
 	hrtfcoeff_t _hc;
 	stk::Iir _filter_l;
 	stk::Iir _filter_r;
 	stk::Delay _delay;
-#endif
 
-	stk::Iir _filter_surfaces;
 
-	// Filter methods
-#ifndef HRTF_IIR
-	binauraldata_t _hrtf_filter(data_t &input, const orientation_angles_t &ori);
-	binauraldata_t _hrtf_fir_filter(data_t &input, const orientation_angles_t &ori);
-#else
 	binauraldata_t _hrtf_iir_filter(data_t &input, const orientation_angles_t &ori);
-#endif
-
 	data_t _surfaces_filter(data_t &input, const Ism::tree_vs_t::iterator node);
 	bool _listener_is_moved();
 

@@ -20,7 +20,6 @@ set(CXX_SOURCE_FILES
     configuration.cpp
     fdn.cpp
     system.cpp
-    hrtfconvolver.cpp
 	main.cpp
 )
 

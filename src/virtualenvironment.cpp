@@ -76,20 +76,8 @@ VirtualEnvironment::VirtualEnvironment(configuration_t::ptr_t cs, TrackerBase::p
 	_new_bir = false;
 
 	// create and load HRTF DB
-#ifndef HRTF_IIR
-	_hrtfdb = HrtfSet::create(_config->hrtf_file);
-	// for left ear
-	_hrtf_conv_l = HrtfConvolver::create(N_FFT);
-	_hrtf_conv_l->setKernelLength(KERNEL_LENGTH);
-	_hrtf_conv_l->setSegmentLength(SEGMENT_LENGTH);
-	// for right ear
-	_hrtf_conv_r = HrtfConvolver::create(N_FFT);
-	_hrtf_conv_r->setKernelLength(KERNEL_LENGTH);
-	_hrtf_conv_r->setSegmentLength(SEGMENT_LENGTH);
-#else
 	_hcdb = HrtfCoeffSet::create(_config->hrtf_file);
 	_delay.setMaximumDelay(BUFFER_SAMPLES);
-#endif
 
 //	_delay_vs_l.setMaximumDelay(BUFFER_SAMPLES);
 //	_delay_vs_l.setMaximumDelay(BUFFER_SAMPLES);
