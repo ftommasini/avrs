@@ -191,7 +191,7 @@ void *System::_rt_thread(void *arg)
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 
 	// create SYS task
-	sys_task = rt_task_init_schmod(nam2num("TSKSYS"), 0, 0, 0, SCHED_FIFO, 0xFF); // use CPU 1????
+	sys_task = rt_task_init_schmod(nam2num("TSKSYS"), 0, 0, 0, SCHED_FIFO, 0xFF);
 
 	if (!sys_task)
 	{
