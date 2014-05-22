@@ -175,6 +175,7 @@ void VirtualEnvironment::renderize()
 		if (!vs->audible)  	// only for audible VSs
 			continue;
 
+#ifdef APPLY_DIRECTIVITY_FILTERING
 //		t.start();
 		// directivity filtering
 		input = _sound_source->get_IR(vs->orientation_ref_listener);
@@ -182,28 +183,37 @@ void VirtualEnvironment::renderize()
 		input.resize(VS_SAMPLES, 0.0f);
 //		t.stop();
 //		DPRINT("Directivity - time %.3f", t.elapsed_time(microsecond));
+#else
+		data_t input(32);
+		input[0] = 1.0f;  // delta dirac
+#endif
 
+#ifdef APPLY_SURFACE_FILTERING
 		// surface filtering
 		input = _surfaces_filter(input, it);
+#endif
 
+#ifdef APPLY_AIR_FILTERING
 //		t.start();
 		// distance attenuation
-		float attenuation_factor = 1.0f / (vs->dist_listener);// * vs->dist_listener);  // 1/r^2  ???
+		float attenuation_factor = 1.0f / (vs->dist_listener);
 
 		for (i = 0; i < input.size(); i++)
 			input[i] *= attenuation_factor;
 //		t.stop();
 //		DPRINT("Distance - time %.3f", t.elapsed_time(microsecond));
+#endif
 
+#ifdef APPLY_HRTF_FILTERING
 		// HRTF filtering
 		output = _hrtf_iir_filter(input, vs->orientation_ref_listener);
+#else
+		// Non HRTF filtering
+		memcpy(&output.left[0], &input[0], input.size() * sizeof(sample_t));
+		memcpy(&output.right[0], &input[0], input.size() * sizeof(sample_t));
+#endif
 
-//		for (i = 0; i < input.size(); i++)
-//		{
-//			output.left[i] = input[i];
-//			output.right[i] = input[i];
-//		}
-
+		// Buffer accumulation
 //		t.start();
 		// calculate the sample from reflectogram where starts this reflection
 		unsigned long sample = (unsigned long) round((vs->time_rel_ms * SAMPLE_RATE) / 1000.0f);
@@ -214,6 +224,7 @@ void VirtualEnvironment::renderize()
 			_render_buffer.left[i] += output.left[j];
 			_render_buffer.right[i] += output.right[j];
 		}
+
 //		t.stop ();
 //		DPRINT("Buffer - time %.3f", t.elapsed_time(microsecond));
 	}
