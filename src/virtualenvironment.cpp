@@ -96,6 +96,9 @@ VirtualEnvironment::VirtualEnvironment(configuration_t::ptr_t cs, TrackerBase::p
 
 	_outputs.resize(_ism->get_count_visible_vs());  // output per visible VS
 	_air_absorption = AirAbsorption::create(_config->air_absorption_file);
+
+	// Late reverberation
+	_calc_late_reverberation();
 }
 
 VirtualEnvironment::~VirtualEnvironment()
@@ -257,6 +260,37 @@ void VirtualEnvironment::renderize()
 	}
 }
 
+data_t VirtualEnvironment::_surfaces_filter(data_t &input, const Ism::tree_vs_t::iterator node)
+{
+//	TimerRtai t;
+ 	data_t values = input;
+ 	Ism::tree_vs_t::iterator root_it = _ism->root_tree_vs;
+ 	Ism::tree_vs_t::iterator current_node = node;
+
+	while (current_node != root_it)  // while the current node is not the root node
+	{
+		VirtualSource::ptr_t vs = *current_node;
+		assert(vs.get() != NULL);
+		Surface::ptr_t s = vs->surface_ptr;
+		assert(s.get() != NULL);
+
+//		t.start();
+		//_set coefficients and clear previous filter state
+		_filter_surfaces.setCoefficients(s->get_b_filter_coeff(), s->get_a_filter_coeff(), true);
+
+		// filter for the current surface
+		for (uint i = 0; i < input.size(); i++)
+			values[i] = (sample_t) _filter_surfaces.tick(values[i]);
+
+//		t.stop();
+//		DPRINT("surface - time %.3f", t.elapsed_time(microsecond));
+
+		current_node = _ism->tree_vs.parent(current_node);  // get the parent
+	}
+
+	return values;
+}
+
 // IIR filter for single reflection
 binauraldata_t VirtualEnvironment::_hrtf_iir_filter(data_t &input, const orientation_angles_t &ori)
 {
@@ -310,20 +344,20 @@ binauraldata_t VirtualEnvironment::_hrtf_iir_filter(data_t &input, const orienta
 	return output;
 }
 
-void VirtualEnvironment::calc_late_reverberation()
+void VirtualEnvironment::_calc_late_reverberation()
 {
 //	orientation_angles_t ori;  // dummy
 //	data_t input = _sound_source->get_IR(ori);
 
-//	data_t input(_length_bir);
-//	input[0] = 1.0;  // delta dirac
-
 	data_t input(_length_bir);
-	int n = 64;
-	std::vector<double> x = math::linspace(-PI, -PI, n);
+	input[0] = 1.0;  // delta dirac
 
-	for (int i = 0; i < n; i++)
-		input[i] = math::sinc(x[i]);
+//	data_t input(_length_bir);
+//	int n = 64;
+//	std::vector<double> x = math::linspace(-PI, -PI, n);
+//
+//	for (int i = 0; i < n; i++)
+//		input[i] = math::sinc(x[i]);
 
 	std::vector<double> output(_length_bir);  // temporary
 	uint i;
@@ -391,37 +425,6 @@ void VirtualEnvironment::calc_late_reverberation()
 
 	for (i = 0; i < _length_bir; i++)
 		out.tick(_late_buffer[i]);
-}
-
-data_t VirtualEnvironment::_surfaces_filter(data_t &input, const Ism::tree_vs_t::iterator node)
-{
-//	TimerRtai t;
- 	data_t values = input;
- 	Ism::tree_vs_t::iterator root_it = _ism->root_tree_vs;
- 	Ism::tree_vs_t::iterator current_node = node;
-
-	while (current_node != root_it)  // while the current node is not the root node
-	{
-		VirtualSource::ptr_t vs = *current_node;
-		assert(vs.get() != NULL);
-		Surface::ptr_t s = vs->surface_ptr;
-		assert(s.get() != NULL);
-
-//		t.start();
-		//_set coefficients and clear previous filter state
-		_filter_surfaces.setCoefficients(s->get_b_filter_coeff(), s->get_a_filter_coeff(), true);
-
-		// filter for the current surface
-		for (uint i = 0; i < input.size(); i++)
-			values[i] = (sample_t) _filter_surfaces.tick(values[i]);
-
-//		t.stop();
-//		DPRINT("surface - time %.3f", t.elapsed_time(microsecond));
-
-		current_node = _ism->tree_vs.parent(current_node);  // get the parent
-	}
-
-	return values;
 }
 
 }  // namespace avrs

@@ -88,7 +88,6 @@ public:
 	 * Render the binaural impulse response (BIR) in real-time process by using current tracker data
 	 */
 	void renderize();
-	void calc_late_reverberation();
 	unsigned long sample_mix_time();
 
 	/**
@@ -140,6 +139,7 @@ private:
 	stk::Delay _delay;
 
 
+	void _calc_late_reverberation();
 	binauraldata_t _hrtf_iir_filter(data_t &input, const orientation_angles_t &ori);
 	data_t _surfaces_filter(data_t &input, const Ism::tree_vs_t::iterator node);
 	bool _listener_is_moved();

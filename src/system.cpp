@@ -219,7 +219,6 @@ void *System::_rt_thread(void *arg)
 	for (i = 0; i < BUFFER_SAMPLES; i++)
 		output_l[i] = output_r[i] = 0.0f;
 
-	_ve->calc_late_reverberation();
 	_out->start(); // start the output
 	_ve->start_simulation();
 

@@ -203,7 +203,6 @@ static const short int VS_SAMPLES = 256;
 #define DPRINT(format, ...)  // nothing
 #endif
 
-
 #define APPLY_DIRECTIVITY_FILTERING
 #define APPLY_SURFACE_FILTERING
 #define APPLY_AIR_FILTERING
