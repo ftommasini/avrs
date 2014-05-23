@@ -20,7 +20,6 @@
 #include <stk/Stk.h>
 #include <boost/make_shared.hpp>
 
-#include "avrsexception.hpp"
 #include "fdn.hpp"
 
 namespace avrs
@@ -73,15 +72,9 @@ Fdn::ptr_t Fdn::create(unsigned int N, double gain_A, const double *b,
 void Fdn::_init()
 {
 	// Setup filters
-
-	// Tone control filter
-	_tc = boost::make_shared<OneZero>();
-	// hard-coded values
-	_tc->setB0(1.2462);
-	_tc->setB1(-0.2462);
-
-	// some variables need for calculating lowpass filter coefficients
-	StkFloat T, alpha;
+	StkFloat T;
+	StkFloat alpha;
+	StkFloat beta;
 
 	T = 1.0 / (Stk::sampleRate());
 
@@ -89,6 +82,12 @@ void Fdn::_init()
 		alpha = 1.0; // to prevent dividing by 0
 	else
 		alpha = _t60_pi / _t60_0;
+
+	// Tone control filter
+	_tc = boost::make_shared<OneZero>();
+	beta = (1 - alpha) / (1 + alpha);
+	_tc->setZero(beta);
+	_tc->setGain(1/(1-beta));
 
 	double tmp_val = (log(10) / 4) * (1 - (1 / (alpha * alpha)));
 	std::vector<StkFloat> g(_N);
@@ -132,7 +131,7 @@ void Fdn::_init()
 	// Feedback matrix (A) calculation
 	colvec u = ones<colvec>(_N);
 	mat I = eye<mat>(_N, _N);
-	_A = _gA * ((2.0 / _N) * u * trans(u) - I);
+	_A = _gA * (I - (2.0 / _N) * u * trans(u));
 	clear();
 
 	// stabilize the FDN
@@ -163,13 +162,14 @@ StkFloat Fdn::tick(StkFloat sample)
 	for (unsigned int i = 0; i < _N; i++)
 	{
 		_s_delayed[i] = _delayline[i]->tick(_s[i]);
-		_s_filtered[i] = _lp_filter[i]->tick(_s_delayed[i]);
-//		_s_filtered[i] = _filter[i]->tick(_s_delayed[i]);
+//		_s_filtered[i] = _lp_filter[i]->tick(_s_delayed[i]);
+		_s_filtered[i] = _filter[i]->tick(_s_delayed[i]);
 	}
 
 	_s = (sample * _b) + (_A * _s_filtered);
 
 	return (_tc->tick(dot(_c, _s_filtered)) + (_d * sample));
+	//return (dot(_c, _s_filtered)) + (_d * sample);
 }
 
 void Fdn::_stabilize(long n_ticks)
@@ -180,10 +180,10 @@ void Fdn::_stabilize(long n_ticks)
 	for (long i = 0; i < n_ticks; i++)
 	{
 		// for each line
-		for (unsigned int i = 0; i < _N; i++)
+		for (unsigned int j = 0; j < _N; j++)
 		{
-			_s_delayed[i] = _delayline[i]->tick(_s[i]);
-			_s_filtered[i] = _s_delayed[i];
+			_s_delayed[j] = _delayline[j]->tick(_s[j]);
+			_s_filtered[j] = _s_delayed[j];
 		}
 
 		_s = (1.0 * _b) + (_A * _s_filtered);

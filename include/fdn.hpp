@@ -60,8 +60,6 @@
 #include <armadillo>
 #include <boost/shared_ptr.hpp>
 
-#include "common.hpp"
-
 namespace avrs
 {
 
