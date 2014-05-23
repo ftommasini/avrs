@@ -19,6 +19,7 @@
 #include <boost/format.hpp>
 #include <boost/make_shared.hpp>
 #include <stk/FileWvOut.h>
+#include <stk/Noise.h>
 
 #include "utils/timerrtai.hpp"
 #include "dxfreader.hpp"
@@ -354,11 +355,17 @@ binauraldata_t VirtualEnvironment::_hrtf_iir_filter(data_t &input, const orienta
 
 void VirtualEnvironment::_calc_late_reverberation()
 {
+	uint i;
+
 //	orientation_angles_t ori;  // dummy
 //	data_t input = _sound_source->get_IR(ori);
 
 	data_t input(_length_bir);
 	input[0] = 1.0;  // delta dirac
+	boost::shared_ptr<stk::Noise> noise(new stk::Noise());
+
+	for (i = 1; i < _length_bir; i++)
+		input[i] = 0.0001 * noise->tick();
 
 //	data_t input(_length_bir);
 //	int n = 64;
@@ -368,7 +375,6 @@ void VirtualEnvironment::_calc_late_reverberation()
 //		input[i] = math::sinc(x[i]);
 
 	std::vector<double> output(_length_bir);  // temporary
-	uint i;
 
 	for (i = 0; i < _length_bir; i++)
 		output[i] = _fdn->tick(input[i]);
