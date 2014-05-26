@@ -58,19 +58,19 @@ VirtualEnvironment::VirtualEnvironment(configuration_t::ptr_t cs, TrackerBase::p
 	assert(_listener.get() != NULL);
 
 	// FDN
-//	const unsigned int N = 8;  // lines of FDN
-//	long m[N] = { 601, 691, 773, 839, 919, 997, 1061, 1129 };
-//	double gA = 1.0; // gain coefficient for the A feedback matrix
-//	double b[N] = { 1, 1, 1, 1, 1, 1, 1, 1 };
-//	double c[N] = { 1, -1, 1, -1, 1, -1, 1, -1 };
-//	double d = 0.0;
-
-	const unsigned int N = 16;  // lines of FDN
-	long m[N] = { 113, 337, 601, 691, 773, 839, 919, 997, 1051, 1061, 1129, 2161, 2411, 3119, 3929, 4799 };
+	const unsigned int N = 8;  // lines of FDN
+	long m[N] = { 601, 691, 773, 839, 919, 997, 1061, 1129 };
 	double gA = 1.0; // gain coefficient for the A feedback matrix
-	double b[N] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-	double c[N] = { 1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1, -1 };
+	double b[N] = { 1, 1, 1, 1, 1, 1, 1, 1 };
+	double c[N] = { 1, -1, 1, -1, 1, -1, 1, -1 };
 	double d = 0.0;
+
+//	const unsigned int N = 16;  // lines of FDN
+//	long m[N] = { 113, 337, 601, 691, 773, 839, 919, 997, 1051, 1061, 1129, 2161, 2411, 3119, 3929, 4799 };
+//	double gA = 1.0; // gain coefficient for the A feedback matrix
+//	double b[N] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+//	double c[N] = { 1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1, -1 };
+//	double d = 0.0;
 
 	_fdn = Fdn::create(N, gA, b, c, d, m, _config->rt60_0, _config->rt60_pi,
 			_config->fdn_b_coeff, _config->fdn_a_coeff);
@@ -362,14 +362,15 @@ void VirtualEnvironment::_calc_late_reverberation()
 
 	data_t input(_length_bir);
 	input[0] = 1.0;  // delta dirac
-	boost::shared_ptr<stk::Noise> noise(new stk::Noise());
 
-	for (i = 1; i < _length_bir; i++)
-		input[i] = 0.0001 * noise->tick();
+//	boost::shared_ptr<stk::Noise> noise(new stk::Noise());
+//
+//	for (i = 1; i < _length_bir; i++)
+//		input[i] = 0.0001 * noise->tick();
 
 //	data_t input(_length_bir);
 //	int n = 64;
-//	std::vector<double> x = math::linspace(-PI, -PI, n);
+//	std::vector<double> x = math::linspace(-PI, PI, n);
 //
 //	for (int i = 0; i < n; i++)
 //		input[i] = math::sinc(x[i]);
