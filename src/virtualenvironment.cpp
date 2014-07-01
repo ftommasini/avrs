@@ -244,29 +244,29 @@ void VirtualEnvironment::renderize()
 	_new_bir = true;
 
 	// FOR DEBUG!!!
-	static long flag = 0;
-	flag++;
-
-	if (flag == 1)
-	{
-		stk::FileWvOut out1_l("early_l.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
-		stk::FileWvOut out1_r("early_r.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
-
-		for (i = 0; i < sample_mix_time(); i++)
-		{
-			out1_l.tick(_render_buffer.left[i]);
-			out1_r.tick(_render_buffer.right[i]);
-		}
-
-		stk::FileWvOut out2_l("bir_l.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
-		stk::FileWvOut out2_r("bir_r.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
-
-		for (i = 0; i < _length_bir; i++)
-		{
-			out2_l.tick(_render_buffer.left[i]);
-			out2_r.tick(_render_buffer.right[i]);
-		}
-	}
+//	static long flag = 0;
+//	flag++;
+//
+//	if (flag == 1)
+//	{
+//		stk::FileWvOut out1_l("early_l.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
+//		stk::FileWvOut out1_r("early_r.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
+//
+//		for (i = 0; i < sample_mix_time(); i++)
+//		{
+//			out1_l.tick(_render_buffer.left[i]);
+//			out1_r.tick(_render_buffer.right[i]);
+//		}
+//
+//		stk::FileWvOut out2_l("bir_l.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
+//		stk::FileWvOut out2_r("bir_r.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
+//
+//		for (i = 0; i < _length_bir; i++)
+//		{
+//			out2_l.tick(_render_buffer.left[i]);
+//			out2_r.tick(_render_buffer.right[i]);
+//		}
+//	}
 }
 
 data_t VirtualEnvironment::_surfaces_filter(data_t &input, const Ism::tree_vs_t::iterator node)
@@ -435,11 +435,11 @@ void VirtualEnvironment::_calc_late_reverberation()
 		_render_buffer.right[i] += _late_buffer[i];
 	}
 
-	// FOR DEBUG!!!
-	stk::FileWvOut out("late.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
-
-	for (i = 0; i < _length_bir; i++)
-		out.tick(_late_buffer[i]);
+//	// FOR DEBUG!!!
+//	stk::FileWvOut out("late.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
+//
+//	for (i = 0; i < _length_bir; i++)
+//		out.tick(_late_buffer[i]);
 }
 
 }  // namespace avrs

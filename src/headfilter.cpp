@@ -89,7 +89,7 @@ bool HrtfCoeffSet::_load()
 {
 	bool ok = true;
 	std::ifstream file;
-	file.exceptions(std::ifstream::failbit | std::ifstream::badbit );
+	file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 
 	try {
 		file.open(_filename.c_str(), std::ios::in | std::ios::binary);
