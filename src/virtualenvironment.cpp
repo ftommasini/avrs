@@ -172,6 +172,10 @@ void VirtualEnvironment::renderize()
 	data_t input;
 	data_t image;
 	binauraldata_t output(BUFFER_SAMPLES);
+	unsigned long samples_source_listener = (unsigned long) ceil((_ism->dist_source_listener() / _config->speed_of_sound) * SAMPLE_RATE);
+	Delay delay_l, delay_r;
+	delay_l.setDelay(samples_source_listener);
+	delay_r.setDelay(samples_source_listener);
 
 	memcpy(&_render_buffer.left[0], &_late_buffer[0], sample_mix_time() * sizeof(sample_t));
 	memcpy(&_render_buffer.right[0], &_late_buffer[0], sample_mix_time() * sizeof(sample_t));
@@ -179,7 +183,7 @@ void VirtualEnvironment::renderize()
 //	memcpy(&_render_buffer.left[0], &_zeros[0], sample_mix_time() * sizeof(sample_t));
 //	memcpy(&_render_buffer.right[0], &_zeros[0], sample_mix_time() * sizeof(sample_t));
 
-	// TODO GUARDAR EL ITERATOR EN CADA VS, ASI SE RECORRE SOLAMENTE LAS VISIBLES
+	// TODO RECORRER SOLO AUDIBLES
 	for (Ism::tree_vs_t::iterator it = _ism->tree_vs.begin(); it != _ism->tree_vs.end(); it++)
 	{
 		VirtualSource::ptr_t vs = *it;
@@ -241,14 +245,20 @@ void VirtualEnvironment::renderize()
 //		DPRINT("Buffer - time %.3f", t.elapsed_time(microsecond));
 	}
 
+	for (i = 0; i < _length_bir; i++)
+	{
+		_render_buffer.left[i] = delay_l.tick(_render_buffer.left[i]);
+		_render_buffer.right[i] = delay_r.tick(_render_buffer.right[i]);
+	}
+
 	_new_bir = true;
 
 	// FOR DEBUG!!!
-//	static long flag = 0;
-//	flag++;
-//
-//	if (flag == 1)
-//	{
+	static long flag = 0;
+	flag++;
+
+	if (flag == 1)
+	{
 //		stk::FileWvOut out1_l("early_l.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
 //		stk::FileWvOut out1_r("early_r.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
 //
@@ -257,16 +267,16 @@ void VirtualEnvironment::renderize()
 //			out1_l.tick(_render_buffer.left[i]);
 //			out1_r.tick(_render_buffer.right[i]);
 //		}
-//
-//		stk::FileWvOut out2_l("bir_l.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
-//		stk::FileWvOut out2_r("bir_r.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
-//
-//		for (i = 0; i < _length_bir; i++)
-//		{
-//			out2_l.tick(_render_buffer.left[i]);
-//			out2_r.tick(_render_buffer.right[i]);
-//		}
-//	}
+
+		stk::FileWvOut out2_l("bir_l.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
+		stk::FileWvOut out2_r("bir_r.wav", 1, stk::FileWrite::FILE_WAV, stk::Stk::STK_SINT16);
+
+		for (i = 0; i < _length_bir; i++)
+		{
+			out2_l.tick(0.5*_render_buffer.left[i]);
+			out2_r.tick(0.5*_render_buffer.right[i]);
+		}
+	}
 }
 
 data_t VirtualEnvironment::_surfaces_filter(data_t &input, const Ism::tree_vs_t::iterator node)

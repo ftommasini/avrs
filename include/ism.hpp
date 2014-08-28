@@ -55,6 +55,8 @@ public:
 	void print_list();
 	void print_summary();
 
+	float dist_source_listener();
+
 	// tree for VSs
 	tree_vs_t tree_vs;
 	tree_vs_t::iterator root_tree_vs;  // root of the tree
@@ -63,6 +65,7 @@ private:
 	configuration_t::ptr_t _config;
 	Room::ptr_t _room;
 	float _time_ref_ms;
+	float _dist_source_listener;  // distance from source to listener (in meters)
 
 	unsigned long _count_vs;
 

@@ -15,3 +15,5 @@ Debug/*
 Release/*
 time.txt
 *.wav
+scripts/*
+.settings/*
