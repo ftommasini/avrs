@@ -203,9 +203,12 @@ static const short int VS_SAMPLES = 256;
 #define DPRINT(format, ...)  // nothing
 #endif
 
+#define APPLY_DIRECTIVITY_FILTERING
+#define APPLY_SURFACE_FILTERING
+#define APPLY_AIR_FILTERING
+#define APPLY_HRTF_FILTERING
 
-#define HRTF_IIR
-//#define VSFILTER_THREADS
+//#define FDN_SCALING_DISTANCE
 
 }  // namespace
 

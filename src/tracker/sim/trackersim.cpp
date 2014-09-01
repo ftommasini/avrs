@@ -21,9 +21,11 @@
  */
 
 #include <rtai_lxrt.h>
+#include <boost/filesystem.hpp>
 
 #include "tracker/sim/trackersim.hpp"
 #include "utils/rttools.hpp"
+#include "utils/configfilereader.hpp"
 #include "avrsexception.hpp"
 
 namespace avrs
@@ -40,7 +42,7 @@ TrackerSim::TrackerSim(sim_t sim, unsigned int read_interval_ms, std::string fil
 
 TrackerSim::~TrackerSim()
 {
-	this->stop();
+	stop();
 }
 
 TrackerSim::ptr_t TrackerSim::create(sim_t sim, unsigned int read_interval_ms, std::string filename)
@@ -57,6 +59,10 @@ void TrackerSim::_init()
 
 		if (!_file)
 			throw AvrsException("Error creating VirtualEnvironment");
+	}
+	else if (_sim_type == constant)
+	{
+		load_sim_constant_file();
 	}
 }
 
@@ -86,7 +92,6 @@ inline void TrackerSim::calibrate()
 {
 	;  // nothing to do
 }
-
 
 void *TrackerSim::_threadWrapper(void *arg)
 {
@@ -258,14 +263,33 @@ void TrackerSim::sim_from_file()
 
 void TrackerSim::sim_constant()
 {
-	// hardcoded values
-	_data.pos.x = 5.0f;
-	_data.pos.y = 3.0f;
-	_data.pos.z = 1.0f;
+	;
+//	DPRINT("X: %+1.3f\tY: %+1.3f\tZ: %+1.3f", _data.pos.x, _data.pos.y, _data.pos.z);
+}
 
-	_data.ori.az = -15.0f;
-	_data.ori.el = -2.5f;
-	_data.ori.ro = 0.0f;
+void TrackerSim::load_sim_constant_file()
+{
+	std::string filename = "tracker_sim_constant.conf";
+	boost::filesystem::path p_full = boost::filesystem::current_path() / "etc" / filename;
+	ConfigFileReader cfr(p_full.string());
+
+	if (!cfr.readInto(_data.pos.x, "X"))
+		throw AvrsException("Error in tracker file: X is missing");
+
+	if (!cfr.readInto(_data.pos.y, "Y"))
+		throw AvrsException("Error in tracker file: Y is missing");
+
+	if (!cfr.readInto(_data.pos.z, "Z"))
+		throw AvrsException("Error in tracker file: Z is missing");
+
+	if (!cfr.readInto(_data.ori.az, "AZ"))
+		throw AvrsException("Error in tracker file: AZ is missing");
+
+	if (!cfr.readInto(_data.ori.el, "EL"))
+		throw AvrsException("Error in tracker file: EL is missing");
+
+	if (!cfr.readInto(_data.ori.ro, "RO"))
+		throw AvrsException("Error in tracker file: RO is missing");
 }
 
 }  // namespace avrs

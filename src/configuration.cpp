@@ -157,6 +157,9 @@ void ConfigurationManager::load_configuration(const std::string filename)
 	if (!cfr.readInto(_conf->max_order, "ISM_MAX_ORDER"))
 		throw AvrsException("Error in configuration file: ISM_MAX_ORDER is missing");
 
+	if (!cfr.readInto(_conf->transition_time, "ISM_TRANSITION_TIME"))
+		throw AvrsException("Error in configuration file: ISM_TRANSITION_TIME is missing");
+
 	// Sound Source
 	if (!cfr.readInto(tmp, "SOUND_SOURCE_IR_FILE"))
 		throw AvrsException("Error in configuration file: SOUND_SOURCE_IR_FILE is missing");
@@ -183,6 +186,19 @@ void ConfigurationManager::load_configuration(const std::string filename)
 		_conf->sound_source->pos.at(coord++) = (float) atof(t1.get_token().c_str());
 	}
 
+	// orientation of sound source is discarded (omnidirectional only)
+
+	// FDN
+	if (!cfr.readInto(tmp, "FDN_FILTER_COEFF_B"))
+		throw AvrsException("Error in configuration file: FDN_FILTER_COEFF_B is missing");
+
+	_conf->fdn_b_coeff = full_path(tmp);
+
+	if (!cfr.readInto(tmp, "FDN_FILTER_COEFF_A"))
+		throw AvrsException("Error in configuration file: FDN_FILTER_COEFF_A is missing");
+
+	_conf->fdn_a_coeff = full_path(tmp);
+
 	// Listener
 	_conf->listener = Listener::create();
 	assert(_conf->listener.get() != NULL);
@@ -202,19 +218,15 @@ void ConfigurationManager::load_configuration(const std::string filename)
 
 	_conf->listener->set_position_reference(pos);
 
-	// orientation of sound source is discarded
+	if (!cfr.readInto(tmp, "LISTENER_ORIENTATION"))
+		throw AvrsException("Error in configuration file: LISTENER_ORIENTATION is missing");
 
-//	if (!cfr.readInto(tmp, "LISTENER_ORIENTATION"))
-//		throw AvrsException("Error in configuration file: LISTENER_ORIENTATION is missing");
-//
-//	orientation_angles_t ori;
-//	Tokenizer t3(tmp, delimiter);
-//	t3.next_token();
-//	ori.az = (float) atof(t3.get_token().c_str());
-//	t3.next_token();
-//	ori.el = (float) atof(t3.get_token().c_str());
-
-	orientation_angles_t ori;  // for simulated movements
+	orientation_angles_t ori;
+	Tokenizer t3(tmp, delimiter);
+	t3.next_token();
+	ori.az = (float) atof(t3.get_token().c_str());
+	t3.next_token();
+	ori.el = (float) atof(t3.get_token().c_str());
 
 	_conf->listener->set_orientation_reference(ori);
 	_conf->listener->set_initial_point_of_view(ori, pos);

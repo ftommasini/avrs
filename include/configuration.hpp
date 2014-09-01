@@ -53,13 +53,17 @@ typedef struct Configuration
 	std::string filter_surf_file;
 	double rt60_0;
 	double rt60_pi;
+	std::vector< std::vector<double> > b_coeff;  // surface material
+	std::vector< std::vector<double> > a_coeff;  // surface material
 
 	// ISM parameters
 	float max_distance;
 	unsigned int max_order;
+	float transition_time;
 
-	std::vector< std::vector<double> > b_coeff;
-	std::vector< std::vector<double> > a_coeff;
+	// FDN
+	std::string fdn_b_coeff;
+	std::string fdn_a_coeff;
 
 	// Sound Source
 	std::string ir_file;

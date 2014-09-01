@@ -20,20 +20,21 @@
 #include <stk/Stk.h>
 #include <boost/make_shared.hpp>
 
-#include "avrsexception.hpp"
 #include "fdn.hpp"
 
 namespace avrs
 {
 
 Fdn::Fdn(unsigned int N, double gain_A, const double *b, const double *c,
-		double d, const long *m, double RTatDC, double RTatPI) :
+		double d, const long *m, double RTatDC, double RTatPI,
+		std::string b_coeff_file, std::string a_coeff_file) :
 	_N(N), _gA(gain_A), _d(d), _t60_0(RTatDC), _t60_pi(RTatPI)
 {
 	_m.resize(_N);
 	_delayline.resize(_N);
+
 	_lp_filter.resize(_N);
-//	_filter.resize(_N);
+	_filter.resize(_N);
 
 	_b.reshape(_N, 1);
 	_c.reshape(_N, 1);
@@ -49,43 +50,31 @@ Fdn::Fdn(unsigned int N, double gain_A, const double *b, const double *c,
 	_s_delayed.reshape(_N, 1);
 	_s_filtered.reshape(_N, 1);
 
-//	_b_coeff.load("data/filters_num.txt", raw_ascii);
-//	_a_coeff.load("data/filters_den.txt", raw_ascii);
+	_b_coeff.load(b_coeff_file, raw_ascii);
+	_a_coeff.load(a_coeff_file, raw_ascii);
 
 	_init();
 }
 
 Fdn::~Fdn()
 {
-//	for (unsigned int i = 0; i < _N; i++)
-//	{
-//		delete _delayline[i];
-//		delete _lp_filter[i];
-////		delete _filter[i];
-//	}
-//
-//	delete _tc;
+	;
 }
 
 Fdn::ptr_t Fdn::create(unsigned int N, double gain_A, const double *b,
-		const double *c, double d, const long *m, double RTatDC, double RTatPI)
+		const double *c, double d, const long *m, double RTatDC, double RTatPI,
+		std::string b_coeff_file, std::string a_coeff_file)
 {
-	ptr_t p_tmp(new Fdn(N, gain_A, b, c, d, m, RTatDC, RTatPI));
+	ptr_t p_tmp(new Fdn(N, gain_A, b, c, d, m, RTatDC, RTatPI,  b_coeff_file,  a_coeff_file));
 	return p_tmp;
 }
 
 void Fdn::_init()
 {
 	// Setup filters
-
-	// Tone control filter
-	_tc = boost::make_shared<OneZero>();
-	// hard-coded values
-	_tc->setB0(1.2462);
-	_tc->setB1(-0.2462);
-
-	// some variables need for calculating lowpass filter coefficients
-	StkFloat T, alpha;
+	StkFloat T;
+	StkFloat alpha;
+	StkFloat beta;
 
 	T = 1.0 / (Stk::sampleRate());
 
@@ -94,6 +83,12 @@ void Fdn::_init()
 	else
 		alpha = _t60_pi / _t60_0;
 
+	// Tone control filter
+	_tc = boost::make_shared<OneZero>();
+	beta = (1 - alpha) / (1 + alpha);
+	_tc->setZero(beta);
+	_tc->setGain(1/(1-beta));
+
 	double tmp_val = (log(10) / 4) * (1 - (1 / (alpha * alpha)));
 	std::vector<StkFloat> g(_N);
 	std::vector<StkFloat> a(_N);
@@ -101,8 +96,10 @@ void Fdn::_init()
 	// Absorption filters
 	for (unsigned int i = 0; i < _N; i++)
 	{
+		// Delay line
 		_delayline[i] = boost::make_shared<Delay>(_m[i], _m[i]);
 
+		// Low-pass filters
 		float exponent = -(3.0 * _m[i] * T) / _t60_0;
 		g[i] = pow(10, exponent);
 		a[i] = log10(g[i]) * tmp_val;
@@ -110,31 +107,31 @@ void Fdn::_init()
 		_lp_filter[i]->setB0(g[i] * (1 - a[i]));
 		_lp_filter[i]->setA1(a[i]);
 
-//		std::vector<StkFloat> b;
-//		mat::row_iterator bfrom = _b_coeff.begin_row(i); // start of row i
-//		mat::row_iterator bto = _b_coeff.end_row(i); // end of row i
-//
-//		for (mat::row_iterator ri = bfrom; ri != bto; ri++)
-//		{
-//			b.push_back(*ri);
-//		}
-//
-//		std::vector<StkFloat> a;
-//		mat::row_iterator afrom = _a_coeff.begin_row(i); // start of row i
-//		mat::row_iterator ato = _a_coeff.end_row(i); // end of row i
-//
-//		for (mat::row_iterator ri = afrom; ri != ato; ri++)
-//		{
-//			a.push_back(*ri);
-//		}
-//
-//		_filter[i] = new Iir(b, a);
+		// IIR filters
+		std::vector<StkFloat> b;
+
+		// row by row
+		for (mat::row_iterator ri = _b_coeff.begin_row(i); ri != _b_coeff.end_row(i); ri++)
+		{
+			b.push_back(*ri);
+		}
+
+		std::vector<StkFloat> a;
+
+		// row by row
+		for (mat::row_iterator ri = _a_coeff.begin_row(i); ri != _a_coeff.end_row(i); ri++)
+		{
+			a.push_back(*ri);
+		}
+
+		_filter[i] = boost::make_shared<Iir>();
+		_filter[i]->setCoefficients(b, a);
 	}
 
 	// Feedback matrix (A) calculation
 	colvec u = ones<colvec>(_N);
 	mat I = eye<mat>(_N, _N);
-	_A = _gA * ((2.0 / _N) * u * trans(u) - I);
+	_A = _gA * (I - (2.0 / _N) * u * trans(u));
 	clear();
 
 	// stabilize the FDN
@@ -149,7 +146,7 @@ void Fdn::clear(void)
 	{
 		_delayline[i]->clear();
 		_lp_filter[i]->clear();
-//		_filter[i]->clear();
+		_filter[i]->clear();
 
 		_s[i] = 0.0;
 		_s_delayed[i] = 0.0;
@@ -165,15 +162,14 @@ StkFloat Fdn::tick(StkFloat sample)
 	for (unsigned int i = 0; i < _N; i++)
 	{
 		_s_delayed[i] = _delayline[i]->tick(_s[i]);
-		//_s_filtered[i] = _s_delayed[i];  // without attenuation
-
-		_s_filtered[i] = _lp_filter[i]->tick(_s_delayed[i]);
-		//_s_filtered[i] = _filter[i]->tick(_s_delayed[i]);
+//		_s_filtered[i] = _lp_filter[i]->tick(_s_delayed[i]);
+		_s_filtered[i] = _filter[i]->tick(_s_delayed[i]);
 	}
 
 	_s = (sample * _b) + (_A * _s_filtered);
 
 	return (_tc->tick(dot(_c, _s_filtered)) + (_d * sample));
+	//return (dot(_c, _s_filtered)) + (_d * sample);
 }
 
 void Fdn::_stabilize(long n_ticks)
@@ -184,10 +180,10 @@ void Fdn::_stabilize(long n_ticks)
 	for (long i = 0; i < n_ticks; i++)
 	{
 		// for each line
-		for (unsigned int i = 0; i < _N; i++)
+		for (unsigned int j = 0; j < _N; j++)
 		{
-			_s_delayed[i] = _delayline[i]->tick(_s[i]);
-			_s_filtered[i] = _s_delayed[i];
+			_s_delayed[j] = _delayline[j]->tick(_s[j]);
+			_s_filtered[j] = _s_delayed[j];
 		}
 
 		_s = (1.0 * _b) + (_A * _s_filtered);

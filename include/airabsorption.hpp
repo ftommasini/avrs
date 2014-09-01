@@ -35,8 +35,8 @@ public:
 	/// Static factory function for HrtfSet objects
 	static ptr_t create(std::string filename);
 
-	std::vector<double> &get_b_coeff(float distance);
-	std::vector<double> &get_a_coeff(float distance);
+//	std::vector<double> &get_b_coeff(float distance);
+//	std::vector<double> &get_a_coeff(float distance);
 
 private:
 	AirAbsorption(std::string filename);
