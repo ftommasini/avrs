@@ -60,8 +60,6 @@
 #include <armadillo>
 #include <boost/shared_ptr.hpp>
 
-#include "common.hpp"
-
 namespace avrs
 {
 
@@ -76,9 +74,9 @@ public:
 	//! Class destructor.
 	~Fdn();
 
-	static ptr_t create(unsigned int N, double gain_A, const double *b,
-			const double *c, double d, const long *m, double RTatDC,
-			double RTatPI);
+	static ptr_t create(unsigned int N, double gain_A, const double *b, const double *c,
+			double d, const long *m, double RTatDC, double RTatPI,
+			std::string b_coeff_file, std::string a_coeff_file);
 
 	//! Clears the internal states of the FDN delay lines and filters.
 	void clear();
@@ -91,7 +89,8 @@ private:
 	//! the sampling rate, the gain coefficient of the feedback matrix,
 	//! and the FDN delay line lengths
 	Fdn(unsigned int N, double gain_A, const double *b, const double *c,
-			double d, const long *m, double RTatDC, double RTatPI);
+			double d, const long *m, double RTatDC, double RTatPI,
+			std::string b_coeff_file, std::string a_coeff_file);
 
 	void _init();
 	void _stabilize(long n_ticks);
@@ -109,12 +108,12 @@ private:
 	double _t60_0;
 	double _t60_pi;
 
-//	mat _b_coeff;
-//	mat _a_coeff;
+	mat _b_coeff;
+	mat _a_coeff;
 
 	std::vector<unsigned long> _m; // length of delay lines
 	std::vector< boost::shared_ptr<Delay> > _delayline; // array of pointers to delay line objects
-	//std::vector<Iir *> _filter; // array of pointers to filter objects
+	std::vector< boost::shared_ptr<Iir> > _filter; // array of pointers to filter objects
 	std::vector< boost::shared_ptr<OnePole> > _lp_filter;  // array of pointers to low-pass filter objects
 	boost::shared_ptr<OneZero> _tc; // pointer to tone correction filter
 };

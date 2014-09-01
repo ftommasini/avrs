@@ -71,10 +71,10 @@ bool SoundSource::_init()
 				max_value = abs_value;
 		}
 
-		for (uint i = 0; i < in_wv.getSize(); i++)
-		{
-			_ir[i] /= max_value;  // normalize
-		}
+//		for (uint i = 0; i < in_wv.getSize(); i++)
+//		{
+//			_ir[i] /= max_value;  // normalize
+//		}
 	}
 	catch (stk::StkError &ex)
 	{

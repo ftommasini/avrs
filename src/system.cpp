@@ -25,6 +25,7 @@
 #include <rtai_mbx.h>
 #include <rtai_fifos.h>
 #include <stk/Stk.h>
+#include <stk/FileWvOut.h>
 
 #include "utils/rttools.hpp"
 #include "utils/math.hpp"
@@ -80,21 +81,21 @@ void System::_init()
 			read_interval_ms);
 #else
 	std::cout << "Starting simulated tracker\n";
+
+//	_tracker = TrackerSim::create(
+//			TrackerSim::from_file,
+//			read_interval_ms,
+//			_config_sim->tracker_sim_file);
+
 	_tracker = TrackerSim::create(
-			TrackerSim::from_file,
-			read_interval_ms,
-			_config_sim->tracker_sim_file);
+			TrackerSim::constant,
+			read_interval_ms);
 #endif
 
 	assert(_tracker.get() != NULL);
 
 	_ve = VirtualEnvironment::create(_config_sim, _tracker);
 	assert(_ve.get() != NULL);
-
-	//_ve->print_vis();  // for debug only
-	// Print information of ISM
-	std::cout << "Total VSs calculated: " << _ve->n_vs()  << std::endl;
-	std::cout << "Audible VSs: " << _ve->n_visible_vs() << std::endl;
 }
 
 // SRT main task
@@ -190,7 +191,7 @@ void *System::_rt_thread(void *arg)
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 
 	// create SYS task
-	sys_task = rt_task_init_schmod(nam2num("TSKSYS"), 0, 0, 0, SCHED_FIFO, 0xFF); // use CPU 1????
+	sys_task = rt_task_init_schmod(nam2num("TSKSYS"), 0, 0, 0, SCHED_FIFO, 0xFF);
 
 	if (!sys_task)
 	{
@@ -218,7 +219,6 @@ void *System::_rt_thread(void *arg)
 	for (i = 0; i < BUFFER_SAMPLES; i++)
 		output_l[i] = output_r[i] = 0.0f;
 
-	_ve->calc_late_reverberation();
 	_out->start(); // start the output
 	_ve->start_simulation();
 

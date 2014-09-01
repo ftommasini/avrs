@@ -30,6 +30,7 @@ Ism::Ism(configuration_t::ptr_t config, const Room::ptr_t &r)
 	_config = config;
 	_room = r;
 	_count_vs = 0;
+	_time_ref_ms = 0.0f;
 }
 
 Ism::~Ism()
@@ -47,7 +48,8 @@ void Ism::calculate(bool discard_nodes)
 	vs->id = ++_count_vs; // 1 = "real source"
 	vs->audible = true;
 	vs->pos = _config->sound_source->pos;
-	vs->dist_listener = arma::norm(vs->pos - _config->listener->pos, 2);
+	_dist_source_listener = arma::norm(vs->pos - _config->listener->pos, 2);
+	vs->dist_listener = _dist_source_listener;
 	vs->pos_ref_listener = vs->pos - _config->listener->pos;
 	_time_ref_ms = (vs->dist_listener / _config->speed_of_sound) * 1000.0f;
 	vs->time_abs_ms = _time_ref_ms;
@@ -185,10 +187,17 @@ void Ism::print_list()
 
 void Ism::print_summary()
 {
+	std::cout << "ISM Order:\t" << _config->max_order << std::endl;
+	std::cout << "ISM Distance:\t"  << _config->max_distance << std::endl;
 	std::cout << "Total VSs:\t" << get_count_vs() << std::endl;
 	std::cout << "Total MB:\t" << boost::format("%.3f\n") % (get_bytes_vs() / (1024.0 * 1024.0));
 	std::cout << "Audible VSs:\t" << get_count_visible_vs() << std::endl;
 	std::cout << std::endl;
+}
+
+float Ism::dist_source_listener()
+{
+	return _dist_source_listener;
 }
 
 // Private functions

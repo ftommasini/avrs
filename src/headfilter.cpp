@@ -89,7 +89,7 @@ bool HrtfCoeffSet::_load()
 {
 	bool ok = true;
 	std::ifstream file;
-	file.exceptions(std::ifstream::failbit | std::ifstream::badbit );
+	file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 
 	try {
 		file.open(_filename.c_str(), std::ios::in | std::ios::binary);
@@ -107,13 +107,21 @@ bool HrtfCoeffSet::_load()
 		unsigned short version;
 		file.read(reinterpret_cast<char *>(&version), sizeof(unsigned short));
 
-		if (version != 3)
+		if (version != 4)  // format version 4
 			throw std::string("Wrong format version");
 
 		// Type of data
 		unsigned short data_type;
 		file.read(reinterpret_cast<char *>(&data_type), sizeof(unsigned short));
 		// nothing to do...
+
+		// Name of data
+		unsigned int name_length;
+		file.read(reinterpret_cast<char *>(&name_length), sizeof(unsigned int));
+		char name[name_length + 1];
+		file.read(name, name_length);
+		name[name_length] = '\0';
+		std::string sname(name);
 
 		file.read(reinterpret_cast<char *>(&_n_az), sizeof(unsigned int));
 		file.read(reinterpret_cast<char *>(&_n_el), sizeof(unsigned int));

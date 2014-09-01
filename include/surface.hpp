@@ -47,6 +47,7 @@ public:
 	avrs::point3d_t &get_normal();
 	arma::frowvec4 &get_plane_coeff();
 
+	// Wall absorption
 	void set_b_filter_coeff(std::vector<double> &b_coeff);
 	std::vector<double> &get_b_filter_coeff();
 	void set_a_filter_coeff(std::vector<double> &a_coeff);

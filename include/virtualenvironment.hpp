@@ -50,9 +50,8 @@ extern "C" {
 #include "fdn.hpp"
 #include "common.hpp"
 #include "configuration.hpp"
+#include "airabsorption.hpp"
 #include "virtualsource.hpp"
-
-#include "hrtfconvolver.hpp"
 
 namespace avrs
 {
@@ -89,8 +88,8 @@ public:
 	 * Render the binaural impulse response (BIR) in real-time process by using current tracker data
 	 */
 	void renderize();
+	unsigned long sample_mix_time();
 
-	void calc_late_reverberation();
 	/**
 	 * Get the current BIR
 	 * @return the current BIR
@@ -104,13 +103,13 @@ private:
 	configuration_t::ptr_t _config;
 
 	// Buffers
-	data_t _input_buffer;
-	binauraldata_t _render_buffer;  // keep the complete BIR
+	data_t _early_buffer;  // early reflections
+	data_t _late_buffer;  // diffusion + late reverberation
+	binauraldata_t _render_buffer;  // complete BIR
+
 	unsigned long _length_bir;
 	data_t _zeros;
-	bool _new_bir;
-//	stk::DelayA _delay_vs_l;
-//	stk::DelayA _delay_vs_r;
+	bool _new_bir;  // flag indicates new BIR
 
 	// Tracker
 	TrackerBase::ptr_t _tracker;
@@ -128,34 +127,20 @@ private:
 	Ism::ptr_t _ism;
 	// Late reverberation
 	Fdn::ptr_t _fdn;
-	data_t _late_buffer;
-
-	// renderer
-#ifndef HRTF_IIR
-	HrtfSet::ptr_t _hrtfdb;
-	hrtf_t _hrtf;
-	HrtfConvolver::ptr_t _hrtf_conv_l;
-	HrtfConvolver::ptr_t _hrtf_conv_r;
-	stk::Fir _fir_l;
-	stk::Fir _fir_r;
-#else
+	// Air absorption
+	AirAbsorption::ptr_t _air_absorption;
+	// Surface material filters
+	stk::Iir _filter_surfaces;
+	// Renderer
 	HrtfCoeffSet::ptr_t _hcdb;
 	hrtfcoeff_t _hc;
 	stk::Iir _filter_l;
 	stk::Iir _filter_r;
 	stk::Delay _delay;
-#endif
 
-	stk::Iir _filter_surfaces;
 
-	// Filter methods
-#ifndef HRTF_IIR
-	binauraldata_t _hrtf_filter(data_t &input, const orientation_angles_t &ori);
-	binauraldata_t _hrtf_fir_filter(data_t &input, const orientation_angles_t &ori);
-#else
+	void _calc_late_reverberation();
 	binauraldata_t _hrtf_iir_filter(data_t &input, const orientation_angles_t &ori);
-#endif
-
 	data_t _surfaces_filter(data_t &input, const Ism::tree_vs_t::iterator node);
 	bool _listener_is_moved();
 
@@ -178,16 +163,16 @@ inline void VirtualEnvironment::start_simulation()
 		_tracker->start();
 }
 
-inline void VirtualEnvironment::calibrate_tracker()
-{
-	if (_tracker.get() != NULL)
-		_tracker->calibrate();
-}
-
 inline void VirtualEnvironment::stop_simulation()
 {
 	if (_tracker.get() != NULL)
 		_tracker->stop();
+}
+
+inline void VirtualEnvironment::calibrate_tracker()
+{
+	if (_tracker.get() != NULL)
+		_tracker->calibrate();
 }
 
 inline binauraldata_t &VirtualEnvironment::get_BIR()
@@ -202,7 +187,7 @@ inline bool VirtualEnvironment::is_new_BIR() const
 
 inline float VirtualEnvironment::get_room_area() const
 {
-	return _room->get_total_area();
+	return _room->total_area();
 }
 
 inline unsigned int VirtualEnvironment::n_surfaces() const
@@ -218,6 +203,15 @@ inline unsigned int VirtualEnvironment::n_vs() const
 inline unsigned int VirtualEnvironment::n_visible_vs()
 {
 	return _ism->get_count_visible_vs();
+}
+
+inline unsigned long VirtualEnvironment::sample_mix_time()
+{
+	if (_config->transition_time < 0.0f)
+		return (unsigned long)((_config->max_distance / _config->speed_of_sound) * SAMPLE_RATE);
+		//return (unsigned long)((sqrt(_room->volume()) * SAMPLE_RATE) / 1000);  // mixing time
+
+	return (unsigned long)((_config->transition_time / _config->speed_of_sound) * SAMPLE_RATE);
 }
 
 inline bool VirtualEnvironment::_listener_is_moved()

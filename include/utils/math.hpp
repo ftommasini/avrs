@@ -29,6 +29,7 @@
 #ifndef MATH_HPP_
 #define MATH_HPP_
 
+#include <vector>
 #include <limits>
 #include <cmath>
 #include <armadillo>
@@ -229,9 +230,14 @@ inline float roundn(float x, int n)
 	return (float) (p * round(x / p));
 }
 
+/**
+ * Approximate speed of sound in dry air (0% humidity) at temperatures near 0ºC
+ * @param temp Temperature in ºC
+ * @return Speed of sound in m/s
+ */
 inline float speed_of_sound(float temp)
 {
-	return 331.4 * sqrt(1 + (temp / 273));
+	return 331.3 * sqrt(1 + (temp / 273.15));
 }
 
 inline arma::mat::fixed<4,4> rotation_matrix_from_angles(const avrs::orientation_angles_t &o)
@@ -271,6 +277,43 @@ inline void rectangular2polar(double *point, float *az_deg, float *el_deg)
 	float el_r = (float)atan2(point[Z], sqrt(point[X] * point[X] + point[Y] * point[Y]));
 	*az_deg = rad2deg(az_r);
 	*el_deg = rad2deg(el_r);
+}
+
+// normalized sinc function
+inline double sinc(double x)
+{
+	if (x == 0.0)
+		return 1;
+
+	return sin(PI * x) / (PI * x);
+}
+
+inline std::vector<double> generate_range(double a, double inc, double b)
+{
+    std::vector<double> array;
+
+    while(a <= b)
+    {
+        array.push_back(a);
+        a += inc;
+    }
+
+    return array;
+}
+
+inline std::vector<double> linspace(double a, double b, int n)
+{
+    std::vector<double> array(n);
+    double step = (b - a) / (n - 1);
+
+    for (int i = 0; i < n; i++)
+    {
+    	array.push_back(a + (i * step));
+    }
+
+    array[n - 1] = b;
+
+    return array;
 }
 
 }  // namespace math

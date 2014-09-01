@@ -6,6 +6,7 @@ add_subdirectory(tracker)
 # C++ source files
 set(CXX_SOURCE_FILES 
     dxfreader.cpp
+    airabsorption.cpp
     surface.cpp
     room.cpp
     listener.cpp
@@ -19,7 +20,6 @@ set(CXX_SOURCE_FILES
     configuration.cpp
     fdn.cpp
     system.cpp
-    hrtfconvolver.cpp
 	main.cpp
 )
 

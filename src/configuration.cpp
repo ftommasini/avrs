@@ -20,7 +20,7 @@
  * @file configuration.cpp
  */
 
-#include <cstdio>
+#include <fstream>
 #include <boost/filesystem.hpp>
 #include <boost/make_shared.hpp>
 
@@ -157,6 +157,9 @@ void ConfigurationManager::load_configuration(const std::string filename)
 	if (!cfr.readInto(_conf->max_order, "ISM_MAX_ORDER"))
 		throw AvrsException("Error in configuration file: ISM_MAX_ORDER is missing");
 
+	if (!cfr.readInto(_conf->transition_time, "ISM_TRANSITION_TIME"))
+		throw AvrsException("Error in configuration file: ISM_TRANSITION_TIME is missing");
+
 	// Sound Source
 	if (!cfr.readInto(tmp, "SOUND_SOURCE_IR_FILE"))
 		throw AvrsException("Error in configuration file: SOUND_SOURCE_IR_FILE is missing");
@@ -183,6 +186,19 @@ void ConfigurationManager::load_configuration(const std::string filename)
 		_conf->sound_source->pos.at(coord++) = (float) atof(t1.get_token().c_str());
 	}
 
+	// orientation of sound source is discarded (omnidirectional only)
+
+	// FDN
+	if (!cfr.readInto(tmp, "FDN_FILTER_COEFF_B"))
+		throw AvrsException("Error in configuration file: FDN_FILTER_COEFF_B is missing");
+
+	_conf->fdn_b_coeff = full_path(tmp);
+
+	if (!cfr.readInto(tmp, "FDN_FILTER_COEFF_A"))
+		throw AvrsException("Error in configuration file: FDN_FILTER_COEFF_A is missing");
+
+	_conf->fdn_a_coeff = full_path(tmp);
+
 	// Listener
 	_conf->listener = Listener::create();
 	assert(_conf->listener.get() != NULL);
@@ -202,19 +218,15 @@ void ConfigurationManager::load_configuration(const std::string filename)
 
 	_conf->listener->set_position_reference(pos);
 
-	// orientation of sound source is discarded
+	if (!cfr.readInto(tmp, "LISTENER_ORIENTATION"))
+		throw AvrsException("Error in configuration file: LISTENER_ORIENTATION is missing");
 
-//	if (!cfr.readInto(tmp, "LISTENER_ORIENTATION"))
-//		throw AvrsException("Error in configuration file: LISTENER_ORIENTATION is missing");
-//
-//	orientation_angles_t ori;
-//	Tokenizer t3(tmp, delimiter);
-//	t3.next_token();
-//	ori.az = (float) atof(t3.get_token().c_str());
-//	t3.next_token();
-//	ori.el = (float) atof(t3.get_token().c_str());
-
-	orientation_angles_t ori;  // for simulated movements
+	orientation_angles_t ori;
+	Tokenizer t3(tmp, delimiter);
+	t3.next_token();
+	ori.az = (float) atof(t3.get_token().c_str());
+	t3.next_token();
+	ori.el = (float) atof(t3.get_token().c_str());
 
 	_conf->listener->set_orientation_reference(ori);
 	_conf->listener->set_initial_point_of_view(ori, pos);
@@ -246,6 +258,11 @@ void ConfigurationManager::load_configuration(const std::string filename)
 
 	_conf->speed_of_sound = avrs::math::speed_of_sound(_conf->temperature);
 
+	if (!cfr.readInto(tmp, "AIR_ABSORPTION_FILE"))
+		throw AvrsException("Error in configuration file: AIR_ABSORPTION_FILE is missing");
+
+	_conf->air_absorption_file = full_path(tmp);
+
 	if (!cfr.readInto(_conf->angle_threshold, "ANGLE_THRESHOLD"))
 		throw AvrsException("Error in configuration file: ANGLE_THRESHOLD is missing");
 
@@ -262,57 +279,52 @@ std::string ConfigurationManager::full_path(const std::string relative_path)
 	return p_full.string();
 }
 
-bool ConfigurationManager::load_surface_filters(string filename)
+bool ConfigurationManager::load_surface_filters(std::string filename)
 {
-	FILE *p_file;
-	size_t n;
-	unsigned int n_surf, order;
+	bool ok = true;
+	std::ifstream file;
+	file.exceptions(std::ifstream::failbit | std::ifstream::badbit );
 
-	p_file = fopen(filename.c_str(), "rb");
+	try {
+		file.open(filename.c_str(), std::ios::in | std::ios::binary);
 
-	if (!p_file)
+		// Number of surfaces to read
+		uint n_surf;
+		file.read(reinterpret_cast<char *>(&n_surf), sizeof(uint));
+
+		// Filters order
+		uint order;
+		file.read(reinterpret_cast<char *>(&order), sizeof(uint));
+
+		for (uint i = 0; i < n_surf; i++)
+		{
+			std::vector<double> row_b(order + 1);
+			std::vector<double> row_a(order + 1);
+
+			// B coefficients
+			file.read(reinterpret_cast<char *>(&row_b[0]), sizeof(double) * (order + 1));
+			// A coefficients
+			file.read(reinterpret_cast<char *>(&row_a[0]), sizeof(double) * (order + 1));
+
+			_conf->b_coeff.push_back(row_b);
+			_conf->a_coeff.push_back(row_a);
+		}
+
+		file.close();
+		ok = true;
+	}
+	catch (std::ifstream::failure ex)
 	{
-		return false;
+		std::cout << ex.what() << std::endl;
+		ok = false;
+	}
+	catch (std::string ex)
+	{
+		std::cout << ex << std:: endl;
+		ok = false;
 	}
 
-	// Number of surfaces to read
-	n = fread(&n_surf, sizeof(unsigned int), 1, p_file);
-
-	if (n != 1)
-		goto error;
-
-	// Filters order
-	n = fread(&order, sizeof(unsigned int), 1, p_file);
-
-	if (n != 1)
-		goto error;
-
-	for (unsigned int i = 0; i < n_surf; i++)
-	{
-		std::vector<double> row_b(order + 1);
-
-		n = fread(&row_b[0], sizeof(double), order + 1, p_file);
-
-		if (n != order + 1)
-			goto error;
-
-		_conf->b_coeff.push_back(row_b);
-		std::vector<double> row_a(order + 1);
-
-		n = fread(&row_a[0], sizeof(double), order + 1, p_file);
-
-		if (n != order + 1)
-			goto error;
-
-		_conf->a_coeff.push_back(row_a);
-	}
-
-	fclose(p_file);
-	return true;
-
-error: // read error management
-	fclose(p_file);
-	return false;
+	return ok;
 }
 
 }  // namespace avrs
