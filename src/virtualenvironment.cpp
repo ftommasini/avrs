@@ -165,10 +165,6 @@ void VirtualEnvironment::renderize()
 	data_t input;
 	data_t image;
 	binauraldata_t output(BUFFER_SAMPLES);
-	unsigned long samples_source_listener = (unsigned long) ceil((_ism->dist_source_listener() / _config->speed_of_sound) * SAMPLE_RATE);
-	Delay delay_l, delay_r;
-	delay_l.setDelay(samples_source_listener);
-	delay_r.setDelay(samples_source_listener);
 
 	memcpy(&_render_buffer.left[0], &_late_buffer[0], sample_mix_time() * sizeof(sample_t));
 	memcpy(&_render_buffer.right[0], &_late_buffer[0], sample_mix_time() * sizeof(sample_t));
@@ -237,6 +233,13 @@ void VirtualEnvironment::renderize()
 //		t.stop ();
 //		DPRINT("Buffer - time %.3f", t.elapsed_time(microsecond));
 	}
+
+	// add delay from source to listener
+	unsigned long samples_source_listener =
+			(unsigned long) ceil((_ism->dist_source_listener() / _config->speed_of_sound) * SAMPLE_RATE);
+	Delay delay_l, delay_r;
+	delay_l.setDelay(samples_source_listener);
+	delay_r.setDelay(samples_source_listener);
 
 	for (i = 0; i < _length_bir; i++)
 	{
