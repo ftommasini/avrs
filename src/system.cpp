@@ -160,11 +160,7 @@ bool System::run()
 	}
 
 	pthread_join(_thread_id, NULL); // wait until run thread finish...
-
-	// Why error? (segmentation fault)
-	//stop_rt_timer();
 	rt_task_delete(wait_task);
-
 	printf("Quit\n");
 
 	return true;
