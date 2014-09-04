@@ -17,3 +17,5 @@ time.txt
 *.wav
 scripts/*
 .settings/*
+*.m
+*.m~

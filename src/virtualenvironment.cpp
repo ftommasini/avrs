@@ -166,11 +166,14 @@ void VirtualEnvironment::renderize()
 	data_t image;
 	binauraldata_t output(BUFFER_SAMPLES);
 
-	memcpy(&_render_buffer.left[0], &_late_buffer[0], sample_mix_time() * sizeof(sample_t));
-	memcpy(&_render_buffer.right[0], &_late_buffer[0], sample_mix_time() * sizeof(sample_t));
+//	memcpy(&_render_buffer.left[0], &_late_buffer[0], sample_mix_time() * sizeof(sample_t));
+//	memcpy(&_render_buffer.right[0], &_late_buffer[0], sample_mix_time() * sizeof(sample_t));
 
 //	memcpy(&_render_buffer.left[0], &_zeros[0], sample_mix_time() * sizeof(sample_t));
 //	memcpy(&_render_buffer.right[0], &_zeros[0], sample_mix_time() * sizeof(sample_t));
+
+	memcpy(&_render_buffer.left[0], &_zeros[0], _length_bir * sizeof(sample_t));
+	memcpy(&_render_buffer.right[0], &_zeros[0], _length_bir * sizeof(sample_t));
 
 	// TODO RECORRER SOLO AUDIBLES
 	for (Ism::tree_vs_t::iterator it = _ism->tree_vs.begin(); it != _ism->tree_vs.end(); it++)
@@ -179,6 +182,12 @@ void VirtualEnvironment::renderize()
 
 		if (!vs->audible)  	// only for audible VSs
 			continue;
+
+//		int n = 64;
+//		std::vector<double> x = math::linspace(-PI, PI, n);
+		//
+		//	for (int i = 0; i < n; i++)
+		//		input[i] = math::sinc(x[i]);
 
 #ifdef APPLY_DIRECTIVITY_FILTERING
 //		t.start();
@@ -201,7 +210,7 @@ void VirtualEnvironment::renderize()
 #ifdef APPLY_AIR_FILTERING
 //		t.start();
 		// distance attenuation
-		float attenuation_factor = 1.0f / (vs->dist_listener);
+		float attenuation_factor = 1.0f / vs->dist_listener;
 
 		for (i = 0; i < input.size(); i++)
 			input[i] *= attenuation_factor;
@@ -363,23 +372,8 @@ void VirtualEnvironment::_calc_late_reverberation()
 {
 	uint i;
 
-//	orientation_angles_t ori;  // dummy
-//	data_t input = _sound_source->get_IR(ori);
-
 	data_t input(_length_bir);
 	input[0] = 1.0;  // delta dirac
-
-//	boost::shared_ptr<stk::Noise> noise(new stk::Noise());
-//
-//	for (i = 1; i < _length_bir; i++)
-//		input[i] = 0.0001 * noise->tick();
-
-//	data_t input(_length_bir);
-//	int n = 64;
-//	std::vector<double> x = math::linspace(-PI, PI, n);
-//
-//	for (int i = 0; i < n; i++)
-//		input[i] = math::sinc(x[i]);
 
 	std::vector<double> output(_length_bir);  // temporary
 

@@ -63,8 +63,8 @@ void Ism::calculate(bool discard_nodes)
 	_aud.clear();
 	_aud.push_back(vs);
 
-	// propagate first order... and then run recursively
-	_propagate(vs, root_tree_vs, 1, discard_nodes);
+	if (1 <= _config->max_order)
+		_propagate(vs, root_tree_vs, 1, discard_nodes);  // propagate first order... and then run recursively
 }
 
 // check only audibility
