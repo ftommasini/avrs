@@ -30,7 +30,7 @@ typedef struct VirtualSource
 	typedef boost::shared_ptr<VirtualSource> ptr_t;
 
 	unsigned long id;
-	point3d_t pos;
+	point3d_t pos_R;  // room coordinates system
 	short order;
 	float dist_listener;
 	float time_abs_ms;

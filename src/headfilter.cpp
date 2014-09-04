@@ -23,6 +23,9 @@
 #include "avrsexception.hpp"
 #include "utils/math.hpp"
 
+namespace avrs
+{
+
 HrtfCoeffSet::HrtfCoeffSet(std::string filename)
 	: _filename(filename)
 {
@@ -49,16 +52,20 @@ HrtfCoeffSet::ptr_t HrtfCoeffSet::create(std::string filename)
 	return p_tmp;
 }
 
-void HrtfCoeffSet::get_HRTF_coeff(hrtfcoeff_t *val, float az, float el)
+void HrtfCoeffSet::get_HRTF_coeff(hrtfcoeff_t *val, point3d_t point_L)
 {
 	assert(val != NULL);
 
 	// vertical-polar to rectangular conversion
 	double point[3];
-	avrs::math::polar2rectangular(az, el, point);
+	point[X] = point_L(X);
+	point[Y] = point_L(Y);
+	point[Z] = point_L(Z);
+	//avrs::math::polar2rectangular(az, el, point);
 
 	float az_2, el_2;
 	avrs::math::rectangular2polar(point, &az_2, &el_2);
+	DPRINT("az %f, el %f", az_2, el_2);
 
 	// search in kd-tree
 	const int k = 1;
@@ -274,3 +281,5 @@ void HrtfCoeffSet::_deallocate_memory()
 	free(_el);
 	free(_itd);
 }
+
+}  // namespace avrs

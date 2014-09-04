@@ -58,7 +58,7 @@ public:
 
     void translate(const avrs::point3d_t &p);  // from reference position
 
-    mat::fixed<4,4> &get_rotation_matrix();
+    arma::fmat::fixed<4,4> &get_rotation_matrix();
 
 private:
 	Listener();
@@ -67,17 +67,16 @@ private:
 	avrs::orientation_angles_t _ori;
 	avrs::orientation_angles_t _ori_ref;  // TODO deprecated?
 
-	arma::mat::fixed<4,4> _R0;  // Initial Rotation matrix
-	arma::mat::fixed<4,4> _T0;  // Initial Rotation matrix
-	arma::mat::fixed<4,4> _Tr;  // Transformation matrix
-
-	arma::mat::fixed<4,4> _Rc;  // Current Rotation matrix
-	arma::mat::fixed<4,4> _Tc;  // Current Translation matrix
+	fmat::fixed<4,4> _R0;  // Initial Rotation matrix
+	fmat::fixed<4,4> _T0;  // Initial Translation matrix
+	fmat::fixed<4,4> _Tr;  // Transformation matrix
+	fmat::fixed<4,4> _Rc;  // Current Rotation matrix
+	fmat::fixed<4,4> _Tc;  // Current Translation matrix
 };
 
 inline void Listener::rotate(const avrs::orientation_angles_t &o)
 {
-	arma::mat::fixed<4,4> Ri = avrs::math::rotation_matrix_from_angles(o);  // ZXZ
+	fmat::fixed<4,4> Ri = avrs::math::rotation_matrix_from_angles(o);  // ZXZ
 	_Rc = Ri * _Tr;
     //_Rc.print();
 
@@ -91,7 +90,7 @@ inline void Listener::rotate(const avrs::orientation_angles_t &o)
 
 inline void Listener::translate(const avrs::point3d_t &p)
 {
-    mat::fixed<4,4> Ti;
+    fmat::fixed<4,4> Ti;
 	Ti << 1 << 0 << 0 << p(0) << endr
 	   << 0 << 1 << 0 << p(1) << endr
 	   << 0 << 0 << 1 << p(2) << endr
@@ -112,7 +111,7 @@ inline avrs::orientation_angles_t &Listener::get_orientation()
 //	return _pos;
 //}
 
-inline mat::fixed<4,4> &Listener::get_rotation_matrix()
+inline fmat::fixed<4,4> &Listener::get_rotation_matrix()
 {
 	return _Rc;
 }

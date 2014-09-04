@@ -47,10 +47,10 @@ void Ism::calculate(bool discard_nodes)
 	VirtualSource::ptr_t vs(new VirtualSource);
 	vs->id = ++_count_vs; // 1 = "real source"
 	vs->audible = true;
-	vs->pos = _config->sound_source->pos;
-	_dist_source_listener = arma::norm(vs->pos - _config->listener->pos, 2);
+	vs->pos_R = _config->sound_source->pos;
+	_dist_source_listener = arma::norm(vs->pos_R - _config->listener->pos, 2);
 	vs->dist_listener = _dist_source_listener;
-	vs->pos_ref_listener = vs->pos - _config->listener->pos;
+	vs->pos_ref_listener = vs->pos_R - _config->listener->pos;
 	_time_ref_ms = (vs->dist_listener / _config->speed_of_sound) * 1000.0f;
 	vs->time_abs_ms = _time_ref_ms;
 	vs->time_rel_ms = 0.0f;
@@ -177,9 +177,9 @@ void Ism::print_list()
 			% vs->dist_listener
 			% vs->order
 			% vs->id
-			% vs->pos(X)
-			% vs->pos(Y)
-			% vs->pos(Z);
+			% vs->pos_R(X)
+			% vs->pos_R(Y)
+			% vs->pos_R(Z);
 	}
 
 	std::cout << std::endl;
@@ -215,15 +215,15 @@ void Ism::_propagate(VirtualSource::ptr_t vs_parent, const tree_vs_t::iterator n
 		// (normal to the surface, already calculated)
 
 		// distance from virtual source (VS) to surface
-		float dist_vs_s = s->get_dist_origin() - arma::dot(vs_parent->pos, s->get_normal());
+		float dist_vs_s = s->get_dist_origin() - arma::dot(vs_parent->pos_R, s->get_normal());
 
 		// validity test (if VS fails, is discarded)
 		if (dist_vs_s > 0.0f)
 		{
 			// progeny VS position
-			arma::frowvec3 pos = vs_parent->pos + 2 * dist_vs_s * s->get_normal();
+			arma::frowvec3 pos_R = vs_parent->pos_R + 2 * dist_vs_s * s->get_normal();
 			// distance from VS to listener
-			float dist_listener = arma::norm(pos - _config->listener->pos, 2);
+			float dist_listener = arma::norm(pos_R - _config->listener->pos, 2);
 
 			// proximity test (if it fails, is discarded)
 			if (dist_listener <= _config->max_distance)
@@ -232,7 +232,7 @@ void Ism::_propagate(VirtualSource::ptr_t vs_parent, const tree_vs_t::iterator n
 				VirtualSource::ptr_t vs_progeny(new VirtualSource);
 
 				// update values for valid VS
-				vs_progeny->pos = pos;
+				vs_progeny->pos_R = pos_R;
 				vs_progeny->dist_listener = dist_listener;
 				vs_progeny->time_abs_ms = (vs_progeny->dist_listener / _config->speed_of_sound) * 1000.0f;;
 				vs_progeny->time_rel_ms = vs_progeny->time_abs_ms - _time_ref_ms;
@@ -241,7 +241,7 @@ void Ism::_propagate(VirtualSource::ptr_t vs_parent, const tree_vs_t::iterator n
 				vs_progeny->id = ++_count_vs;
 
 				// calculate the position referenced to listener of progeny VS
-				vs_progeny->pos_ref_listener = vs_progeny->pos - _config->listener->pos;
+				vs_progeny->pos_ref_listener = vs_progeny->pos_R - _config->listener->pos;
 
 				// calculate the orientation of VS
 				_calc_vs_orientation(vs_progeny);
@@ -315,7 +315,7 @@ bool Ism::_check_audibility_2(const VirtualSource::ptr_t &vs, const tree_vs_t::i
 		Surface::ptr_t s = vs_parent->surface_ptr;  // or _r->get_surface(vs_parent->surface_index);
 
 		// check for visibility
-		arma::frowvec3 xyz_vs = vs_parent->pos - pos_vl;  // VS position referenced to virtual listener
+		arma::frowvec3 xyz_vs = vs_parent->pos_R - pos_vl;  // VS position referenced to virtual listener
 		arma::frowvec4 plane_coeff = s->get_plane_coeff();
 		// dot product
 		float denom = plane_coeff(0) * xyz_vs(X)
@@ -345,7 +345,7 @@ bool Ism::_check_audibility_2(const VirtualSource::ptr_t &vs, const tree_vs_t::i
 void Ism::_calc_vs_orientation(const VirtualSource::ptr_t &vs)
 {
 	// azimuth calculus
-	vs->pos_ref_listener = vs->pos - _config->listener->pos;
+	vs->pos_ref_listener = vs->pos_R - _config->listener->pos;
 	vs->orientation_initial.az =
 			-((atan2(vs->pos_ref_listener(Y), vs->pos_ref_listener(X)) * avrs::math::PIdiv180_inverse) - 90.0f); // in degrees
 
