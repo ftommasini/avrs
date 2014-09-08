@@ -61,6 +61,7 @@ void HrtfCoeffSet::get_HRTF_coeff(hrtfcoeff_t *val, point3d_t point_L)
 	point[X] = point_L(X);
 	point[Y] = point_L(Y);
 	point[Z] = point_L(Z);
+
 	//avrs::math::polar2rectangular(az, el, point);
 
 	float az_2, el_2;

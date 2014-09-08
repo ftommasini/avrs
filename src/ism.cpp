@@ -48,9 +48,9 @@ void Ism::calculate(bool discard_nodes)
 	vs->id = ++_count_vs; // 1 = "real source"
 	vs->audible = true;
 	vs->pos_R = _config->sound_source->pos;
-	_dist_source_listener = arma::norm(vs->pos_R - _config->listener->pos, 2);
+	_dist_source_listener = arma::norm(vs->pos_R - _config->listener->get_position(), 2);
 	vs->dist_listener = _dist_source_listener;
-	vs->pos_ref_listener = vs->pos_R - _config->listener->pos;
+	vs->pos_L = vs->pos_R - _config->listener->get_position();
 	_time_ref_ms = (vs->dist_listener / _config->speed_of_sound) * 1000.0f;
 	vs->time_abs_ms = _time_ref_ms;
 	vs->time_rel_ms = 0.0f;
@@ -115,7 +115,10 @@ void Ism::update_vs_orientations(const orientation_angles_t &listener_orientatio
 	for (aud_it_t it = _aud.begin(); it != _aud.end(); it++)
 	{
 		VirtualSource::ptr_t vs = *it;
-		vs->orientation_ref_listener = vs->orientation_initial - listener_orientation;
+
+		//point3d_t vs_pos_L = vs_pos_R * _listener->get_rotation_matrix().submat(0, 0, 2, 2);
+
+		vs->orientation_L = vs->orientation_0 - listener_orientation;
 	}
 }
 
@@ -220,10 +223,10 @@ void Ism::_propagate(VirtualSource::ptr_t vs_parent, const tree_vs_t::iterator n
 		// validity test (if VS fails, is discarded)
 		if (dist_vs_s > 0.0f)
 		{
-			// progeny VS position
+			// progeny VS position (in Room coordinate system)
 			arma::frowvec3 pos_R = vs_parent->pos_R + 2 * dist_vs_s * s->get_normal();
 			// distance from VS to listener
-			float dist_listener = arma::norm(pos_R - _config->listener->pos, 2);
+			float dist_listener = arma::norm(pos_R - _config->listener->get_position(), 2);
 
 			// proximity test (if it fails, is discarded)
 			if (dist_listener <= _config->max_distance)
@@ -241,7 +244,7 @@ void Ism::_propagate(VirtualSource::ptr_t vs_parent, const tree_vs_t::iterator n
 				vs_progeny->id = ++_count_vs;
 
 				// calculate the position referenced to listener of progeny VS
-				vs_progeny->pos_ref_listener = vs_progeny->pos_R - _config->listener->pos;
+				vs_progeny->pos_L = vs_progeny->pos_R - _config->listener->get_position();
 
 				// calculate the orientation of VS
 				_calc_vs_orientation(vs_progeny);
@@ -283,19 +286,19 @@ bool Ism::_check_audibility_1(const VirtualSource::ptr_t &vs)
 	Surface::ptr_t s = vs->surface_ptr;
 	arma::frowvec4 plane_coeff = s->get_plane_coeff();
 	// n . (P1 - P0) where n is the normal of the plane
-	float denom = plane_coeff(0) * vs->pos_ref_listener(X)
-			+ plane_coeff(1) * vs->pos_ref_listener(Y)
-			+ plane_coeff(2) * vs->pos_ref_listener(Z);
+	float denom = plane_coeff(0) * vs->pos_L(X)
+			+ plane_coeff(1) * vs->pos_L(Y)
+			+ plane_coeff(2) * vs->pos_L(Z);
 
 	// check if line and plane are parallel (value near to zero)
 	if (fabs(denom) <= PRECISION)
 		return false;
 
 	// calculate the parameter for the parametric equation of the line
-	float t = -(plane_coeff(0) * (_config->listener->pos)(X)
-			+ plane_coeff(1) * (_config->listener->pos)(Y)
-			+ plane_coeff(2) * (_config->listener->pos)(Z) + plane_coeff(3)) / denom;
-	vs->intersection_point = _config->listener->pos + vs->pos_ref_listener * t;  // calculate the intersection point
+	float t = -(plane_coeff(0) * (_config->listener->get_position())(X)
+			+ plane_coeff(1) * (_config->listener->get_position())(Y)
+			+ plane_coeff(2) * (_config->listener->get_position())(Z) + plane_coeff(3)) / denom;
+	vs->intersection_point = _config->listener->get_position() + vs->pos_L * t;  // calculate the intersection point
 
 	// finally, check if the intersection point is inside of surface
 	return s->is_point_inside(vs->intersection_point);
@@ -345,17 +348,17 @@ bool Ism::_check_audibility_2(const VirtualSource::ptr_t &vs, const tree_vs_t::i
 void Ism::_calc_vs_orientation(const VirtualSource::ptr_t &vs)
 {
 	// azimuth calculus
-	vs->pos_ref_listener = vs->pos_R - _config->listener->pos;
-	vs->orientation_initial.az =
-			-((atan2(vs->pos_ref_listener(Y), vs->pos_ref_listener(X)) * avrs::math::PIdiv180_inverse) - 90.0f); // in degrees
+	vs->pos_L = vs->pos_R - _config->listener->get_position();
+	vs->orientation_0.az =
+			-((atan2(vs->pos_L(Y), vs->pos_L(X)) * avrs::math::PIdiv180_inverse) - 90.0f); // in degrees
 
 	// elevation calculus
-	float r = sqrt(vs->pos_ref_listener(X) * vs->pos_ref_listener(X)
-			+ vs->pos_ref_listener(Y) * vs->pos_ref_listener(Y));
-	vs->orientation_initial.el =
-			-((atan2(r, vs->pos_ref_listener(Z)) * avrs::math::PIdiv180_inverse) - 90.0f); // in degrees
+	float r = sqrt(vs->pos_L(X) * vs->pos_L(X)
+			+ vs->pos_L(Y) * vs->pos_L(Y));
+	vs->orientation_0.el =
+			-((atan2(r, vs->pos_L(Z)) * avrs::math::PIdiv180_inverse) - 90.0f); // in degrees
 
-	vs->orientation_initial = vs->orientation_initial - _config->listener->get_orientation();
+	vs->orientation_0 = vs->orientation_0 - _config->listener->get_orientation();
 
 //	arma::rowvec vs_pos_r(4);
 //	vs_pos_r << vs->pos(0) << vs->pos(1) << vs->pos(2) << 0 << endr;

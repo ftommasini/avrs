@@ -44,18 +44,16 @@ public:
 	virtual ~Listener();
     static ptr_t create();
 
-    void set_orientation_reference(const avrs::orientation_angles_t &o);
+//    void set_orientation_reference(const avrs::orientation_angles_t &o);
 
     avrs::orientation_angles_t &get_orientation();
     void rotate(const avrs::orientation_angles_t &o);
 
-    void set_position_reference(const avrs::point3d_t &p);
+//    void set_position_reference(const avrs::point3d_t &p);
 
     void set_initial_point_of_view(const avrs::orientation_angles_t &o, const avrs::point3d_t &p);
 
-    //avrs::point3d_t &get_position();  // TODO position_t
-    avrs::point3d_t pos;  // in room reference system
-
+    avrs::point3d_t &get_position();  // TODO position_t
     void translate(const avrs::point3d_t &p);  // from reference position
 
     arma::fmat::fixed<4,4> &get_rotation_matrix();
@@ -63,13 +61,15 @@ public:
 private:
 	Listener();
 
-	avrs::point3d_t _pos_ref;
+//	avrs::point3d_t _pos_ref;
 	avrs::orientation_angles_t _ori;
-	avrs::orientation_angles_t _ori_ref;  // TODO deprecated?
+	avrs::point3d_t _pos;  // in room reference system
+//	avrs::orientation_angles_t _ori_ref;  // TODO deprecated?
 
 	fmat::fixed<4,4> _R0;  // Initial Rotation matrix
 	fmat::fixed<4,4> _T0;  // Initial Translation matrix
 	fmat::fixed<4,4> _Tr;  // Transformation matrix
+
 	fmat::fixed<4,4> _Rc;  // Current Rotation matrix
 	fmat::fixed<4,4> _Tc;  // Current Translation matrix
 };
@@ -78,7 +78,6 @@ inline void Listener::rotate(const avrs::orientation_angles_t &o)
 {
 	fmat::fixed<4,4> Ri = avrs::math::rotation_matrix_from_angles(o);  // ZXZ
 	_Rc = Ri * _Tr;
-    //_Rc.print();
 
 	// Euler angles ZXZ (in degrees)
 	int sign1 = (_Rc(0,1) >= 0 ? 1 : -1);
@@ -97,6 +96,8 @@ inline void Listener::translate(const avrs::point3d_t &p)
 	   << 0 << 0 << 0 << 1    << endr;
 	_Tc = Ti * _Tr;
 
+	_pos = p;
+
     // TODO test!
 	// http://www.fastgraph.com/makegames/3drotation/
 }
@@ -106,10 +107,10 @@ inline avrs::orientation_angles_t &Listener::get_orientation()
 	return _ori;
 }
 
-//inline avrs::point3d_t &Listener::get_position()  // TODO position_t
-//{
-//	return _pos;
-//}
+inline avrs::point3d_t &Listener::get_position()  // TODO position_t
+{
+	return _pos;
+}
 
 inline fmat::fixed<4,4> &Listener::get_rotation_matrix()
 {

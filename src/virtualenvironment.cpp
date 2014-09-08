@@ -114,7 +114,6 @@ VirtualEnvironment::ptr_t VirtualEnvironment::create(configuration_t::ptr_t cs, 
 	return p_tmp;
 }
 
-
 bool VirtualEnvironment::update_listener_orientation()
 {
 	trackerdata_t tmp_data;
@@ -325,6 +324,11 @@ binauraldata_t VirtualEnvironment::_hrtf_iir_filter(data_t &input, const point3d
 
 
 	point3d_t vs_pos_L = vs_pos_R * _listener->get_rotation_matrix().submat(0, 0, 2, 2);
+	DPRINT("rotation matrix");
+	_listener->get_rotation_matrix().submat(0, 0, 2, 2).print();
+	DPRINT("vs_pos R");
+	vs_pos_R.print();
+	DPRINT("vs_pos L");
 	vs_pos_L.print();
 	_hcdb->get_HRTF_coeff(&_hc, vs_pos_L);
 //	t.start();

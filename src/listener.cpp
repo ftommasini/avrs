@@ -16,10 +16,6 @@
  *
  */
 
-/**
- * @file listener.cpp
- */
-
 #include "listener.hpp"
 
 namespace avrs
@@ -56,16 +52,16 @@ void Listener::set_initial_point_of_view(const avrs::orientation_angles_t &o, co
 	_Tr = _R0 * _T0;
 }
 
-void Listener::set_orientation_reference(const avrs::orientation_angles_t &o)
-{
-	_ori_ref = o;
-	_ori = _ori_ref;
-}
-
-void Listener::set_position_reference(const avrs::point3d_t &p)
-{
-	_pos_ref = p;
-	pos = _pos_ref;
-}
+//void Listener::set_orientation_reference(const avrs::orientation_angles_t &o)
+//{
+//	_ori_ref = o;
+//	_ori = _ori_ref;
+//}
+//
+//void Listener::set_position_reference(const avrs::point3d_t &p)
+//{
+//	_pos_ref = p;
+//	pos = _pos_ref;
+//}
 
 }  // namespace avrs
