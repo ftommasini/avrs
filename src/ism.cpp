@@ -272,7 +272,6 @@ void Ism::_propagate(VirtualSource::ptr_t vs_parent, const tree_vs_t::iterator n
 			}
 		}
 
-		// TODO lock_guard
 		if (discard_nodes)
 			tree_vs.erase_children(node_parent); // release memory
 	}

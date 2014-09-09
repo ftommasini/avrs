@@ -32,30 +32,33 @@ typedef struct TrackerData
 	orientation_angles_t ori;
 	unsigned long timestamp;
 
+	matrix_t R;  // rotation matrix
+	matrix_t T;  // traslation matrix
+
 	TrackerData()
 	{
 		timestamp = 0;
 	}
 
-	TrackerData operator-(const TrackerData &val) const
-	{
-		TrackerData res;
-
-		res.pos = pos + val.pos;
-		res.ori = ori - val.ori;
-
-		return res;
-	}
-
-	TrackerData operator+(const TrackerData &val) const
-	{
-		TrackerData res;
-
-		res.pos = pos + val.pos;
-		res.ori = ori + val.ori;
-
-		return res;
-	}
+//	TrackerData operator-(const TrackerData &val) const
+//	{
+//		TrackerData res;
+//
+//		res.pos = pos + val.pos;
+//		res.ori = ori - val.ori;
+//
+//		return res;
+//	}
+//
+//	TrackerData operator+(const TrackerData &val) const
+//	{
+//		TrackerData res;
+//
+//		res.pos = pos + val.pos;
+//		res.ori = ori + val.ori;
+//
+//		return res;
+//	}
 
 } trackerdata_t;
 
