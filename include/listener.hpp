@@ -66,17 +66,17 @@ private:
 	avrs::point3d_t _pos;  // in room reference system
 //	avrs::orientation_angles_t _ori_ref;  // TODO deprecated?
 
-	fmat::fixed<4,4> _R0;  // Initial Rotation matrix
-	fmat::fixed<4,4> _T0;  // Initial Translation matrix
-	fmat::fixed<4,4> _Tr;  // Transformation matrix
+	matrix_t _R0;  // Initial Rotation matrix
+	matrix_t _T0;  // Initial Translation matrix
+	matrix_t _Tr;  // Transformation matrix
 
-	fmat::fixed<4,4> _Rc;  // Current Rotation matrix
-	fmat::fixed<4,4> _Tc;  // Current Translation matrix
+	matrix_t _Rc;  // Current Rotation matrix
+	matrix_t _Tc;  // Current Translation matrix
 };
 
 inline void Listener::rotate(const avrs::orientation_angles_t &o)
 {
-	fmat::fixed<4,4> Ri = avrs::math::rotation_matrix_from_angles(o);  // ZXZ
+	matrix_t Ri = avrs::math::rotation_matrix_from_angles(o);  // ZXZ
 	_Rc = Ri * _Tr;
 
 	// Euler angles ZXZ (in degrees)
@@ -89,17 +89,11 @@ inline void Listener::rotate(const avrs::orientation_angles_t &o)
 
 inline void Listener::translate(const avrs::point3d_t &p)
 {
-    fmat::fixed<4,4> Ti;
-	Ti << 1 << 0 << 0 << p(0) << endr
-	   << 0 << 1 << 0 << p(1) << endr
-	   << 0 << 0 << 1 << p(2) << endr
-	   << 0 << 0 << 0 << 1    << endr;
+	matrix_t Ti;
+	Ti = avrs::math::translation_matrix_from_vector(p);
 	_Tc = Ti * _Tr;
 
 	_pos = p;
-
-    // TODO test!
-	// http://www.fastgraph.com/makegames/3drotation/
 }
 
 inline avrs::orientation_angles_t &Listener::get_orientation()
