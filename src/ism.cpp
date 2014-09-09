@@ -115,9 +115,6 @@ void Ism::update_vs_orientations(const orientation_angles_t &listener_orientatio
 	for (aud_it_t it = _aud.begin(); it != _aud.end(); it++)
 	{
 		VirtualSource::ptr_t vs = *it;
-
-		//point3d_t vs_pos_L = vs_pos_R * _listener->get_rotation_matrix().submat(0, 0, 2, 2);
-
 		vs->orientation_L = vs->orientation_0 - listener_orientation;
 	}
 }

@@ -44,7 +44,7 @@ void Listener::set_initial_point_of_view(const avrs::orientation_angles_t &o, co
 	 // Initial Translation matrix
     _T0 = avrs::math::translation_matrix_from_vector(p);
 	// Transformation matrix
-	_Tr = _R0 * _T0;
+	_Tr0 = _R0 * _T0;
 }
 
 //void Listener::set_orientation_reference(const avrs::orientation_angles_t &o)

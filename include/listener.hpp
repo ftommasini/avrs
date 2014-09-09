@@ -56,7 +56,9 @@ public:
     avrs::point3d_t &get_position();  // TODO position_t
     void translate(const avrs::point3d_t &p);  // from reference position
 
-    arma::fmat::fixed<4,4> &get_rotation_matrix();
+    matrix_t &get_rotation_matrix();
+    matrix_t &get_translation_matrix();
+//    matrix_t &get_transformation_matrix();
 
 private:
 	Listener();
@@ -68,7 +70,7 @@ private:
 
 	matrix_t _R0;  // Initial Rotation matrix
 	matrix_t _T0;  // Initial Translation matrix
-	matrix_t _Tr;  // Transformation matrix
+	matrix_t _Tr0;  // Initial Transformation matrix
 
 	matrix_t _Rc;  // Current Rotation matrix
 	matrix_t _Tc;  // Current Translation matrix
@@ -77,7 +79,7 @@ private:
 inline void Listener::rotate(const avrs::orientation_angles_t &o)
 {
 	matrix_t Ri = avrs::math::rotation_matrix_from_angles(o);  // ZXZ
-	_Rc = Ri * _Tr;
+	_Rc = Ri * _Tr0;
 
 	// Euler angles ZXZ (in degrees)
 	int sign1 = (_Rc(0,1) >= 0 ? 1 : -1);
@@ -91,7 +93,7 @@ inline void Listener::translate(const avrs::point3d_t &p)
 {
 	matrix_t Ti;
 	Ti = avrs::math::translation_matrix_from_vector(p);
-	_Tc = Ti * _Tr;
+	_Tc = Ti * _Tr0;
 
 	_pos = p;
 }
@@ -106,10 +108,20 @@ inline avrs::point3d_t &Listener::get_position()  // TODO position_t
 	return _pos;
 }
 
-inline fmat::fixed<4,4> &Listener::get_rotation_matrix()
+inline matrix_t &Listener::get_rotation_matrix()
 {
 	return _Rc;
 }
+
+inline matrix_t &Listener::get_translation_matrix()
+{
+	return _Tc;
+}
+
+//inline matrix_t &Listener::get_transformation_matrix()
+//{
+//	return _Rc * _Tc;
+//}
 
 }  // namespace avrs
 

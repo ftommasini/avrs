@@ -136,7 +136,7 @@ bool VirtualEnvironment::update_listener_orientation()
 			_tracker_data = tmp_data;  // save the current tracker data
 			_listener->rotate(tmp_data.ori);  // update listener orientation
 			_listener->translate(tmp_data.pos.to_point3d());  // update listener position
-			_ism->update_vs_orientations(_listener->get_orientation());  // update VS orientations
+			//_ism->update_vs_orientations(_listener->get_orientation());  // update VS orientations
 
 //			DPRINT("%+1.3f %+1.3f \t %+1.3f %+1.3f",
 //					_tracker_data.ori.az,
@@ -322,10 +322,14 @@ binauraldata_t VirtualEnvironment::_hrtf_iir_filter(data_t &input, const point3d
 	stk::StkFrames out_l(input.size(), 1);  // one channel
 	stk::StkFrames out_r(input.size(), 1);  // one channel
 
+	DPRINT("listener orientation: az %f", _listener->get_orientation().az);
 
-	point3d_t vs_pos_L = vs_pos_R * _listener->get_rotation_matrix().submat(0, 0, 2, 2);
-	DPRINT("rotation matrix");
-	_listener->get_rotation_matrix().submat(0, 0, 2, 2).print();
+
+	point3d_t vs_pos_L = vs_pos_R  * _listener->get_rotation_matrix().submat(0, 0, 2, 2);
+
+
+//	DPRINT("rotation matrix");
+//	_listener->get_transformation_matrix().submat(0, 0, 2, 2).print();
 	DPRINT("vs_pos R");
 	vs_pos_R.print();
 	DPRINT("vs_pos L");
