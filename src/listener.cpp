@@ -37,7 +37,7 @@ Listener::ptr_t Listener::create()
 	return p_tmp;
 }
 
-void Listener::set_initial_point_of_view(const avrs::orientation_angles_t &o, const avrs::point3_t &p)
+void Listener::set_initial_POV(const avrs::orientation_angles_t &o, const avrs::point3_t &p)
 {
     // Initial Rotation matrix
     _R0 = avrs::math::rotation_matrix_from_angles(o);

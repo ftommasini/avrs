@@ -51,13 +51,13 @@ public:
 
 //    void set_position_reference(const avrs::point3_t &p);
 
-    void set_initial_point_of_view(const avrs::orientation_angles_t &o, const avrs::point3_t &p);
+    void set_initial_POV(const avrs::orientation_angles_t &o, const avrs::point3_t &p);
 
     avrs::point3_t &get_position();  // TODO position_t
     void translate(const avrs::point3_t &p);  // from reference position
 
     matrix4_t &get_rotation_matrix();
-    matrix4_t &get_translation_matrix();
+    //matrix4_t &get_translation_matrix();
 //    matrix4_t &get_transformation_matrix();
 
 private:
@@ -113,10 +113,10 @@ inline matrix4_t &Listener::get_rotation_matrix()
 	return _Rc;
 }
 
-inline matrix4_t &Listener::get_translation_matrix()
-{
-	return _Tc;
-}
+//inline matrix4_t &Listener::get_translation_matrix()
+//{
+//	return _Tc;
+//}
 
 //inline matrix4_t &Listener::get_transformation_matrix()
 //{

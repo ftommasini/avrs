@@ -216,8 +216,6 @@ void ConfigurationManager::load_configuration(const std::string filename)
 		pos.at(coord++) = (float) atof(t2.get_token().c_str());
 	}
 
-	//_conf->listener->set_position_reference(pos);
-
 	if (!cfr.readInto(tmp, "LISTENER_ORIENTATION"))
 		throw AvrsException("Error in configuration file: LISTENER_ORIENTATION is missing");
 
@@ -228,8 +226,7 @@ void ConfigurationManager::load_configuration(const std::string filename)
 	t3.next_token();
 	ori.el = (float) atof(t3.get_token().c_str());
 
-	//_conf->listener->set_orientation_reference(ori);
-	_conf->listener->set_initial_point_of_view(ori, pos);
+	_conf->listener->set_initial_POV(ori, pos);
 
 	if (!cfr.readInto(tmp, "LISTENER_HRTF_FILE"))
 		throw AvrsException("Error in configuration file: LISTENER_HRTF_FILE is missing");
