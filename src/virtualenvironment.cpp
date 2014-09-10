@@ -315,7 +315,7 @@ data_t VirtualEnvironment::_surfaces_filter(data_t &input, const Ism::tree_vs_t:
 }
 
 // IIR filter for single reflection
-binauraldata_t VirtualEnvironment::_hrtf_iir_filter(data_t &input, const point3d_t &vs_pos_R)
+binauraldata_t VirtualEnvironment::_hrtf_iir_filter(data_t &input, const point3_t &vs_pos_R)
 {
 //	TimerRtai t;
 	binauraldata_t output(BUFFER_SAMPLES);
@@ -325,7 +325,7 @@ binauraldata_t VirtualEnvironment::_hrtf_iir_filter(data_t &input, const point3d
 	DPRINT("listener orientation: az %f", _listener->get_orientation().az);
 
 
-	point3d_t vs_pos_L = vs_pos_R  * _listener->get_rotation_matrix().submat(0, 0, 2, 2);
+	point3_t vs_pos_L = vs_pos_R  * _listener->get_rotation_matrix().submat(0, 0, 2, 2);
 
 
 //	DPRINT("rotation matrix");

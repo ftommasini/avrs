@@ -32,8 +32,8 @@ typedef struct TrackerData
 	orientation_angles_t ori;
 	unsigned long timestamp;
 
-	matrix_t R;  // rotation matrix
-	matrix_t T;  // traslation matrix
+	matrix4_t R;  // rotation matrix
+	matrix4_t T;  // traslation matrix
 
 	TrackerData()
 	{

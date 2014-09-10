@@ -42,9 +42,9 @@ public:
 
 	unsigned int get_id() const;
 	float get_area() const;
-	bool is_point_inside(avrs::point3d_t point);
+	bool is_point_inside(avrs::point3_t point);
 	float get_dist_origin() const;
-	avrs::point3d_t &get_normal();
+	avrs::point3_t &get_normal();
 	arma::frowvec4 &get_plane_coeff();
 
 	// Wall absorption
@@ -58,8 +58,8 @@ private:
 
 	unsigned int _id;
 	arma::fmat _vert;  // 4x3 matrix (four xyz points for now)
-	avrs::point3d_t _center;  ///< Geometric center of the plane
-	avrs::point3d_t _normal;  // normal to plane
+	avrs::point3_t _center;  ///< Geometric center of the plane
+	avrs::point3_t _normal;  // normal to plane
 	float _dist_origin;  // distance to origin
 	float _area;
 	arma::frowvec4 _plane_coeff;  // (a, b, c, d) coefficients of plane equation [ax + by + cz + d = 0]
@@ -98,7 +98,7 @@ inline float Surface::get_dist_origin() const
 	return _dist_origin;
 }
 
-inline avrs::point3d_t &Surface::get_normal()
+inline avrs::point3_t &Surface::get_normal()
 {
 	return _normal;
 }

@@ -31,16 +31,16 @@ typedef struct VirtualSource
 
 	unsigned long id;
 
-	point3d_t pos_R;  // in Room coordinates system
-	point3d_t pos_L;  // in Listener coordinates system
-	matrix_t rotation;
+	point3_t pos_R;  // in Room coordinates system
+	point3_t pos_L;  // in Listener coordinates system
+	matrix4_t rotation;
 
 	short order;
 	float dist_listener;
 	float time_abs_ms;
 	float time_rel_ms;
 	Surface::ptr_t surface_ptr;
-	point3d_t intersection_point;
+	point3_t intersection_point;
 	bool audible;
 	ptr_t parent_ptr;
 

@@ -240,14 +240,14 @@ inline float speed_of_sound(float temp)
 	return 331.3 * sqrt(1 + (temp / 273.15));
 }
 
-inline matrix_t rotation_matrix_from_angles(const avrs::orientation_angles_t &o)
+inline matrix4_t rotation_matrix_from_angles(const avrs::orientation_angles_t &o)
 {
     // To radians
     double az = (o.az * PI) / 180.0;
     double el = (o.el * PI) / 180.0;
 
 	// Rotation matrix ZXZ convention
-	matrix_t R;  // 4 x 4 matrix
+	matrix4_t R;  // 4 x 4 matrix
 	float sin_az = sin(az);
 	float cos_az = cos(az);
 	float sin_el = sin(el);
@@ -260,9 +260,9 @@ inline matrix_t rotation_matrix_from_angles(const avrs::orientation_angles_t &o)
 	return R;
 }
 
-inline matrix_t translation_matrix_from_vector(const avrs::point3d_t &p)
+inline matrix4_t translation_matrix_from_vector(const avrs::point3_t &p)
 {
-	matrix_t T;  // 4 x 4 matrix
+	matrix4_t T;  // 4 x 4 matrix
 	T << 1 << 0 << 0 << p(0) << arma::endr
 	  << 0 << 1 << 0 << p(1) << arma::endr
 	  << 0 << 0 << 1 << p(2) << arma::endr

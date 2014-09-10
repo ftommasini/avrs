@@ -206,7 +206,7 @@ void ConfigurationManager::load_configuration(const std::string filename)
 	if (!cfr.readInto(tmp, "LISTENER_POSITION"))
 		throw AvrsException("Error in configuration file: LISTENER_POSITION is missing");
 
-	point3d_t pos;
+	point3_t pos;
 	Tokenizer t2(tmp, delimiter);
 	coord = 0;
 

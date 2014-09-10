@@ -65,7 +65,7 @@ public:
 	static ptr_t create(std::string filename);
 
 	//void get_HRTF_coeff(hrtfcoeff_t *val, float az, float el);
-	void get_HRTF_coeff(hrtfcoeff_t *val, point3d_t point_L);
+	void get_HRTF_coeff(hrtfcoeff_t *val, point3_t point_L);
 
 private:
 	HrtfCoeffSet(std::string filename);

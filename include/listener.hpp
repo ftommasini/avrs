@@ -49,36 +49,36 @@ public:
     avrs::orientation_angles_t &get_orientation();
     void rotate(const avrs::orientation_angles_t &o);
 
-//    void set_position_reference(const avrs::point3d_t &p);
+//    void set_position_reference(const avrs::point3_t &p);
 
-    void set_initial_point_of_view(const avrs::orientation_angles_t &o, const avrs::point3d_t &p);
+    void set_initial_point_of_view(const avrs::orientation_angles_t &o, const avrs::point3_t &p);
 
-    avrs::point3d_t &get_position();  // TODO position_t
-    void translate(const avrs::point3d_t &p);  // from reference position
+    avrs::point3_t &get_position();  // TODO position_t
+    void translate(const avrs::point3_t &p);  // from reference position
 
-    matrix_t &get_rotation_matrix();
-    matrix_t &get_translation_matrix();
-//    matrix_t &get_transformation_matrix();
+    matrix4_t &get_rotation_matrix();
+    matrix4_t &get_translation_matrix();
+//    matrix4_t &get_transformation_matrix();
 
 private:
 	Listener();
 
-//	avrs::point3d_t _pos_ref;
+//	avrs::point3_t _pos_ref;
 	avrs::orientation_angles_t _ori;
-	avrs::point3d_t _pos;  // in room reference system
+	avrs::point3_t _pos;  // in room reference system
 //	avrs::orientation_angles_t _ori_ref;  // TODO deprecated?
 
-	matrix_t _R0;  // Initial Rotation matrix
-	matrix_t _T0;  // Initial Translation matrix
-	matrix_t _Tr0;  // Initial Transformation matrix
+	matrix4_t _R0;  // Initial Rotation matrix
+	matrix4_t _T0;  // Initial Translation matrix
+	matrix4_t _Tr0;  // Initial Transformation matrix
 
-	matrix_t _Rc;  // Current Rotation matrix
-	matrix_t _Tc;  // Current Translation matrix
+	matrix4_t _Rc;  // Current Rotation matrix
+	matrix4_t _Tc;  // Current Translation matrix
 };
 
 inline void Listener::rotate(const avrs::orientation_angles_t &o)
 {
-	matrix_t Ri = avrs::math::rotation_matrix_from_angles(o);  // ZXZ
+	matrix4_t Ri = avrs::math::rotation_matrix_from_angles(o);  // ZXZ
 	_Rc = Ri * _Tr0;
 
 	// Euler angles ZXZ (in degrees)
@@ -89,9 +89,9 @@ inline void Listener::rotate(const avrs::orientation_angles_t &o)
 	_ori.ro = 0;  // always zero
 }
 
-inline void Listener::translate(const avrs::point3d_t &p)
+inline void Listener::translate(const avrs::point3_t &p)
 {
-	matrix_t Ti;
+	matrix4_t Ti;
 	Ti = avrs::math::translation_matrix_from_vector(p);
 	_Tc = Ti * _Tr0;
 
@@ -103,22 +103,22 @@ inline avrs::orientation_angles_t &Listener::get_orientation()
 	return _ori;
 }
 
-inline avrs::point3d_t &Listener::get_position()  // TODO position_t
+inline avrs::point3_t &Listener::get_position()  // TODO position_t
 {
 	return _pos;
 }
 
-inline matrix_t &Listener::get_rotation_matrix()
+inline matrix4_t &Listener::get_rotation_matrix()
 {
 	return _Rc;
 }
 
-inline matrix_t &Listener::get_translation_matrix()
+inline matrix4_t &Listener::get_translation_matrix()
 {
 	return _Tc;
 }
 
-//inline matrix_t &Listener::get_transformation_matrix()
+//inline matrix4_t &Listener::get_transformation_matrix()
 //{
 //	return _Rc * _Tc;
 //}

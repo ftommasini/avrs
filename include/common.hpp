@@ -34,8 +34,8 @@ namespace avrs
 typedef fftwf_complex complex_t;  // for spectral data
 typedef float sample_t;  // for time data
 typedef std::vector<sample_t> data_t;
-typedef arma::frowvec3 point3d_t;
-typedef arma::fmat::fixed<4,4> matrix_t;
+typedef arma::frowvec3 point3_t;
+typedef arma::fmat::fixed<4,4> matrix4_t;
 
 typedef struct BinauralData
 {
@@ -89,9 +89,9 @@ typedef struct Position
 	    return res;
 	}
 
-	point3d_t to_point3d() const
+	point3_t to_point3d() const
 	{
-		point3d_t p;
+		point3_t p;
 
 		p << x << y << z << arma::endr;
 

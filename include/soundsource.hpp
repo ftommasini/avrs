@@ -35,7 +35,7 @@ public:
     static ptr_t create(std::string filename);
 
 	avrs::data_t get_IR(avrs::orientation_angles_t &ori);
-	avrs::point3d_t pos;
+	avrs::point3_t pos;
 
 private:
 	SoundSource(std::string filename);
