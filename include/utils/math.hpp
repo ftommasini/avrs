@@ -240,7 +240,7 @@ inline float speed_of_sound(float temp)
 	return 331.3 * sqrt(1 + (temp / 273.15));
 }
 
-inline matrix4_t rotation_matrix_from_angles(const avrs::orientation_angles_t &o)
+inline matrix4_t rotation_matrix_from_angles(const avrs::orientationangles_t &o)
 {
     // To radians
     double az = (o.az * PI) / 180.0;

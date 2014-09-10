@@ -44,8 +44,8 @@ typedef struct VirtualSource
 	bool audible;
 	ptr_t parent_ptr;
 
-	orientation_angles_t orientation_L; // referenced to Listener
-	orientation_angles_t orientation_0; // initial orientation
+	orientationangles_t orientation_L; // referenced to Listener
+	orientationangles_t orientation_0; // initial orientation
 
 } virtualsource_t;
 

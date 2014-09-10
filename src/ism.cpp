@@ -109,7 +109,7 @@ void Ism::calculate(bool discard_nodes)
 //	//DPRINT("Total VSs: %d - Visibles VSs: %d", (int) _tree.size(_root_it), (int) _vis.size());
 //}
 
-void Ism::update_vs_orientations(const orientation_angles_t &listener_orientation)
+void Ism::update_vs_orientations(const orientationangles_t &listener_orientation)
 {
 	// only for visible VSs
 	for (aud_it_t it = _aud.begin(); it != _aud.end(); it++)

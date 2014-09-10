@@ -29,7 +29,7 @@ namespace avrs
 typedef struct TrackerData
 {
 	position_t pos;
-	orientation_angles_t ori;
+	orientationangles_t ori;
 	unsigned long timestamp;
 
 	matrix4_t R;  // rotation matrix

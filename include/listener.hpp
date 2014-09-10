@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2013 Fabián C. Tommasini <fabian@tommasini.com.ar>
+ * Copyright (C) 2009-2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,15 +44,9 @@ public:
 	virtual ~Listener();
     static ptr_t create();
 
-//    void set_orientation_reference(const avrs::orientation_angles_t &o);
-
-    avrs::orientation_angles_t &get_orientation();
-    void rotate(const avrs::orientation_angles_t &o);
-
-//    void set_position_reference(const avrs::point3_t &p);
-
-    void set_initial_POV(const avrs::orientation_angles_t &o, const avrs::point3_t &p);
-
+    void set_initial_POV(const avrs::orientationangles_t &o, const avrs::point3_t &p);
+    avrs::orientationangles_t &get_orientation();
+    void rotate(const avrs::orientationangles_t &o);
     avrs::point3_t &get_position();  // TODO position_t
     void translate(const avrs::point3_t &p);  // from reference position
 
@@ -63,10 +57,8 @@ public:
 private:
 	Listener();
 
-//	avrs::point3_t _pos_ref;
-	avrs::orientation_angles_t _ori;
+	avrs::orientationangles_t _ori;
 	avrs::point3_t _pos;  // in room reference system
-//	avrs::orientation_angles_t _ori_ref;  // TODO deprecated?
 
 	matrix4_t _R0;  // Initial Rotation matrix
 	matrix4_t _T0;  // Initial Translation matrix
@@ -76,7 +68,7 @@ private:
 	matrix4_t _Tc;  // Current Translation matrix
 };
 
-inline void Listener::rotate(const avrs::orientation_angles_t &o)
+inline void Listener::rotate(const avrs::orientationangles_t &o)
 {
 	matrix4_t Ri = avrs::math::rotation_matrix_from_angles(o);  // ZXZ
 	_Rc = Ri * _Tr0;
@@ -98,12 +90,12 @@ inline void Listener::translate(const avrs::point3_t &p)
 	_pos = p;
 }
 
-inline avrs::orientation_angles_t &Listener::get_orientation()
+inline avrs::orientationangles_t &Listener::get_orientation()
 {
 	return _ori;
 }
 
-inline avrs::point3_t &Listener::get_position()  // TODO position_t
+inline avrs::point3_t &Listener::get_position()
 {
 	return _pos;
 }

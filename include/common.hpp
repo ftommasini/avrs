@@ -95,7 +95,7 @@ typedef struct Position
 		return p;
 	}
 
-} position_t, orientation_vector_t;
+} position_t;
 
 typedef struct OrientationAngles
 {
@@ -115,6 +115,7 @@ typedef struct OrientationAngles
 		az = az_val;
 		el = el_val;
 		ro = ro_val;
+		correct_angles(*this);
 	}
 
 	OrientationAngles operator+(const OrientationAngles &val) const
@@ -155,7 +156,7 @@ typedef struct OrientationAngles
 		else if (ori.el < -90)
 			ori.el = -180 - ori.el;
 	}
-} orientation_angles_t;
+} orientationangles_t;
 
 
 // Definitions for all the system

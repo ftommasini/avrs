@@ -43,7 +43,7 @@ public:
 
 	void calculate(bool discard_nodes);
 //	void update_vs_audibility();
-	void update_vs_orientations(const orientation_angles_t &listener_orientation);
+	void update_vs_orientations(const orientationangles_t &listener_orientation);
 
 //	Ism::tree_vs_t &get_tree_vs();
 //	Ism::tree_vs_t::iterator get_root_tree_vs();

@@ -219,7 +219,7 @@ void ConfigurationManager::load_configuration(const std::string filename)
 	if (!cfr.readInto(tmp, "LISTENER_ORIENTATION"))
 		throw AvrsException("Error in configuration file: LISTENER_ORIENTATION is missing");
 
-	orientation_angles_t ori;
+	orientationangles_t ori;
 	Tokenizer t3(tmp, delimiter);
 	t3.next_token();
 	ori.az = (float) atof(t3.get_token().c_str());

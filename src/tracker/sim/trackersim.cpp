@@ -197,7 +197,7 @@ void TrackerSim::sim_cipic_angles()
 
 void TrackerSim::sim_calculated_az()
 {
-	static orientation_angles_t ori_tmp(80.0f, 0.0f, 0.0f);
+	static orientationangles_t ori_tmp(80.0f, 0.0f, 0.0f);
 	static float step = 0.5f;
 
 	if (step > 0) // positive step
@@ -217,7 +217,7 @@ void TrackerSim::sim_calculated_az()
 
 void TrackerSim::sim_calculated_el()
 {
-	static orientation_angles_t ori_tmp(0.0f, 0.0f, 0.0f);
+	static orientationangles_t ori_tmp(0.0f, 0.0f, 0.0f);
 	static float step = 1.0f;
 
 	if (step > 0) // positive step
