@@ -135,7 +135,7 @@ bool VirtualEnvironment::update_listener_orientation()
 		{
 			_tracker_data = tmp_data;  // save the current tracker data
 			_listener->rotate(tmp_data.ori);  // update listener orientation
-			_listener->translate(tmp_data.pos.to_point3d());  // update listener position
+			_listener->translate(tmp_data.pos.to_point3());  // update listener position
 			//_ism->update_vs_orientations(_listener->get_orientation());  // update VS orientations
 
 //			DPRINT("%+1.3f %+1.3f \t %+1.3f %+1.3f",

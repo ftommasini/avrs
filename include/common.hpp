@@ -70,7 +70,6 @@ typedef struct Position
 	Position operator+(const Position &val) const
 	{
 		Position res;
-
 		res.x = x + val.x;
 		res.y = y + val.y;
 		res.z = z + val.z;
@@ -81,7 +80,6 @@ typedef struct Position
 	Position operator-(const Position &val) const
 	{
 		Position res;
-
 		res.x = x - val.x;
 		res.y = y - val.y;
 		res.z = z - val.z;
@@ -89,10 +87,9 @@ typedef struct Position
 	    return res;
 	}
 
-	point3_t to_point3d() const
+	point3_t to_point3() const
 	{
 		point3_t p;
-
 		p << x << y << z << arma::endr;
 
 		return p;
