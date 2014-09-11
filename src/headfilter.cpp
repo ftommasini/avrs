@@ -62,10 +62,10 @@ void HrtfCoeffSet::get_HRTF_coeff(hrtfcoeff_t *val, point3_t point_L)
 	point[Y] = point_L(Y);
 	point[Z] = point_L(Z);
 
-//	float az, el;
-//	avrs::math::rectangular2polar(point, &az, &el);
-//	orientationangles_t ori(az, el);
-//	DPRINT("az %.3f, el %.3f", ori.az, ori.el);
+	float az, el;
+	avrs::math::rectangular_2_polarAVRS(point, &az, &el);
+	orientationangles_t ori(az, el);
+	DPRINT("az %.3f, el %.3f", ori.az, ori.el);
 
 	// search in kd-tree
 	const int k = 1;

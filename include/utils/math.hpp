@@ -271,21 +271,31 @@ inline matrix4_t translation_matrix_from_vector(const avrs::point3_t &p)
 	return T;
 }
 
-inline void polar2rectangular(float az_deg, float el_deg, double *point)
-{
-	// vertical-polar to rectangular conversion
-	float az_r = deg2rad(az_deg);
-	float el_r = deg2rad(el_deg);
-	point[X] = cos(az_r) * cos(el_r);
-	point[Y] = sin(az_r) * cos(el_r);
-	point[Z] = sin(el_r);
-}
+//inline void polarAVRS_2_rectangular(float az_deg, float el_deg, double *point)
+//{
+//	// vertical-polar to rectangular conversion
+//	float az_r = deg2rad(az_deg);
+//	float el_r = deg2rad(el_deg);
+//	point[X] = cos(az_r) * cos(el_r);
+//	point[Y] = sin(az_r) * cos(el_r);
+//	point[Z] = sin(el_r);
+//}
 
-inline void rectangular2polar(double *point, float *az_deg, float *el_deg)
+inline void rectangular_2_polarAVRS(double *point, float *az_deg, float *el_deg)
 {
+	// reflect
+	arma::rowvec3 p;
+	p << -point[X] << point[Y] << point[Z] << arma::endr;  // x-axis reflected
+	// rotate coordinate system
+	arma::mat33 R;
+	R << 0 << -1 << 0 << arma::endr
+	  << 1 <<  0 << 0 << arma::endr
+	  << 0 <<  0 << 1 << arma::endr;
+	p = p * R;
+
 	// rectangular to vertical-polar conversion
-	float az_r = (float)atan2(point[Y], point[X]);
-	float el_r = (float)atan2(point[Z], sqrt(point[X] * point[X] + point[Y] * point[Y]));
+	float az_r = (float)atan2(p(Y), p(X));
+	float el_r = (float)atan2(p(Z), sqrt(p(X) * p(X) + p(Y) * p(Y)));
 	*az_deg = rad2deg(az_r);
 	*el_deg = rad2deg(el_r);
 }
