@@ -322,7 +322,7 @@ binauraldata_t VirtualEnvironment::_hrtf_iir_filter(data_t &input, const point3_
 	stk::StkFrames out_l(input.size(), 1);  // one channel
 	stk::StkFrames out_r(input.size(), 1);  // one channel
 
-	point3_t vs_pos_L = (vs_pos_R - _listener->get_position()) * _listener->get_rotation().submat(0, 0, 2, 2);
+	point3_t vs_pos_L = (vs_pos_R - _listener->get_position()) * _listener->get_rotation();
 	vs_pos_L = normalise(vs_pos_L);
 	vs_pos_L.print();
 

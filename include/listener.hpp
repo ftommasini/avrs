@@ -44,49 +44,50 @@ public:
 	virtual ~Listener();
     static ptr_t create();
 
-    void set_initial_POV(const avrs::orientationangles_t &o, const avrs::point3_t &p);
-    avrs::orientationangles_t &get_orientation();
-    void rotate(const avrs::orientationangles_t &o);
-    avrs::point3_t &get_position();  // TODO position_t
-    void translate(const avrs::point3_t &p);  // from reference position
-    matrix44_t &get_rotation();
-    //matrix44_t &get_translation_matrix();
-//    matrix44_t &get_transformation_matrix();
+    void set_initial_POV(const orientationangles_t &o, const point3_t &p);
+    void rotate(const orientationangles_t &o);
+    void translate(const point3_t &p);  // from reference position
+
+    point3_t &get_position();  // TODO position_t
+    matrix33_t &get_rotation();
+
+    orientationangles_t &get_orientation();
+
+    //matrix33_t &get_translation_matrix();
+//    matrix33_t &get_transformation_matrix();
 
 private:
 	Listener();
 
-	avrs::orientationangles_t _ori;
-	avrs::point3_t _pos;  // in room reference system
+	orientationangles_t _ori;
 
-	matrix44_t _R0;  // Initial Rotation matrix
-	matrix44_t _T0;  // Initial Translation matrix
-	matrix44_t _Tr0;  // Initial Transformation matrix
+	point3_t _pos0;  // Initial position (in room reference system)
+	point3_t _pos;   // Current position (in room reference system)
 
-	matrix44_t _Rc;  // Current Rotation matrix
-	matrix44_t _Tc;  // Current Translation matrix
+	matrix33_t _R0;  // Initial Rotation matrix
+	matrix33_t _R;   // Current Rotation matrix
 };
 
-inline void Listener::rotate(const avrs::orientationangles_t &o)
+inline void Listener::rotate(const orientationangles_t &o)
 {
-	matrix44_t Ri = avrs::math::angles_2_rotation_matrix(o);  // ZXZ
-	_Rc = Ri * _Tr0;
+	matrix33_t Ri = avrs::math::angles_2_rotation_matrix(o);  // ZXZ
+	_R = Ri * _R0;
 
 	// Euler angles ZXZ (in degrees)
-	int sign1 = (_Rc(0,1) >= 0 ? 1 : -1);
-	_ori.az = sign1 * (acos(_Rc(0,0)) * 180.0) / M_PI;
-	int sign2 = (_Rc(1,2) >= 0 ? 1 : -1);
-	_ori.el = sign2 * (acos(_Rc(2,2)) * 180.0) / M_PI;
+	int sign1 = (_R(0,1) >= 0 ? 1 : -1);
+	_ori.az = sign1 * (acos(_R(0,0)) * 180.0) / M_PI;
+	int sign2 = (_R(1,2) >= 0 ? 1 : -1);
+	_ori.el = sign2 * (acos(_R(2,2)) * 180.0) / M_PI;
 	_ori.ro = 0;  // always zero
 }
 
-inline void Listener::translate(const avrs::point3_t &p)
+inline void Listener::translate(const point3_t &p)
 {
-	matrix44_t Ti;
-	Ti = avrs::math::vector_2_translation_matrix(p);
-	_Tc = Ti * _Tr0;
+//	matrix33_t Ti;
+//	Ti = avrs::math::vector_2_translation_matrix(p);
+//	_Tc = Ti * _Tr0;
 
-	_pos = p;
+	_pos = p + _pos0;
 }
 
 inline avrs::orientationangles_t &Listener::get_orientation()
@@ -99,17 +100,17 @@ inline avrs::point3_t &Listener::get_position()
 	return _pos;
 }
 
-inline matrix44_t &Listener::get_rotation()
+inline matrix33_t &Listener::get_rotation()
 {
-	return _Rc;
+	return _R;
 }
 
-//inline matrix44_t &Listener::get_translation_matrix()
+//inline matrix33_t &Listener::get_translation_matrix()
 //{
 //	return _Tc;
 //}
 
-//inline matrix44_t &Listener::get_transformation_matrix()
+//inline matrix33_t &Listener::get_transformation_matrix()
 //{
 //	return _Rc * _Tc;
 //}

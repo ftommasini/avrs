@@ -33,7 +33,7 @@ typedef struct VirtualSource
 
 	point3_t pos_R;  // in Room coordinates system
 	point3_t pos_L;  // in Listener coordinates system
-	matrix44_t rotation;
+	matrix33_t rotation;
 
 	short order;
 	float dist_listener;

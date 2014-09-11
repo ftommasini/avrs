@@ -240,36 +240,35 @@ inline float speed_of_sound(float temp)
 	return 331.3 * sqrt(1 + (temp / 273.15));
 }
 
-inline matrix44_t angles_2_rotation_matrix(const avrs::orientationangles_t &o)
+inline matrix33_t angles_2_rotation_matrix(const avrs::orientationangles_t &o)
 {
     // To radians
     double az = (o.az * PI) / 180.0;
     double el = (o.el * PI) / 180.0;
 
 	// Rotation matrix ZXZ convention
-	matrix44_t R;  // 4 x 4 matrix
+	avrs::matrix33_t R;  // 3 x 3 matrix
 	float sin_az = sin(az);
 	float cos_az = cos(az);
 	float sin_el = sin(el);
 	float cos_el = cos(el);
-	R << cos_az           << sin_az           << 0      << 0 << arma::endr
-	  << -sin_az * cos_el << cos_az * cos_el  << sin_el << 0 << arma::endr
-	  << sin_az * sin_el  << -cos_az * sin_el << cos_el << 0 << arma::endr
-	  << 0                << 0                << 0      << 1 << arma::endr;
+	R << cos_az           << sin_az           << 0      << arma::endr
+	  << -sin_az * cos_el << cos_az * cos_el  << sin_el << arma::endr
+	  << sin_az * sin_el  << -cos_az * sin_el << cos_el << arma::endr;
 
 	return R;
 }
 
-inline matrix44_t vector_2_translation_matrix(const avrs::point3_t &p)
-{
-	matrix44_t T;  // 4 x 4 matrix
-	T << 1 << 0 << 0 << p(0) << arma::endr
-	  << 0 << 1 << 0 << p(1) << arma::endr
-	  << 0 << 0 << 1 << p(2) << arma::endr
-	  << 0 << 0 << 0 << 1    << arma::endr;
-
-	return T;
-}
+//inline matrix33_t vector_2_translation_matrix(const avrs::point3_t &p)
+//{
+//	matrix33_t T;  // 4 x 4 matrix
+//	T << 1 << 0 << 0 << p(0) << arma::endr
+//	  << 0 << 1 << 0 << p(1) << arma::endr
+//	  << 0 << 0 << 1 << p(2) << arma::endr
+//	  << 0 << 0 << 0 << 1    << arma::endr;
+//
+//	return T;
+//}
 
 //inline void polarAVRS_2_rectangular(float az_deg, float el_deg, double *point)
 //{
