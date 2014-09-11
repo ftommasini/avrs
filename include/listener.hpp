@@ -49,10 +49,9 @@ public:
     void rotate(const avrs::orientationangles_t &o);
     avrs::point3_t &get_position();  // TODO position_t
     void translate(const avrs::point3_t &p);  // from reference position
-
-    matrix4_t &get_rotation_matrix();
-    //matrix4_t &get_translation_matrix();
-//    matrix4_t &get_transformation_matrix();
+    matrix44_t &get_rotation();
+    //matrix44_t &get_translation_matrix();
+//    matrix44_t &get_transformation_matrix();
 
 private:
 	Listener();
@@ -60,17 +59,17 @@ private:
 	avrs::orientationangles_t _ori;
 	avrs::point3_t _pos;  // in room reference system
 
-	matrix4_t _R0;  // Initial Rotation matrix
-	matrix4_t _T0;  // Initial Translation matrix
-	matrix4_t _Tr0;  // Initial Transformation matrix
+	matrix44_t _R0;  // Initial Rotation matrix
+	matrix44_t _T0;  // Initial Translation matrix
+	matrix44_t _Tr0;  // Initial Transformation matrix
 
-	matrix4_t _Rc;  // Current Rotation matrix
-	matrix4_t _Tc;  // Current Translation matrix
+	matrix44_t _Rc;  // Current Rotation matrix
+	matrix44_t _Tc;  // Current Translation matrix
 };
 
 inline void Listener::rotate(const avrs::orientationangles_t &o)
 {
-	matrix4_t Ri = avrs::math::rotation_matrix_from_angles(o);  // ZXZ
+	matrix44_t Ri = avrs::math::angles_2_rotation_matrix(o);  // ZXZ
 	_Rc = Ri * _Tr0;
 
 	// Euler angles ZXZ (in degrees)
@@ -83,8 +82,8 @@ inline void Listener::rotate(const avrs::orientationangles_t &o)
 
 inline void Listener::translate(const avrs::point3_t &p)
 {
-	matrix4_t Ti;
-	Ti = avrs::math::translation_matrix_from_vector(p);
+	matrix44_t Ti;
+	Ti = avrs::math::vector_2_translation_matrix(p);
 	_Tc = Ti * _Tr0;
 
 	_pos = p;
@@ -100,17 +99,17 @@ inline avrs::point3_t &Listener::get_position()
 	return _pos;
 }
 
-inline matrix4_t &Listener::get_rotation_matrix()
+inline matrix44_t &Listener::get_rotation()
 {
 	return _Rc;
 }
 
-//inline matrix4_t &Listener::get_translation_matrix()
+//inline matrix44_t &Listener::get_translation_matrix()
 //{
 //	return _Tc;
 //}
 
-//inline matrix4_t &Listener::get_transformation_matrix()
+//inline matrix44_t &Listener::get_transformation_matrix()
 //{
 //	return _Rc * _Tc;
 //}

@@ -40,9 +40,9 @@ Listener::ptr_t Listener::create()
 void Listener::set_initial_POV(const avrs::orientationangles_t &o, const avrs::point3_t &p)
 {
     // Initial Rotation matrix
-    _R0 = avrs::math::rotation_matrix_from_angles(o);
+    _R0 = avrs::math::angles_2_rotation_matrix(o);
 	 // Initial Translation matrix
-    _T0 = avrs::math::translation_matrix_from_vector(p);
+    _T0 = avrs::math::vector_2_translation_matrix(p);
 	// Transformation matrix
 	_Tr0 = _R0 * _T0;
 }
