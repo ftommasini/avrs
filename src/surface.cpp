@@ -233,8 +233,8 @@ void Surface::_calc_dist_origin()
 
 void Surface::_calc_area()
 {
-	avrs::point3d_t ac = _vert.row(0) - _vert.row(2);  // ac vector
-	avrs::point3d_t bd = _vert.row(1) - _vert.row(3);  // bd vector
+	avrs::point3_t ac = _vert.row(0) - _vert.row(2);  // ac vector
+	avrs::point3_t bd = _vert.row(1) - _vert.row(3);  // bd vector
 	_area = 0.5f * norm(cross(ac, bd), 2);
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2013 Fabián C. Tommasini <fabian@tommasini.com.ar>
+ * Copyright (C) 2009-2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,40 +44,33 @@ public:
 	virtual ~Listener();
     static ptr_t create();
 
-//    void set_orientation_reference(const avrs::orientation_angles_t &o);
-
-    avrs::orientation_angles_t &get_orientation();
-    void rotate(const avrs::orientation_angles_t &o);
-
-//    void set_position_reference(const avrs::point3d_t &p);
-
-    void set_initial_point_of_view(const avrs::orientation_angles_t &o, const avrs::point3d_t &p);
-
-    avrs::point3d_t &get_position();  // TODO position_t
-    void translate(const avrs::point3d_t &p);  // from reference position
-
-    arma::fmat::fixed<4,4> &get_rotation_matrix();
+    void set_initial_POV(const avrs::orientationangles_t &o, const avrs::point3_t &p);
+    avrs::orientationangles_t &get_orientation();
+    void rotate(const avrs::orientationangles_t &o);
+    avrs::point3_t &get_position();  // TODO position_t
+    void translate(const avrs::point3_t &p);  // from reference position
+    matrix44_t &get_rotation();
+    //matrix44_t &get_translation_matrix();
+//    matrix44_t &get_transformation_matrix();
 
 private:
 	Listener();
 
-//	avrs::point3d_t _pos_ref;
-	avrs::orientation_angles_t _ori;
-	avrs::point3d_t _pos;  // in room reference system
-//	avrs::orientation_angles_t _ori_ref;  // TODO deprecated?
+	avrs::orientationangles_t _ori;
+	avrs::point3_t _pos;  // in room reference system
 
-	fmat::fixed<4,4> _R0;  // Initial Rotation matrix
-	fmat::fixed<4,4> _T0;  // Initial Translation matrix
-	fmat::fixed<4,4> _Tr;  // Transformation matrix
+	matrix44_t _R0;  // Initial Rotation matrix
+	matrix44_t _T0;  // Initial Translation matrix
+	matrix44_t _Tr0;  // Initial Transformation matrix
 
-	fmat::fixed<4,4> _Rc;  // Current Rotation matrix
-	fmat::fixed<4,4> _Tc;  // Current Translation matrix
+	matrix44_t _Rc;  // Current Rotation matrix
+	matrix44_t _Tc;  // Current Translation matrix
 };
 
-inline void Listener::rotate(const avrs::orientation_angles_t &o)
+inline void Listener::rotate(const avrs::orientationangles_t &o)
 {
-	fmat::fixed<4,4> Ri = avrs::math::rotation_matrix_from_angles(o);  // ZXZ
-	_Rc = Ri * _Tr;
+	matrix44_t Ri = avrs::math::angles_2_rotation_matrix(o);  // ZXZ
+	_Rc = Ri * _Tr0;
 
 	// Euler angles ZXZ (in degrees)
 	int sign1 = (_Rc(0,1) >= 0 ? 1 : -1);
@@ -87,35 +80,39 @@ inline void Listener::rotate(const avrs::orientation_angles_t &o)
 	_ori.ro = 0;  // always zero
 }
 
-inline void Listener::translate(const avrs::point3d_t &p)
+inline void Listener::translate(const avrs::point3_t &p)
 {
-    fmat::fixed<4,4> Ti;
-	Ti << 1 << 0 << 0 << p(0) << endr
-	   << 0 << 1 << 0 << p(1) << endr
-	   << 0 << 0 << 1 << p(2) << endr
-	   << 0 << 0 << 0 << 1    << endr;
-	_Tc = Ti * _Tr;
+	matrix44_t Ti;
+	Ti = avrs::math::vector_2_translation_matrix(p);
+	_Tc = Ti * _Tr0;
 
 	_pos = p;
-
-    // TODO test!
-	// http://www.fastgraph.com/makegames/3drotation/
 }
 
-inline avrs::orientation_angles_t &Listener::get_orientation()
+inline avrs::orientationangles_t &Listener::get_orientation()
 {
 	return _ori;
 }
 
-inline avrs::point3d_t &Listener::get_position()  // TODO position_t
+inline avrs::point3_t &Listener::get_position()
 {
 	return _pos;
 }
 
-inline fmat::fixed<4,4> &Listener::get_rotation_matrix()
+inline matrix44_t &Listener::get_rotation()
 {
 	return _Rc;
 }
+
+//inline matrix44_t &Listener::get_translation_matrix()
+//{
+//	return _Tc;
+//}
+
+//inline matrix44_t &Listener::get_transformation_matrix()
+//{
+//	return _Rc * _Tc;
+//}
 
 }  // namespace avrs
 

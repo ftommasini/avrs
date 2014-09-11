@@ -135,8 +135,8 @@ bool VirtualEnvironment::update_listener_orientation()
 		{
 			_tracker_data = tmp_data;  // save the current tracker data
 			_listener->rotate(tmp_data.ori);  // update listener orientation
-			//_listener->move(tmp_data.pos.to_point3d());  // update listener position
-			_ism->update_vs_orientations(_listener->get_orientation());  // update VS orientations
+			_listener->translate(tmp_data.pos.to_point3());  // update listener position
+			//_ism->update_vs_orientations(_listener->get_orientation());  // update VS orientations
 
 //			DPRINT("%+1.3f %+1.3f \t %+1.3f %+1.3f",
 //					_tracker_data.ori.az,
@@ -277,8 +277,8 @@ void VirtualEnvironment::renderize()
 
 		for (i = 0; i < _length_bir; i++)
 		{
-			out2_l.tick(_render_buffer.left[i]);
-			out2_r.tick(_render_buffer.right[i]);
+			out2_l.tick(0.5*_render_buffer.left[i]);
+			out2_r.tick(0.5*_render_buffer.right[i]);
 		}
 	}
 }
@@ -315,22 +315,19 @@ data_t VirtualEnvironment::_surfaces_filter(data_t &input, const Ism::tree_vs_t:
 }
 
 // IIR filter for single reflection
-binauraldata_t VirtualEnvironment::_hrtf_iir_filter(data_t &input, const point3d_t &vs_pos_R)
+binauraldata_t VirtualEnvironment::_hrtf_iir_filter(data_t &input, const point3_t &vs_pos_R)
 {
 //	TimerRtai t;
 	binauraldata_t output(BUFFER_SAMPLES);
 	stk::StkFrames out_l(input.size(), 1);  // one channel
 	stk::StkFrames out_r(input.size(), 1);  // one channel
 
-
-	point3d_t vs_pos_L = vs_pos_R * _listener->get_rotation_matrix().submat(0, 0, 2, 2);
-	DPRINT("rotation matrix");
-	_listener->get_rotation_matrix().submat(0, 0, 2, 2).print();
-	DPRINT("vs_pos R");
-	vs_pos_R.print();
-	DPRINT("vs_pos L");
+	point3_t vs_pos_L = (vs_pos_R - _listener->get_position()) * _listener->get_rotation().submat(0, 0, 2, 2);
+	vs_pos_L = normalise(vs_pos_L);
 	vs_pos_L.print();
+
 	_hcdb->get_HRTF_coeff(&_hc, vs_pos_L);
+
 //	t.start();
 	// get the best-fit HRTF for both ears
 //	_hcdb->get_HRTF_coeff(&_hc, ori.az, ori.el);

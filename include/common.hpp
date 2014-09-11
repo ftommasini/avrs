@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2013 Fabián C. Tommasini <fabian@tommasini.com.ar>
+ * Copyright (C) 2009-2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,8 @@ namespace avrs
 typedef fftwf_complex complex_t;  // for spectral data
 typedef float sample_t;  // for time data
 typedef std::vector<sample_t> data_t;
-typedef arma::frowvec3 point3d_t;
+typedef arma::frowvec3 point3_t;
+typedef arma::fmat::fixed<4,4> matrix44_t;
 
 typedef struct BinauralData
 {
@@ -69,7 +70,6 @@ typedef struct Position
 	Position operator+(const Position &val) const
 	{
 		Position res;
-
 		res.x = x + val.x;
 		res.y = y + val.y;
 		res.z = z + val.z;
@@ -80,7 +80,6 @@ typedef struct Position
 	Position operator-(const Position &val) const
 	{
 		Position res;
-
 		res.x = x - val.x;
 		res.y = y - val.y;
 		res.z = z - val.z;
@@ -88,16 +87,15 @@ typedef struct Position
 	    return res;
 	}
 
-	point3d_t to_point3d() const
+	point3_t to_point3() const
 	{
-		point3d_t p;
-
+		point3_t p;
 		p << x << y << z << arma::endr;
 
 		return p;
 	}
 
-} position_t, orientation_vector_t;
+} position_t;
 
 typedef struct OrientationAngles
 {
@@ -117,6 +115,7 @@ typedef struct OrientationAngles
 		az = az_val;
 		el = el_val;
 		ro = ro_val;
+		correct_angles(*this);
 	}
 
 	OrientationAngles operator+(const OrientationAngles &val) const
@@ -157,7 +156,7 @@ typedef struct OrientationAngles
 		else if (ori.el < -90)
 			ori.el = -180 - ori.el;
 	}
-} orientation_angles_t;
+} orientationangles_t;
 
 
 // Definitions for all the system

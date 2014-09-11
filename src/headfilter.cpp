@@ -52,7 +52,7 @@ HrtfCoeffSet::ptr_t HrtfCoeffSet::create(std::string filename)
 	return p_tmp;
 }
 
-void HrtfCoeffSet::get_HRTF_coeff(hrtfcoeff_t *val, point3d_t point_L)
+void HrtfCoeffSet::get_HRTF_coeff(hrtfcoeff_t *val, point3_t point_L)
 {
 	assert(val != NULL);
 
@@ -61,12 +61,6 @@ void HrtfCoeffSet::get_HRTF_coeff(hrtfcoeff_t *val, point3d_t point_L)
 	point[X] = point_L(X);
 	point[Y] = point_L(Y);
 	point[Z] = point_L(Z);
-
-	//avrs::math::polar2rectangular(az, el, point);
-
-	float az_2, el_2;
-	avrs::math::rectangular2polar(point, &az_2, &el_2);
-	DPRINT("az %f, el %f", az_2, el_2);
 
 	// search in kd-tree
 	const int k = 1;
@@ -88,9 +82,11 @@ void HrtfCoeffSet::get_HRTF_coeff(hrtfcoeff_t *val, point3d_t point_L)
 	memcpy(&val->b_right[0], &_b_right[idx][0], sizeof(double) * _n_coeff);
 	memcpy(&val->a_right[0], &_a_right[idx][0], sizeof(double) * _n_coeff);
 
-//	DPRINT("\tAz: %+1.3f [%+1.3f]\t El: %+1.3f [%+1.3f]\t ITD: %s %d samples",
-//			_az[idx], az, _el[idx], el,
-//			val->itd >= 0 ? "L" : "R", val->itd >= 0 ? val->itd : -(val->itd));
+	float az, el;
+	avrs::math::rectangular_2_polarAVRS(point, &az, &el);
+	DPRINT("\tAz: %+1.3f [%+1.3f]\t El: %+1.3f [%+1.3f]\t ITD: %s %d samples",
+			az, _az[idx], el, _el[idx],
+			val->itd >= 0 ? "L" : "R", val->itd >= 0 ? val->itd : -(val->itd));
 }
 
 bool HrtfCoeffSet::_load()

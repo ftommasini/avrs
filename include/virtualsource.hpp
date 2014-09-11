@@ -30,22 +30,23 @@ typedef struct VirtualSource
 	typedef boost::shared_ptr<VirtualSource> ptr_t;
 
 	unsigned long id;
-	point3d_t pos_R;  // in Room coordinates system
-	point3d_t pos_L;  // in Listener coordinates system
 
-//	arma::fmat<4,4> rotation;
+	point3_t pos_R;  // in Room coordinates system
+	point3_t pos_L;  // in Listener coordinates system
+	matrix44_t rotation;
 
 	short order;
 	float dist_listener;
 	float time_abs_ms;
 	float time_rel_ms;
 	Surface::ptr_t surface_ptr;
-	point3d_t intersection_point;
+	point3_t intersection_point;
 	bool audible;
-	//point3d_t pos_ref_listener; // to listener
 	ptr_t parent_ptr;
-	orientation_angles_t orientation_L; // referenced to Listener
-	orientation_angles_t orientation_0; // initial orientation
+
+	orientationangles_t orientation_L; // referenced to Listener
+	orientationangles_t orientation_0; // initial orientation
+
 } virtualsource_t;
 
 }  // namespace avrs

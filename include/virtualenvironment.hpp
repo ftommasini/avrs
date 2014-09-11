@@ -140,7 +140,7 @@ private:
 
 	// Private methods
 	void _calc_late_reverberation();
-	binauraldata_t _hrtf_iir_filter(data_t &input, const point3d_t &vs_pos_R);
+	binauraldata_t _hrtf_iir_filter(data_t &input, const point3_t &vs_pos_R);
 	data_t _surfaces_filter(data_t &input, const Ism::tree_vs_t::iterator node);
 	bool _listener_is_moved();
 
