@@ -184,12 +184,6 @@ void VirtualEnvironment::renderize()
 		if (!vs->audible)  	// only for audible VSs
 			continue;
 
-//		int n = 64;
-//		std::vector<double> x = math::linspace(-PI, PI, n);
-		//
-		//	for (int i = 0; i < n; i++)
-		//		input[i] = math::sinc(x[i]);
-
 #ifdef APPLY_DIRECTIVITY_FILTERING
 //		t.start();
 		// directivity filtering
@@ -199,8 +193,15 @@ void VirtualEnvironment::renderize()
 //		t.stop();
 //		DPRINT("Directivity - time %.3f", t.elapsed_time(microsecond));
 #else
-		data_t input(32);
-		input[0] = 1.0f;  // delta dirac
+		data_t input(64);
+		//input[0] = 1.0f;  // delta dirac
+
+		// sinc function
+		int n = 64;
+		std::vector<double> x = math::linspace(-PI, PI, n);
+
+		for (int i = 0; i < n; i++)
+			input[i] = math::sinc(x[i]);
 #endif
 
 #ifdef APPLY_SURFACE_FILTERING
