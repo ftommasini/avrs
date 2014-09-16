@@ -41,8 +41,10 @@ void Listener::set_initial_POV(const orientationangles_t &o, const point3_t &p)
 {
     // Initial rotation
     _R0 = avrs::math::angles_2_rotation_matrix(o);
+    _R = _R0;
 	 // Initial position
     _pos0 = p;
+    _pos = _pos0;
 }
 
 }  // namespace avrs
