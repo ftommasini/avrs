@@ -48,13 +48,10 @@ public:
     void rotate(const orientationangles_t &o);
     void translate(const point3_t &p);  // from reference position
 
-    point3_t &get_position();  // TODO position_t
+    point3_t &get_position();
     matrix33_t &get_rotation();
 
     orientationangles_t &get_orientation();
-
-    //matrix33_t &get_translation_matrix();
-//    matrix33_t &get_transformation_matrix();
 
 private:
 	Listener();
@@ -83,10 +80,6 @@ inline void Listener::rotate(const orientationangles_t &o)
 
 inline void Listener::translate(const point3_t &p)
 {
-//	matrix33_t Ti;
-//	Ti = avrs::math::vector_2_translation_matrix(p);
-//	_Tc = Ti * _Tr0;
-
 	_pos = p + _pos0;
 }
 
@@ -104,16 +97,6 @@ inline matrix33_t &Listener::get_rotation()
 {
 	return _R;
 }
-
-//inline matrix33_t &Listener::get_translation_matrix()
-//{
-//	return _Tc;
-//}
-
-//inline matrix33_t &Listener::get_transformation_matrix()
-//{
-//	return _Rc * _Tc;
-//}
 
 }  // namespace avrs
 
