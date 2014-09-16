@@ -84,7 +84,7 @@ void HrtfCoeffSet::get_HRTF_coeff(hrtfcoeff_t *val, point3_t point_L)
 
 	float az, el;
 	avrs::math::rectangular_2_polarAVRS(point, &az, &el);
-	DPRINT("\tAz: %+1.3f [%+1.3f]\t El: %+1.3f [%+1.3f]\t ITD: %s %d samples",
+	DPRINT("Az: %+1.3f [%+1.3f]\t El: %+1.3f [%+1.3f]\t ITD: %s %d samples",
 			az, _az[idx], el, _el[idx],
 			val->itd >= 0 ? "L" : "R", val->itd >= 0 ? val->itd : -(val->itd));
 }

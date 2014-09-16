@@ -305,7 +305,7 @@ inline double sinc(double x)
 	if (x == 0.0)
 		return 1;
 
-	return sin(PI * x) / (PI * x);
+	return (sin(PI * x) / (PI * x));
 }
 
 inline std::vector<double> generate_range(double a, double inc, double b)

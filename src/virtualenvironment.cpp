@@ -193,15 +193,17 @@ void VirtualEnvironment::renderize()
 //		t.stop();
 //		DPRINT("Directivity - time %.3f", t.elapsed_time(microsecond));
 #else
-		data_t input(64);
+		input.resize(VS_SAMPLES);
+
 		//input[0] = 1.0f;  // delta dirac
 
 		// sinc function
-		int n = 64;
-		std::vector<double> x = math::linspace(-PI, PI, n);
+		std::vector<double> x = math::linspace(-PI, PI, VS_SAMPLES);
 
-		for (int i = 0; i < n; i++)
-			input[i] = math::sinc(x[i]);
+		for (int k = 0; k < VS_SAMPLES; k++)
+		{
+			input[k] = 0.5 * math::sinc(x[k]);
+		}
 #endif
 
 #ifdef APPLY_SURFACE_FILTERING
@@ -327,13 +329,12 @@ binauraldata_t VirtualEnvironment::_hrtf_iir_filter(data_t &input, const point3_
 
 	point3_t vs_pos_L = (vs_pos_R - _listener->get_position()) * _listener->get_rotation();
 	vs_pos_L = normalise(vs_pos_L);
-	vs_pos_L.print();
-
-	_hcdb->get_HRTF_coeff(&_hc, vs_pos_L);
 
 //	t.start();
+
 	// get the best-fit HRTF for both ears
-//	_hcdb->get_HRTF_coeff(&_hc, ori.az, ori.el);
+	_hcdb->get_HRTF_coeff(&_hc, vs_pos_L);
+
 //	t.stop();
 //	DPRINT("Kd-tree - time %.3f", t.elapsed_time(microsecond));
 
