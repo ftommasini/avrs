@@ -71,7 +71,6 @@ private:
 	void sim_calculated_az();
 	void sim_calculated_el();
 	void sim_constant();
-	void load_sim_constant_file();
 
 	FILE *_file;
 	std::string _filename;
