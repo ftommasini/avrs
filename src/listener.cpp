@@ -37,14 +37,14 @@ Listener::ptr_t Listener::create()
 	return p_tmp;
 }
 
-void Listener::set_initial_POV(const avrs::orientationangles_t &o, const avrs::point3_t &p)
+void Listener::set_initial_POV(const orientationangles_t &o, const point3_t &p)
 {
-    // Initial Rotation matrix
+    // Initial rotation
     _R0 = avrs::math::angles_2_rotation_matrix(o);
-	 // Initial Translation matrix
-    _T0 = avrs::math::vector_2_translation_matrix(p);
-	// Transformation matrix
-	_Tr0 = _R0 * _T0;
+    _R = _R0;
+	 // Initial position
+    _pos0 = p;
+    _pos = _pos0;
 }
 
 }  // namespace avrs

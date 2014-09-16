@@ -34,7 +34,7 @@ public:
 	virtual ~SoundSource();
     static ptr_t create(std::string filename);
 
-	avrs::data_t get_IR(avrs::orientationangles_t &ori);
+	avrs::data_t get_IR(avrs::point3_t &p);
 	avrs::point3_t pos;
 
 private:
@@ -45,7 +45,7 @@ private:
 	avrs::data_t _ir;
 };
 
-inline avrs::data_t SoundSource::get_IR(avrs::orientationangles_t &ori)
+inline avrs::data_t SoundSource::get_IR(avrs::point3_t &p)
 {
 	return _ir;
 }

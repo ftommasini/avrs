@@ -165,14 +165,16 @@ void VirtualEnvironment::renderize()
 	data_t image;
 	binauraldata_t output(BUFFER_SAMPLES);
 
-//	memcpy(&_render_buffer.left[0], &_late_buffer[0], sample_mix_time() * sizeof(sample_t));
-//	memcpy(&_render_buffer.right[0], &_late_buffer[0], sample_mix_time() * sizeof(sample_t));
+#ifdef APPLY_FDN_REVERBERATION
+	memcpy(&_render_buffer.left[0], &_late_buffer[0], sample_mix_time() * sizeof(sample_t));
+	memcpy(&_render_buffer.right[0], &_late_buffer[0], sample_mix_time() * sizeof(sample_t));
 
 //	memcpy(&_render_buffer.left[0], &_zeros[0], sample_mix_time() * sizeof(sample_t));
 //	memcpy(&_render_buffer.right[0], &_zeros[0], sample_mix_time() * sizeof(sample_t));
-
+#else
 	memcpy(&_render_buffer.left[0], &_zeros[0], _length_bir * sizeof(sample_t));
 	memcpy(&_render_buffer.right[0], &_zeros[0], _length_bir * sizeof(sample_t));
+#endif
 
 	// TODO RECORRER SOLO AUDIBLES
 	for (Ism::tree_vs_t::iterator it = _ism->tree_vs.begin(); it != _ism->tree_vs.end(); it++)
@@ -191,7 +193,7 @@ void VirtualEnvironment::renderize()
 #ifdef APPLY_DIRECTIVITY_FILTERING
 //		t.start();
 		// directivity filtering
-		input = _sound_source->get_IR(vs->orientation_ref_listener);
+		input = _sound_source->get_IR(vs->pos_L);
 		assert(input.size() <= VS_SAMPLES);  // TODO REVISAR LONGITUD DE EARLY REFLECTIONS
 		input.resize(VS_SAMPLES, 0.0f);
 //		t.stop();
@@ -322,7 +324,7 @@ binauraldata_t VirtualEnvironment::_hrtf_iir_filter(data_t &input, const point3_
 	stk::StkFrames out_l(input.size(), 1);  // one channel
 	stk::StkFrames out_r(input.size(), 1);  // one channel
 
-	point3_t vs_pos_L = (vs_pos_R - _listener->get_position()) * _listener->get_rotation().submat(0, 0, 2, 2);
+	point3_t vs_pos_L = (vs_pos_R - _listener->get_position()) * _listener->get_rotation();
 	vs_pos_L = normalise(vs_pos_L);
 	vs_pos_L.print();
 

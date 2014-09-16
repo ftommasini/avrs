@@ -35,7 +35,7 @@ typedef fftwf_complex complex_t;  // for spectral data
 typedef float sample_t;  // for time data
 typedef std::vector<sample_t> data_t;
 typedef arma::frowvec3 point3_t;
-typedef arma::fmat::fixed<4,4> matrix44_t;
+typedef arma::fmat::fixed<3,3> matrix33_t;
 
 typedef struct BinauralData
 {
