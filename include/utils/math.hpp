@@ -328,7 +328,7 @@ inline std::vector<double> linspace(double a, double b, int n)
 
     for (int i = 0; i < n; i++)
     {
-    	array.push_back(a + (i * step));
+    	array[i] = (a + (i * step));
     }
 
     array[n - 1] = b;
