@@ -82,11 +82,11 @@ void HrtfCoeffSet::get_HRTF_coeff(hrtfcoeff_t *val, point3_t point_L)
 	memcpy(&val->b_right[0], &_b_right[idx][0], sizeof(double) * _n_coeff);
 	memcpy(&val->a_right[0], &_a_right[idx][0], sizeof(double) * _n_coeff);
 
-	float az, el;
-	avrs::math::rectangular_2_polarAVRS(point, &az, &el);
-	DPRINT("Az: %+1.3f [%+1.3f]\t El: %+1.3f [%+1.3f]\t ITD: %s %d samples",
-			az, _az[idx], el, _el[idx],
-			val->itd >= 0 ? "L" : "R", val->itd >= 0 ? val->itd : -(val->itd));
+//	float az, el;
+//	avrs::math::rectangular_2_polarAVRS(point, &az, &el);
+//	DPRINT("Az: %+1.3f [%+1.3f]\t El: %+1.3f [%+1.3f]\t ITD: %s %d samples",
+//			az, _az[idx], el, _el[idx],
+//			val->itd >= 0 ? "L" : "R", val->itd >= 0 ? val->itd : -(val->itd));
 }
 
 bool HrtfCoeffSet::_load()
