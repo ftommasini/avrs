@@ -240,41 +240,61 @@ inline float speed_of_sound(float temp)
 	return 331.3 * sqrt(1 + (temp / 273.15));
 }
 
-inline arma::mat::fixed<4,4> rotation_matrix_from_angles(const avrs::orientation_angles_t &o)
+inline matrix33_t angles_2_rotation_matrix(const avrs::orientationangles_t &o)
 {
     // To radians
     double az = (o.az * PI) / 180.0;
     double el = (o.el * PI) / 180.0;
 
 	// Rotation matrix ZXZ convention
-	arma::mat::fixed<4,4> R;  // 4 x 4 matrix
-	double sin_az = sin(az);
-	double cos_az = cos(az);
-	double sin_el = sin(el);
-	double cos_el = cos(el);
-	R << cos_az           << sin_az           << 0      << 0 << arma::endr
-	  << -sin_az * cos_el << cos_az * cos_el  << sin_el << 0 << arma::endr
-	  << sin_az * sin_el  << -cos_az * sin_el << cos_el << 0 << arma::endr
-	  << 0                << 0                << 0      << 1 << arma::endr;
+	avrs::matrix33_t R;  // 3 x 3 matrix
+	float sin_az = sin(az);
+	float cos_az = cos(az);
+	float sin_el = sin(el);
+	float cos_el = cos(el);
+	R << cos_az           << sin_az           << 0      << arma::endr
+	  << -sin_az * cos_el << cos_az * cos_el  << sin_el << arma::endr
+	  << sin_az * sin_el  << -cos_az * sin_el << cos_el << arma::endr;
 
 	return R;
 }
 
-inline void polar2rectangular(float az_deg, float el_deg, double *point)
-{
-	// vertical-polar to rectangular conversion
-	float az_r = deg2rad(az_deg);
-	float el_r = deg2rad(el_deg);
-	point[X] = cos(az_r) * cos(el_r);
-	point[Y] = sin(az_r) * cos(el_r);
-	point[Z] = sin(el_r);
-}
+//inline matrix33_t vector_2_translation_matrix(const avrs::point3_t &p)
+//{
+//	matrix33_t T;  // 4 x 4 matrix
+//	T << 1 << 0 << 0 << p(0) << arma::endr
+//	  << 0 << 1 << 0 << p(1) << arma::endr
+//	  << 0 << 0 << 1 << p(2) << arma::endr
+//	  << 0 << 0 << 0 << 1    << arma::endr;
+//
+//	return T;
+//}
 
-inline void rectangular2polar(double *point, float *az_deg, float *el_deg)
+//inline void polarAVRS_2_rectangular(float az_deg, float el_deg, double *point)
+//{
+//	// vertical-polar to rectangular conversion
+//	float az_r = deg2rad(az_deg);
+//	float el_r = deg2rad(el_deg);
+//	point[X] = cos(az_r) * cos(el_r);
+//	point[Y] = sin(az_r) * cos(el_r);
+//	point[Z] = sin(el_r);
+//}
+
+inline void rectangular_2_polarAVRS(double *point, float *az_deg, float *el_deg)
 {
+	// reflect
+	arma::rowvec3 p;
+	p << -point[X] << point[Y] << point[Z] << arma::endr;  // x-axis reflected
+	// rotate coordinate system
+	arma::mat33 R;
+	R << 0 << -1 << 0 << arma::endr
+	  << 1 <<  0 << 0 << arma::endr
+	  << 0 <<  0 << 1 << arma::endr;
+	p = p * R;
+
 	// rectangular to vertical-polar conversion
-	float az_r = (float)atan2(point[Y], point[X]);
-	float el_r = (float)atan2(point[Z], sqrt(point[X] * point[X] + point[Y] * point[Y]));
+	float az_r = (float)atan2(p(Y), p(X));
+	float el_r = (float)atan2(p(Z), sqrt(p(X) * p(X) + p(Y) * p(Y)));
 	*az_deg = rad2deg(az_r);
 	*el_deg = rad2deg(el_r);
 }
@@ -285,7 +305,7 @@ inline double sinc(double x)
 	if (x == 0.0)
 		return 1;
 
-	return sin(PI * x) / (PI * x);
+	return (sin(PI * x) / (PI * x));
 }
 
 inline std::vector<double> generate_range(double a, double inc, double b)
@@ -308,7 +328,7 @@ inline std::vector<double> linspace(double a, double b, int n)
 
     for (int i = 0; i < n; i++)
     {
-    	array.push_back(a + (i * step));
+    	array[i] = (a + (i * step));
     }
 
     array[n - 1] = b;

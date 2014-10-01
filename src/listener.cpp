@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2013 Fabián C. Tommasini <fabian@tommasini.com.ar>
+ * Copyright (C) 2009-2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,10 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see http://www.gnu.org/licenses/.
  *
- */
-
-/**
- * @file listener.cpp
  */
 
 #include "listener.hpp"
@@ -41,31 +37,14 @@ Listener::ptr_t Listener::create()
 	return p_tmp;
 }
 
-void Listener::set_initial_point_of_view(const avrs::orientation_angles_t &o, const avrs::point3d_t &p)
+void Listener::set_initial_POV(const orientationangles_t &o, const point3_t &p)
 {
-    // Initial Rotation matrix
-    _R0 = avrs::math::rotation_matrix_from_angles(o);
-
-	 // Initial Translation matrix
-	_T0 << 1 << 0 << 0 << p(0) << endr
-	    << 0 << 1 << 0 << p(1) << endr
-	    << 0 << 0 << 1 << p(2) << endr
-	    << 0 << 0 << 0 << 1    << endr;
-
-	// Transformation matrix
-	_Tr = _R0 * _T0;
-}
-
-void Listener::set_orientation_reference(const avrs::orientation_angles_t &o)
-{
-	_ori_ref = o;
-	_ori = _ori_ref;
-}
-
-void Listener::set_position_reference(const avrs::point3d_t &p)
-{
-	_pos_ref = p;
-	pos = _pos_ref;
+    // Initial rotation
+    _R0 = avrs::math::angles_2_rotation_matrix(o);
+    _R = _R0;
+	 // Initial position
+    _pos0 = p;
+    _pos = _pos0;
 }
 
 }  // namespace avrs

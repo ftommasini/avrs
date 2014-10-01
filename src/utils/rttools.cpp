@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2013 Fabián C. Tommasini <fabian@tommasini.com.ar>
+ * Copyright (C) 2009-2014 Fabián C. Tommasini <fabian@tommasini.com.ar>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,12 +20,15 @@
  * \file rttools.cpp
  */
 
-#include "utils//rttools.hpp"
+#include "utils/rttools.hpp"
 
 namespace avrs
 {
 
-MBX *rttools::get_mbx(std::string name, int size)
+namespace rttools
+{
+
+MBX *get_mbx(std::string name, int size)
 {
 	unsigned long mbx_id = nam2num(name.c_str());
 	MBX *mbx = (MBX *) rt_get_adr(mbx_id);
@@ -37,7 +40,7 @@ MBX *rttools::get_mbx(std::string name, int size)
 	return mbx;
 }
 
-int rttools::del_mbx(std::string name)
+int del_mbx(std::string name)
 {
 	unsigned long mbx_id = nam2num(name.c_str());
 	MBX *mbx = (MBX *) rt_get_adr(mbx_id);
@@ -51,7 +54,7 @@ int rttools::del_mbx(std::string name)
 	return retval;
 }
 
-unsigned int rttools::cpu_id(unsigned int cpu)
+unsigned int cpu_id(unsigned int cpu)
 {
 	assert(cpu <= CPU_MAX);
 
@@ -60,5 +63,7 @@ unsigned int rttools::cpu_id(unsigned int cpu)
 	else
 		return (1 << (cpu - 1));
 }
+
+}  // namespace rttools
 
 }  // namespace avrs

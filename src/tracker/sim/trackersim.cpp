@@ -60,10 +60,6 @@ void TrackerSim::_init()
 		if (!_file)
 			throw AvrsException("Error creating VirtualEnvironment");
 	}
-	else if (_sim_type == constant)
-	{
-		load_sim_constant_file();
-	}
 }
 
 void TrackerSim::start()
@@ -197,7 +193,7 @@ void TrackerSim::sim_cipic_angles()
 
 void TrackerSim::sim_calculated_az()
 {
-	static orientation_angles_t ori_tmp(80.0f, 0.0f, 0.0f);
+	static orientationangles_t ori_tmp(80.0f, 0.0f, 0.0f);
 	static float step = 0.5f;
 
 	if (step > 0) // positive step
@@ -217,7 +213,7 @@ void TrackerSim::sim_calculated_az()
 
 void TrackerSim::sim_calculated_el()
 {
-	static orientation_angles_t ori_tmp(0.0f, 0.0f, 0.0f);
+	static orientationangles_t ori_tmp(0.0f, 0.0f, 0.0f);
 	static float step = 1.0f;
 
 	if (step > 0) // positive step
@@ -263,33 +259,12 @@ void TrackerSim::sim_from_file()
 
 void TrackerSim::sim_constant()
 {
-	;
-//	DPRINT("X: %+1.3f\tY: %+1.3f\tZ: %+1.3f", _data.pos.x, _data.pos.y, _data.pos.z);
-}
-
-void TrackerSim::load_sim_constant_file()
-{
-	std::string filename = "tracker_sim_constant.conf";
-	boost::filesystem::path p_full = boost::filesystem::current_path() / "etc" / filename;
-	ConfigFileReader cfr(p_full.string());
-
-	if (!cfr.readInto(_data.pos.x, "X"))
-		throw AvrsException("Error in tracker file: X is missing");
-
-	if (!cfr.readInto(_data.pos.y, "Y"))
-		throw AvrsException("Error in tracker file: Y is missing");
-
-	if (!cfr.readInto(_data.pos.z, "Z"))
-		throw AvrsException("Error in tracker file: Z is missing");
-
-	if (!cfr.readInto(_data.ori.az, "AZ"))
-		throw AvrsException("Error in tracker file: AZ is missing");
-
-	if (!cfr.readInto(_data.ori.el, "EL"))
-		throw AvrsException("Error in tracker file: EL is missing");
-
-	if (!cfr.readInto(_data.ori.ro, "RO"))
-		throw AvrsException("Error in tracker file: RO is missing");
+	_data.pos.x = 0.0f;
+	_data.pos.y = 0.0f;
+	_data.pos.z = 0.0f;
+	_data.ori.az = 0.0f;
+	_data.ori.el = 0.0f;
+	_data.ori.ro = 0.0f;
 }
 
 }  // namespace avrs

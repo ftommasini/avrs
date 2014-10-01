@@ -189,9 +189,10 @@ void usage()
 
 void print_version()
 {
-	std::cout << "avrs " << VERSION_NUMBER << std::endl;
+	std::cout << "AVRS " << VERSION_NUMBER << std::endl;
+	std::cout << "Acoustic Virtual Reality System" << std::endl;
 	std::cout << "Copyright (C) 2009-2014 Fabián Tommasini" << std::endl;
-	std::cout << "                        and others" << std::endl;
+	std::cout << "                        and contributors" << std::endl;
 	std::cout << "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>" << std::endl;
 	std::cout << "This is free software: you are free to change and redistribute it." << std::endl;
 	std::cout << "There is NO WARRANTY, to the extent permitted by law." << std::endl;
